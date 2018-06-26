@@ -13,10 +13,16 @@ initialize_experiment_file_MHT.main(age= 3, prep = 'Optic lobe - left', indicato
 import squirrel
 from datetime import datetime
 import os
+from sys import platform
+
 
 def main(age = 0, prep = '',indicator1 = '', driver1 = '', indicator2 = '', driver2 = '',  
-         data_directory = '/Users/mhturner/documents/stashedObjects/', experimenter = 'MHT'):
-    
+         data_directory = None, experimenter = 'MHT'):
+    if data_directory is None:
+        if platform == "darwin":
+            data_directory = '/Users/mhturner/documents/stashedObjects/'
+        elif platform == "win32":
+            data_directory = '/Users/Main/Documents/Data/'
     
     init_now = datetime.now()
     date = init_now.isoformat()[:-16]

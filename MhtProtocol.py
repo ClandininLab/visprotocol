@@ -14,11 +14,16 @@ from time import sleep
 from datetime import datetime
 import numpy.random as random
 import squirrel
+from sys import platform
 
 def start(run_parameters, protocol_parameters, port=62632):
     client = ServerProxy('http://127.0.0.1:{}'.format(port))
+    
     # Load initialized metadata file
-    data_directory = '/Users/mhturner/documents/stashedObjects/'
+    if platform == "darwin":
+        data_directory = '/Users/mhturner/documents/stashedObjects/'
+    elif platform == "win32":
+        data_directory = '/Users/Main/Documents/Data/'
     date = datetime.now().isoformat()[:-16]
     try:
         experiment_file = squirrel.get(date, data_directory)
@@ -59,10 +64,10 @@ if __name__ == '__start__':
 # E.g. reset a random seed each epoch, or select a parameter value from among a list of possible values
 def getEpochParameters(protocol_ID, protocol_parameters, epoch):
     epoch_parameters = protocol_parameters
-    background_color = epoch_parameters['background_color']
-    if not isinstance(background_color,tuple):
-        epoch_parameters['background_color'] = (background_color, background_color, background_color)
-    
+##    background_color = epoch_parameters['background']
+##    if not isinstance(background_color,tuple):
+##        epoch_parameters['background'] = (background_color, background_color, background_color)
+##    
     if protocol_ID == 'CheckerboardWhiteNoise':
         stimulus_ID = 'RandomGrid'
         epoch_parameters['start_seed'] = int(random.choice(range(int(1e6))))
@@ -85,15 +90,14 @@ def getParameterDefaults(protocol_ID):
                    'rand_min':0,
                    'rand_max':1.0,
                    'start_seed':0,
-                   'update_rate':60.0,
-                   'background_color':0.5}
+                   'update_rate':60.0}
         
     elif protocol_ID == 'RotatingSquareGrating':
         params = {'period':20,
                    'duty_cycle':0.5,
                    'rate':10,
                    'color':1.0,
-                   'background_color':0.5}
+                   'background':0.5}
     
     else:
         raise NameError('Unrecognized stimulus ID')         
