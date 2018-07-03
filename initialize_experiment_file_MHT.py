@@ -41,7 +41,8 @@ def main(age = 0, prep = '',indicator1 = '', driver1 = '', indicator2 = '', driv
 
 
     experiment_file = {'experiment_metadata':experiment_metadata,
-                       'epoch_run':[]}
+                       'epoch_run':[],
+                       'notes':[]}
     if os.path.isfile(data_directory + date + '.pkl'):
         raise NameError('Experiment file already exists! Please move or re-name existing file if you would like to start a new one')
         

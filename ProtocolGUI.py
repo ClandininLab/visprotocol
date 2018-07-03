@@ -26,10 +26,11 @@ class ProtocolGUI(QWidget):
         
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
+        # Link to a protocol object
+        self.protocolObject = MhtProtocol.MhtProtocol();
+
         self.initUI()
-        
-        
-        
+
     def initUI(self):  
         self.grid = QGridLayout()
         self.grid.setSpacing(10)
@@ -94,7 +95,7 @@ class ProtocolGUI(QWidget):
         self.resetLayout()
         
         # Get default protocol parameters for this protocol ID
-        self.protocol_parameters = MhtProtocol.getParameterDefaults(self.run_parameters['protocol_ID'])
+        self.protocol_parameters = self.protocolObject.getParameterDefaults(self.run_parameters['protocol_ID'])
         
         # update display window to show parameters for this protocol
         # TODO: handle lists of parameters somehow
@@ -127,10 +128,11 @@ class ProtocolGUI(QWidget):
                 self.protocol_parameters[key] = float(self.protocol_parameter_input[key].text())
             
             # Send run and protocol parameters to protocol control
-            MhtProtocol.start(self.run_parameters, self.protocol_parameters)
+            self.protocolObject.start(self.run_parameters, self.protocol_parameters)
         elif sender.text() == 'Enter note':
             self.noteText = self.notesEdit.toPlainText()
-            print(self.noteText) # TODO: save note text to experiment file
+            self.protocolObject.addNoteToExperimentFile(self.noteText) # save note to expt file
+            self.notesEdit.clear() # clear notes box
         
         
     def resetLayout(self):
@@ -140,8 +142,7 @@ class ProtocolGUI(QWidget):
                 if item != None:
                     item.widget().deleteLater()
         self.show()
-                
-        
+
 
 if __name__ == '__main__':
     
