@@ -27,8 +27,12 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         # # # Where to find the experiment metadata file # # # 
         if platform == "darwin":
             self.data_directory = '/Users/mhturner/documents/stashedObjects/'
+            FullScreen = False
+            ScreenID = 0
         elif platform == "win32":
             self.data_directory = '/Users/Main/Documents/Data/'
+            FullScreen = True
+            ScreenID = 1
         self.date = datetime.now().isoformat()[:-16]
         try: # Load initialized metadata file
             self.experiment_file = squirrel.get(self.date, self.data_directory)
@@ -45,7 +49,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         w = 14.2e-2; h = 9e-2; # m of image at projection plane, screen only shows 9x9 of this
         zDistToScreen = 5.36e-2; # m
     
-        screens = [Screen(width=w, height=h, rotation=None, offset=(0, zDistToScreen, 0), id=0, fullscreen=False, vsync=None,
+        screens = [Screen(width=w, height=h, rotation=None, offset=(0, zDistToScreen, 0), id=ScreenID, fullscreen=FullScreen, vsync=None,
                      square_side=2e-2, square_loc='lr')]
         self.manager = StimManager(screens)
         self.manager.black_corner_square()
