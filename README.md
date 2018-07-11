@@ -1,1 +1,1 @@
-# MHT-flystim
+# ClandininLab-flystim
