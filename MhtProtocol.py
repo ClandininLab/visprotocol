@@ -20,6 +20,9 @@ class MhtProtocol():
     def __init__(self):
         super().__init__()
         # Load initialized metadata file
+        # TODO: hdf5 experiment file. GUI for expt file initialization?
+        # TODO: split off a parent class for lab-wide protocol. Then sub-class individual protocols
+        
         if platform == "darwin":
             self.data_directory = '/Users/mhturner/documents/stashedObjects/'
         elif platform == "win32":
@@ -40,7 +43,7 @@ class MhtProtocol():
     
         for epoch in range(int(run_parameters['num_epochs'])):
             #  get stimulus parameters for this epoch
-            stimulus_ID, epoch_parameters = getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
+            stimulus_ID, epoch_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
     
             # send the stimulus to flystim
             client.load_stim(stimulus_ID, epoch_parameters)
