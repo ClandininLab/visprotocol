@@ -15,17 +15,10 @@ class ProtocolGUI(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.protocolID = ''
-        self.protocol_parameters = {}
-        self.run_parameters = {'protocol_ID':self.protocolID,
-              'num_epochs':5,
-              'pre_time':0.5,
-              'stim_time':5,
-              'tail_time':0.5}
         self.noteText = ''
-        
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
+        
         # Link to a protocol object
         self.protocolObject = MhtProtocol.MhtProtocol();
 
@@ -38,8 +31,8 @@ class ProtocolGUI(QWidget):
         # Protocol ID drop-down:
         comboBox = QComboBox(self)
         comboBox.addItem("(select a protocol to run)")
-        comboBox.addItem("CheckerboardWhiteNoise")
-        comboBox.addItem("RotatingSquareGrating")
+        for protID in self.protocolObject.protocolIDList:
+            comboBox.addItem(protID)
         protocol_label = QLabel('Protocol:')
         comboBox.activated[str].connect(self.onSelectedProtocolID)
 
@@ -48,7 +41,7 @@ class ProtocolGUI(QWidget):
         
         ct = 0
         # Run parameters list
-        for key, value in self.run_parameters.items():
+        for key, value in self.protocolObject.run_parameters.items():
             ct += 1
             if key not in ['protocol_ID', 'run_start_time']:
                 newLabel = QLabel(key + ':')
@@ -79,7 +72,6 @@ class ProtocolGUI(QWidget):
         self.grid.addWidget(notes_label, 8, 0)
         self.grid.addWidget(self.notesEdit, 8, 1, 1, 1)
         
-        
         self.setLayout(self.grid) 
         self.setGeometry(300, 300, 350, 500)
         self.setWindowTitle('FlyStim')    
@@ -89,19 +81,19 @@ class ProtocolGUI(QWidget):
         if text == "(select a protocol to run)":
             return
         else:
-            self.run_parameters['protocol_ID'] = text
+            self.protocolObject.run_parameters['protocol_ID'] = text
             
         # Clear old params list from grid
         self.resetLayout()
         
         # Get default protocol parameters for this protocol ID
-        self.protocol_parameters = self.protocolObject.getParameterDefaults(self.run_parameters['protocol_ID'])
+        self.protocolObject.protocol_parameters = self.protocolObject.getParameterDefaults(self.protocolObject.run_parameters['protocol_ID'])
         
         # update display window to show parameters for this protocol
         # TODO: handle lists of parameters somehow
         self.protocol_parameter_input = {}; # clear old input params dict
         ct = 0
-        for key, value in self.protocol_parameters.items():
+        for key, value in self.protocolObject.protocol_parameters.items():
             ct += 1
             newLabel = QLabel(key + ':')
             self.grid.addWidget(newLabel, 8 + ct , 0)
@@ -110,6 +102,8 @@ class ProtocolGUI(QWidget):
                 self.protocol_parameter_input[key].setValidator(Gui.QIntValidator())
             elif isinstance(value, float):
                 self.protocol_parameter_input[key].setValidator(Gui.QDoubleValidator())
+#            elif isinstance(value, list):
+                
             self.protocol_parameter_input[key].setText(str(value))
             self.grid.addWidget(self.protocol_parameter_input[key], 8 + ct, 1, 1, 1)
         self.show()
@@ -117,23 +111,22 @@ class ProtocolGUI(QWidget):
     def onPressedButton(self):
         sender = self.sender()
         if sender.text() == 'Start':
-            if self.run_parameters['protocol_ID'] == '':
+            if self.protocolObject.run_parameters['protocol_ID'] == '':
                 print('select a protocol to run, first')
                 return
             # Populate parameters from filled fields
             for key, value in self.run_parameter_input.items():
-                self.run_parameters[key] = float(self.run_parameter_input[key].text())
+                self.protocolObject.run_parameters[key] = float(self.run_parameter_input[key].text())
                 
             for key, value in self.protocol_parameter_input.items():
-                self.protocol_parameters[key] = float(self.protocol_parameter_input[key].text())
+                self.protocolObject.protocol_parameters[key] = float(self.protocol_parameter_input[key].text())
             
             # Send run and protocol parameters to protocol control
-            self.protocolObject.start(self.run_parameters, self.protocol_parameters)
+            self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
         elif sender.text() == 'Enter note':
             self.noteText = self.notesEdit.toPlainText()
             self.protocolObject.addNoteToExperimentFile(self.noteText) # save note to expt file
             self.notesEdit.clear() # clear notes box
-        
         
     def resetLayout(self):
         for c in reversed(range(self.grid.count())):
@@ -145,7 +138,6 @@ class ProtocolGUI(QWidget):
 
 
 if __name__ == '__main__':
-    
     app = QApplication(sys.argv)
     ex = ProtocolGUI()
     sys.exit(app.exec_())
