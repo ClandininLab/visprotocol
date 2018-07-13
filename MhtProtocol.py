@@ -6,15 +6,13 @@ Created on Thu Jun 21 10:20:02 2018
 @author: mhturner
 """
 
-#!/usr/bin/env python3
-
 import ClandininLabProtocol
 from flystim.launch import StimManager
 from flystim.screen import Screen
 
 from datetime import datetime
 import numpy.random as random
-import squirrel
+
 from sys import platform
 # TODO: repeated use of the same screen, e.g. re-initialize or replace screen maybe? Button in GUI?
 # TODO: interrupt mid-run. Threading?
@@ -34,10 +32,10 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             FullScreen = True
             ScreenID = 1
         self.date = datetime.now().isoformat()[:-16]
-        try: # Load initialized metadata file
-            self.experiment_file = squirrel.get(self.date, self.data_directory)
-        except FileNotFoundError as e:
-            raise NameError('Initialize experiment file first using initialize_experiment_file')
+#        try: # Load initialized metadata file
+#            self.experiment_file = squirrel.get(self.date, self.data_directory)
+#        except FileNotFoundError as e:
+#            raise NameError('Initialize experiment file first using initialize_experiment_file')
             
         # # #  List of your protocol IDs # # # 
         self.protocolIDList = ['CheckerboardWhiteNoise',
