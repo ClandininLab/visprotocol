@@ -14,14 +14,9 @@ handle things like initializing the screen, and passing parameters to flystim
 
 from time import sleep
 from flystim.launch import MultiCall
-import os
-
 from datetime import datetime
 import squirrel
 from PyQt5.QtWidgets import QApplication
-
-# TODO: repeated use of the same screen, e.g. re-initialize or replace screen maybe? Button in GUI?
-# TODO: interrupt mid-run. Threading?
 
 class ClandininLabProtocol():
     def __init__(self):
@@ -37,11 +32,21 @@ class ClandininLabProtocol():
         self.stop = False
         self.num_epochs_completed = 0
 
+        # Fly should be initialized by the user
+        self.currentFly = None
+        
+        # Experiment file should be initialized by the user
+        self.experiment_file = None
+        self.experiment_file_name = None
+        
     def start(self, run_parameters, protocol_parameters, port=62632):
         run_parameters['run_start_time'] = datetime.now().strftime('%H:%M:%S.%f')[:-4]
         new_run = {'run_parameters':run_parameters,
                    'epoch': []} # list epoch will grow with each iteration
-        self.experiment_file['epoch_run'].append(new_run)
+        if self.experiment_file is not None:
+            self.experiment_file['epoch_run'].append(new_run)
+        else:
+            print('Warning - you are not saving your metadata!')
     
         self.num_epochs_completed = 0
         for epoch in range(int(run_parameters['num_epochs'])):
@@ -79,39 +84,33 @@ class ClandininLabProtocol():
             multicall()
             sleep(run_parameters['tail_time'])
             
-            # update experiment_file now, in case of interrupt in mid-run
-            squirrel.stash(self.experiment_file, self.date , self.data_directory)
             self.num_epochs_completed += 1
+            
+            # update experiment_file now, in case of interrupt in mid-run
+            if self.experiment_file is not None:
+                squirrel.stash(self.experiment_file, self.experiment_file_name , self.data_directory)
 
     def addNoteToExperimentFile(self, noteText):
         noteTime = datetime.now().strftime('%H:%M:%S.%f')[:-4]
         newNoteEntry = dict({'noteTime':noteTime, 'noteText':noteText})
         self.experiment_file['notes'].append(newNoteEntry)
         # update experiment_file
-        squirrel.stash(self.experiment_file, self.date , self.data_directory)
+        squirrel.stash(self.experiment_file, self.experiment_file_name , self.data_directory)
         
-    def initializeExperimentFile(self, FileName, Experimenter, DataDirectory, Rig):
-#        if data_directory is None:
-#            if platform == "darwin":
-#                data_directory = '/Users/mhturner/documents/stashedObjects/'
-#            elif platform == "win32":
-#                data_directory = '/Users/Main/Documents/Data/'
-#    
+    def initializeExperimentFile(self):
         init_now = datetime.now()
         date = init_now.isoformat()[:-16]
         init_time = init_now.strftime("%H:%M:%S")
         
         experiment_metadata = {'date':date, 
                                'init_time':init_time,
-                               'data_directory':DataDirectory,
-                               'experimenter':Experimenter}
+                               'data_directory':self.data_directory,
+                               'experimenter':self.experimenter,
+                               'rig':self.rig}
     
-    
-        experiment_file = {'experiment_metadata':experiment_metadata,
+        self.experiment_file = {'experiment_metadata':experiment_metadata,
                            'epoch_run':[],
                            'notes':[]}
-        if os.path.isfile(DataDirectory + FileName + '.pkl'):
-            raise NameError('Experiment file already exists! Please move or re-name existing file if you would like to start a new one')
-            
-        squirrel.stash(experiment_file, FileName ,DataDirectory)
+        
+        squirrel.stash(self.experiment_file, self.experiment_file_name , self.data_directory)
         

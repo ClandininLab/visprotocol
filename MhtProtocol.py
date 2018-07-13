@@ -9,50 +9,46 @@ Created on Thu Jun 21 10:20:02 2018
 import ClandininLabProtocol
 from flystim.launch import StimManager
 from flystim.screen import Screen
-
-from datetime import datetime
 import numpy.random as random
-
 from sys import platform
-# TODO: repeated use of the same screen, e.g. re-initialize or replace screen maybe? Button in GUI?
-# TODO: interrupt mid-run. Threading?
 
 class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
         super().__init__()
-        # TODO: hdf5 experiment file. GUI for expt file initialization?
+        # TODO: hdf5 experiment file
         
-        # # # Where to find the experiment metadata file # # # 
+        # # # Define your data directory # # #             
         if platform == "darwin":
-            self.data_directory = '/Users/mhturner/documents/stashedObjects/'
+            self.data_directory = '/Users/mhturner/documents/stashedObjects'
+        elif platform == "win32":
+            self.data_directory = '/Users/Main/Documents/Data'
+        
+        # # # Other defaults # # #
+        self.experimenter = 'MHT'
+        self.rig = 'Bruker'
+
+        # # # Parameters for the screen # # # 
+        if platform == "darwin":
             FullScreen = False
             ScreenID = 0
         elif platform == "win32":
-            self.data_directory = '/Users/Main/Documents/Data/'
             FullScreen = True
             ScreenID = 1
-        self.date = datetime.now().isoformat()[:-16]
-#        try: # Load initialized metadata file
-#            self.experiment_file = squirrel.get(self.date, self.data_directory)
-#        except FileNotFoundError as e:
-#            raise NameError('Initialize experiment file first using initialize_experiment_file')
             
+        # Define screen(s) for the rig you use
+        w = 14.2e-2; h = 9e-2; # meters of image at projection plane, screen only shows 9x9 of this
+        zDistToScreen = 5.36e-2; # meters
+        screens = [Screen(width=w, height=h, rotation=None, offset=(0, zDistToScreen, 0), id=ScreenID, fullscreen=FullScreen, vsync=None,
+                     square_side=2e-2, square_loc='lr')]
+
         # # #  List of your protocol IDs # # # 
         self.protocolIDList = ['CheckerboardWhiteNoise',
                                'RotatingSquareGrating',
                                'MovingRectangle']
         
-            
-        # # # Define screen(s) for the rig you use # # #
-        w = 14.2e-2; h = 9e-2; # m of image at projection plane, screen only shows 9x9 of this
-        zDistToScreen = 5.36e-2; # m
-    
-        screens = [Screen(width=w, height=h, rotation=None, offset=(0, zDistToScreen, 0), id=ScreenID, fullscreen=FullScreen, vsync=None,
-                     square_side=2e-2, square_loc='lr')]
+        # # # Start the stim manager and set the frame tracker square to black # # #
         self.manager = StimManager(screens)
         self.manager.black_corner_square()
-
-
     def getEpochParameters(self, protocol_ID, protocol_parameters, epoch):
         """
         This function selects the stimulus parameters sent to FlyStim for each epoch
