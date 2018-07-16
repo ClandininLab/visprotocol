@@ -5,8 +5,6 @@ Created on Thu Jun 21 10:51:42 2018
 
 @author: mhturner
 """
-
-import MhtProtocol
 import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
@@ -28,14 +26,19 @@ class ImagingExperimentGUI(QWidget):
         self.ignoreWarnings = False
         
         # Link to a protocol object
-        items = ('MhtProtocol', '')
+        items = ('MhtProtocol','ExampleProtocol', '')
         item, ok = QInputDialog.getItem(self, "select user protocol", 
          "Available protocols", items, 0, False)
         
         if item == 'MhtProtocol':
+            import MhtProtocol
             self.protocolObject = MhtProtocol.MhtProtocol();
+        elif item == 'ExampleProtocol':
+            import ExampleProtocol
+            self.protocolObject = ExampleProtocol.ExampleProtocol();
         elif item == '':
-            self.protocolObject = MhtProtocol.MhtProtocol();
+            import ExampleProtocol
+            self.protocolObject = ExampleProtocol.ExampleProtocol();
             
         self.initUI()
 
@@ -186,7 +189,7 @@ class ImagingExperimentGUI(QWidget):
             dialog = QDialog()
             
             dialog.ui = InitializeExperimentGUI(parent = dialog)
-            dialog.ui.setupUI(self.protocolObject, dialog)
+            dialog.ui.setupUI(self, dialog)
             dialog.setFixedSize(300,200)
             dialog.exec_()
             
@@ -194,10 +197,6 @@ class ImagingExperimentGUI(QWidget):
             self.protocolObject.data_directory = dialog.ui.le_DataDirectory.text()
             self.protocolObject.experimenter = dialog.ui.le_Experimenter.text()
             self.protocolObject.rig = dialog.ui.le_Rig.text()
-            self.protocolObject.initializeExperimentFile()
-            
-            self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
-            self.updateStatusLabel()
             
         elif sender.text() == 'Load experiment':
             filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
@@ -257,9 +256,10 @@ class ImagingExperimentGUI(QWidget):
         self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
         
 class InitializeExperimentGUI(QWidget):
-   def setupUI(self, protocolObject, parent = None):
+   def setupUI(self, experimentGuiObject, parent = None):
       super(InitializeExperimentGUI, self).__init__(parent)
       self.parent = parent
+      self.experimentGuiObject = experimentGuiObject
       layout = QFormLayout()
       
       label_FileName = QLabel('File Name:')
@@ -270,15 +270,15 @@ class InitializeExperimentGUI(QWidget):
       
       button_SelectDirectory = QPushButton("Select Directory...", self)
       button_SelectDirectory.clicked.connect(self.onPressedDirectoryButton) 
-      self.le_DataDirectory = QLineEdit(protocolObject.data_directory)
+      self.le_DataDirectory = QLineEdit(self.experimentGuiObject.protocolObject.data_directory)
       layout.addRow(button_SelectDirectory, self.le_DataDirectory)
       
       label_Experimenter = QLabel('Experimenter:')
-      self.le_Experimenter = QLineEdit(protocolObject.experimenter)
+      self.le_Experimenter = QLineEdit(self.experimentGuiObject.protocolObject.experimenter)
       layout.addRow(label_Experimenter, self.le_Experimenter)
       
       label_Rig = QLabel('Rig:')
-      self.le_Rig = QLineEdit(protocolObject.rig)
+      self.le_Rig = QLineEdit(self.experimentGuiObject.protocolObject.rig)
       layout.addRow(label_Rig,self.le_Rig)
       
       self.label_status = QLabel('Enter experiment info')
@@ -291,10 +291,21 @@ class InitializeExperimentGUI(QWidget):
       self.setLayout(layout)
 
    def onPressedEnterButton(self):
-       if os.path.isfile(os.path.join(self.le_DataDirectory.text(), self.le_FileName.text()) + '.pkl'):
+       self.experimentGuiObject.protocolObject.experiment_file_name = self.le_FileName.text()
+       self.experimentGuiObject.protocolObject.data_directory = self.le_DataDirectory.text()
+       self.experimentGuiObject.protocolObject.experimenter = self.le_Experimenter.text()
+       self.experimentGuiObject.protocolObject.rig = self.le_Rig.text()
+
+       if os.path.isfile(os.path.join(self.experimentGuiObject.protocolObject.data_directory,
+                                      self.experimentGuiObject.protocolObject.experiment_file_name) + '.pkl'):
            self.label_status.setText('Experiment file already exists!')
+       elif not os.path.isdir(self.experimentGuiObject.protocolObject.data_directory):
+           self.label_status.setText('Data directory does not exist!')
        else: 
            self.label_status.setText('Data entered')
+           self.experimentGuiObject.currentExperimentLabel.setText(self.experimentGuiObject.protocolObject.experiment_file_name)
+           self.experimentGuiObject.protocolObject.initializeExperimentFile()
+           self.experimentGuiObject.updateStatusLabel()
            self.close()
            self.parent.close()
            

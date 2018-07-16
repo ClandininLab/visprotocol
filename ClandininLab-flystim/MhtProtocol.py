@@ -66,8 +66,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
             start_seed = int(np.random.choice(range(int(1e6))))
 
-            epoch_parameters = {'theta_period':2*protocol_parameters['checker_width'],
-                                'phi_period':2*protocol_parameters['checker_width'],
+            epoch_parameters = {'theta_period':protocol_parameters['checker_width'],
+                                'phi_period':protocol_parameters['checker_width'],
                                 'rand_min':0.0,
                                 'rand_max':1.0,
                                 'start_seed':start_seed,
@@ -183,7 +183,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             params = {'square_width':10.0,
                        'color':0.0,
                        'elevation_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], # 60...120
-                       'azimuth_locations': [40.0, 50.0, 60.0, 70.0, 80.0, 90.0], #40...140
+                       'azimuth_locations': [40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0], #40...140
                        'speed':60.0,
                        'randomize_order':True}
         else:
