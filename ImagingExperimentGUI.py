@@ -10,8 +10,8 @@ import MhtProtocol
 import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
-                             QMessageBox)
-import PyQt5.QtGui as Gui
+                             QMessageBox, QCheckBox)
+import PyQt5.QtGui as QtGui
 from datetime import datetime
 import squirrel
 import os
@@ -59,44 +59,44 @@ class ImagingExperimentGUI(QWidget):
         self.grid.addWidget(self.statusLabel, 2 , 0, 1, 2)
         self.updateStatusLabel()
         
-        ct = 0
+        self.run_params_ct = 0
         # Run parameters list
         for key, value in self.protocolObject.run_parameters.items():
             if key not in ['protocol_ID', 'run_start_time']:
-                ct += 1
+                self.run_params_ct += 1
                 newLabel = QLabel(key + ':')
-                self.grid.addWidget(newLabel, 2 + ct , 0)
+                self.grid.addWidget(newLabel, 2 + self.run_params_ct , 0)
                 
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
-                    self.run_parameter_input[key].setValidator(Gui.QIntValidator())
+                    self.run_parameter_input[key].setValidator(QtGui.QIntValidator())
                 elif isinstance(value, float):
-                    self.run_parameter_input[key].setValidator(Gui.QDoubleValidator())
+                    self.run_parameter_input[key].setValidator(QtGui.QDoubleValidator())
                 self.run_parameter_input[key].setText(str(value))
-                self.grid.addWidget(self.run_parameter_input[key], 2 + ct, 1, 1, 1)
-        
+                self.grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
+         
         
         # Start button:
         startButton = QPushButton("Start", self)
         startButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(startButton, 7, 0)
+        self.grid.addWidget(startButton, self.run_params_ct+3, 0)
         
         # Stop button:
         stopButton = QPushButton("Stop", self)
         stopButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(stopButton, 7, 1)
+        self.grid.addWidget(stopButton, self.run_params_ct+3, 1)
         
         # Enter note button:
         noteButton = QPushButton("Enter note", self)
         noteButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(noteButton, 8, 0)
+        self.grid.addWidget(noteButton, self.run_params_ct+4, 0)
 
         # Notes field:
         self.notesEdit = QTextEdit()
-        self.grid.addWidget(self.notesEdit, 8, 1, 1, 1)
+        self.grid.addWidget(self.notesEdit, self.run_params_ct+4, 1, 1, 1)
         
         self.setLayout(self.grid) 
-        self.setGeometry(300, 300, 350, 500)
+        self.setGeometry(300, 300, 450, 500)
         self.setWindowTitle('FlyStim')    
         self.show()
         
@@ -127,22 +127,26 @@ class ImagingExperimentGUI(QWidget):
         self.protocolObject.protocol_parameters = self.protocolObject.getParameterDefaults(self.protocolObject.run_parameters['protocol_ID'])
         
         # update display window to show parameters for this protocol
-        # TODO: handle lists of parameters somehow
         self.protocol_parameter_input = {}; # clear old input params dict
         ct = 0
         for key, value in self.protocolObject.protocol_parameters.items():
             ct += 1
             newLabel = QLabel(key + ':')
-            self.grid.addWidget(newLabel, 8 + ct , 0)
-            self.protocol_parameter_input[key] = QLineEdit()
-            if isinstance(value, int):
-                self.protocol_parameter_input[key].setValidator(Gui.QIntValidator())
-            elif isinstance(value, float):
-                self.protocol_parameter_input[key].setValidator(Gui.QDoubleValidator())
-#            elif isinstance(value, list):
-                
-            self.protocol_parameter_input[key].setText(str(value))
-            self.grid.addWidget(self.protocol_parameter_input[key], 8 + ct, 1, 1, 1)
+            self.grid.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
+            
+            if isinstance(value, bool):
+                self.protocol_parameter_input[key] = QCheckBox()
+                self.protocol_parameter_input[key].setChecked(value)
+                self.grid.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 1)
+            else:
+                self.protocol_parameter_input[key] = QLineEdit()
+                if isinstance(value, int):
+                    self.protocol_parameter_input[key].setValidator(QtGui.QIntValidator())
+                elif isinstance(value, float):
+                    self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
+                    
+                self.protocol_parameter_input[key].setText(str(value)) #set to default value
+                self.grid.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 1)
             
         self.updateStatusLabel()
         self.show()
@@ -173,7 +177,7 @@ class ImagingExperimentGUI(QWidget):
         elif sender.text() == 'Enter note':
             self.noteText = self.notesEdit.toPlainText()
             if self.protocolObject.experiment_file is None:
-                self.notesEdit.setTextColor(Gui.QColor("Red"))
+                self.notesEdit.setTextColor(QtGui.QColor("Red"))
             else: 
                 self.protocolObject.addNoteToExperimentFile(self.noteText) # save note to expt file
                 self.notesEdit.clear() # clear notes box
@@ -206,10 +210,10 @@ class ImagingExperimentGUI(QWidget):
 
     def resetLayout(self):
         for ii in range(len(self.protocolObject.protocol_parameters.items())):
-            item = self.grid.itemAtPosition(9+ii,0)
+            item = self.grid.itemAtPosition(self.run_params_ct+5+ii,0)
             if item != None:
                 item.widget().deleteLater()
-            item = self.grid.itemAtPosition(9+ii,1)
+            item = self.grid.itemAtPosition(self.run_params_ct+5+ii,1)
             if item != None:
                 item.widget().deleteLater()
         self.show()
@@ -235,9 +239,20 @@ class ImagingExperimentGUI(QWidget):
             self.protocolObject.run_parameters[key] = float(self.run_parameter_input[key].text())
             
         for key, value in self.protocol_parameter_input.items():
-            self.protocolObject.protocol_parameters[key] = float(self.protocol_parameter_input[key].text())
+            if isinstance(self.protocol_parameter_input[key],QCheckBox): #QCheckBox
+                self.protocolObject.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
+            else: #QLineEdit
+                new_param_entry = self.protocol_parameter_input[key].text()
+                
+                if new_param_entry[0] == '[': #User trying to enter a list of values
+                    to_a_list = []
+                    for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
+                    self.protocolObject.protocol_parameters[key] = to_a_list
+                else: 
+                    self.protocolObject.protocol_parameters[key] = float(new_param_entry)
+                # TODO: handle params that are meant to be strings
         
-        # Send run and protocol parameters to protocol control
+        # Send run and protocol parameters to protocol object
         self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
         
 class InitializeExperimentGUI(QWidget):

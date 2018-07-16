@@ -11,6 +11,8 @@ handle things like initializing the screen, and passing parameters to flystim
 
 @author: mhturner
 """
+# TODO: hdf5 experiment file instead of pickle file?
+
 
 from time import sleep
 from flystim.launch import MultiCall
@@ -21,13 +23,13 @@ from PyQt5.QtWidgets import QApplication
 class ClandininLabProtocol():
     def __init__(self):
         super().__init__()
-        # TODO: background color and clear color == and run param
         # Run parameters that are constant across all protocols
         self.run_parameters = {'protocol_ID':'',
               'num_epochs':5,
               'pre_time':0.5,
               'stim_time':5,
-              'tail_time':0.5}
+              'tail_time':0.5,
+              'idle_color':0.5}
         self.protocol_parameters = {}
         self.stop = False
         self.num_epochs_completed = 0
@@ -40,6 +42,8 @@ class ClandininLabProtocol():
         self.experiment_file_name = None
         
     def start(self, run_parameters, protocol_parameters, port=62632):
+        self.stop = False
+        self.manager.set_idle_background(run_parameters['idle_color'])
         run_parameters['run_start_time'] = datetime.now().strftime('%H:%M:%S.%f')[:-4]
         new_run = {'run_parameters':run_parameters,
                    'epoch': []} # list epoch will grow with each iteration
@@ -55,11 +59,13 @@ class ClandininLabProtocol():
                 self.stop = False
                 break
             #  get stimulus parameters for this epoch
-            stimulus_ID, epoch_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
+            stimulus_ID, epoch_parameters, convenience_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
  
             # update epoch metadata
             epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-            new_run['epoch'].append({'epoch_time':epoch_time, 'epoch_parameters':epoch_parameters.copy()})
+            new_run['epoch'].append({'epoch_time':epoch_time,
+                   'epoch_parameters':epoch_parameters.copy(),
+                   'convenience_parameters':convenience_parameters.copy()})
             
             # send the stimulus to flystim
             passedParameters = epoch_parameters.copy()
