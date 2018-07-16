@@ -111,7 +111,6 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                 self.persistent_parameters = {'movement_axis_sequence':movement_axis_sequence,
                               'location_sequence':location_sequence}
                     
-            # TODO: handle True/False parameters
             draw_ind = np.mod(self.num_epochs_completed,len(self.persistent_parameters['location_sequence']))
             if draw_ind == 0 and protocol_parameters['randomize_order']:
                 rand_inds = np.random.permutation(len(self.persistent_parameters['location_sequence']))
@@ -187,7 +186,6 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'azimuth_locations': [40.0, 50.0, 60.0, 70.0, 80.0, 90.0], #40...140
                        'speed':60.0,
                        'randomize_order':True}
-        
         else:
             raise NameError('Unrecognized stimulus ID')         
             

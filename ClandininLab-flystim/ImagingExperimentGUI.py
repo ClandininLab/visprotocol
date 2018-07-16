@@ -204,8 +204,9 @@ class ImagingExperimentGUI(QWidget):
             self.protocolObject.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
             self.protocolObject.data_directory = os.path.split(filePath)[0]
             
-            self.protocolObject.experiment_file = squirrel.get(self.protocolObject.experiment_file_name, self.protocolObject.data_directory)
-            self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
+            if self.protocolObject.experiment_file_name is not '':
+                self.protocolObject.experiment_file = squirrel.get(self.protocolObject.experiment_file_name, self.protocolObject.data_directory)
+                self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
             self.updateStatusLabel()
 
     def resetLayout(self):
