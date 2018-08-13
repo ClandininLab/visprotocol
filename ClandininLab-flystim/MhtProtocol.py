@@ -7,10 +7,11 @@ Created on Thu Jun 21 10:20:02 2018
 """
 
 import ClandininLabProtocol
-from flystim.launch import StimManager
-from flystim.screen import Screen
+from flystim.launch import StimClient
 import numpy as np
 from sys import platform
+
+# TODO: send trigger for bruker acquisition
 
 class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
@@ -21,19 +22,6 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         elif platform == "win32": #Windows (rig computer)
             self.data_directory = '/Users/Main/Documents/Data'
 
-        # # # Parameters for the screen # # # 
-        if platform == "darwin": #OSX (laptop, for dev.)
-            FullScreen = False
-            ScreenID = 0
-        elif platform == "win32": #Windows (rig computer)
-            FullScreen = True
-            ScreenID = 1
-            
-        # Define screen(s) for the rig you use
-        w = 14.2e-2; h = 9e-2; # meters of image at projection plane, screen only shows 9x9 of this
-        zDistToScreen = 5.36e-2; # meters
-        screens = [Screen(width=w, height=h, rotation=None, offset=(0, zDistToScreen, 0), id=ScreenID, fullscreen=FullScreen, vsync=None,
-                     square_side=2e-2, square_loc='lr')]
     
         # # # Other metadata defaults. These can be changed in the gui as well # # #
         self.experimenter = 'MHT'
@@ -46,7 +34,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'MovingSquareMapping']
         
         # # # Start the stim manager and set the frame tracker square to black # # #
-        self.manager = StimManager(screens)
+        self.manager = StimClient() # use a server
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
     def getEpochParameters(self, protocol_ID, protocol_parameters, epoch):

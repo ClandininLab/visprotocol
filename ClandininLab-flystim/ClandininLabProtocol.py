@@ -12,7 +12,7 @@ handle things like initializing the screen, and passing parameters to flystim
 @author: mhturner
 """
 # TODO: hdf5 experiment file instead of pickle file?
-
+# TODO: port for remote server playing?
 
 from time import sleep
 from flystim.launch import MultiCall
