@@ -10,6 +10,7 @@ import ClandininLabProtocol
 from flystim.launch import StimClient
 import numpy as np
 from sys import platform
+from flystim.trajectory import RectangleTrajectory, Trajectory
 
 # TODO: send trigger for bruker acquisition
 
@@ -31,7 +32,9 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         self.protocolIDList = ['CheckerboardWhiteNoise',
                                'DriftingSquareGrating',
                                'MovingRectangle',
-                               'MovingSquareMapping']
+                               'ExpandingMovingSquare',
+                               'MovingSquareMapping',
+                               'FlickeringPatch']
         
         # # # Start the stim manager and set the frame tracker square to black # # #
         self.manager = StimClient() # use a server
@@ -54,7 +57,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
             start_seed = int(np.random.choice(range(int(1e6))))
 
-            epoch_parameters = {'theta_period':protocol_parameters['checker_width'],
+            epoch_parameters = {'name':stimulus_ID,
+                                'theta_period':protocol_parameters['checker_width'],
                                 'phi_period':protocol_parameters['checker_width'],
                                 'rand_min':0.0,
                                 'rand_max':1.0,
@@ -66,7 +70,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
             currentAngle = self.selectCurrentParameterFromList(protocol_parameters['angle'], randomize_flag = protocol_parameters['randomize_order'])
             
-            epoch_parameters = {'period':protocol_parameters['period'],
+            epoch_parameters = {'name':stimulus_ID,
+                                'period':protocol_parameters['period'],
                                 'duty_cycle':0.5,
                                 'rate':protocol_parameters['rate'],
                                 'color':protocol_parameters['color'],
@@ -76,18 +81,59 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         elif protocol_ID == 'MovingRectangle':
             stimulus_ID = 'MovingPatch'
             
-            elevation = protocol_parameters['elevation']
+            currentAngle = self.selectCurrentParameterFromList(protocol_parameters['angle'], randomize_flag = protocol_parameters['randomize_order'])
+            
+            centerX = protocol_parameters['center'][0]
+            centerY = protocol_parameters['center'][1]
             speed = protocol_parameters['speed']
             stim_time = self.run_parameters['stim_time']
-            # TODO: handle high level trajectory definitions for this protocol
-            startPoint = (0,0,elevation)
-            endPoint = (stim_time,0 + speed * stim_time,elevation)            
+            distance_to_travel = speed * stim_time
             
-            epoch_parameters = {'theta_width':protocol_parameters['theta_width'],
-                                'phi_width':protocol_parameters['phi_width'],
-                                'color':protocol_parameters['color'],
+            startX = (0,centerX - np.cos(np.radians(currentAngle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(currentAngle)) * distance_to_travel/2)
+            startY = (0,centerY - np.sin(np.radians(currentAngle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(currentAngle)) * distance_to_travel/2)
+
+            trajectory = RectangleTrajectory(x=[startX, endX],
+                                                  y=[startY, endY],
+                                                  angle=currentAngle,
+                                                  h = protocol_parameters['height'],
+                                                  w = protocol_parameters['width'],
+                                                  color = protocol_parameters['color']).to_dict()   
+
+            epoch_parameters = {'name':stimulus_ID,
                                 'background':self.run_parameters['idle_color'],
-                                'trajectory':[startPoint, endPoint]}
+                                'trajectory':trajectory}
+            convenience_parameters = {'currentAngle': currentAngle}
+            
+        elif protocol_ID == 'ExpandingMovingSquare':
+            stimulus_ID = 'MovingPatch'
+            
+            currentWidth = self.selectCurrentParameterFromList(protocol_parameters['width'], randomize_flag = protocol_parameters['randomize_order'])
+            
+            centerX = protocol_parameters['center'][0]
+            centerY = protocol_parameters['center'][1]
+            angle = protocol_parameters['angle']
+            speed = protocol_parameters['speed']
+            stim_time = self.run_parameters['stim_time']
+            distance_to_travel = speed * stim_time
+            
+            startX = (0,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+
+            trajectory = RectangleTrajectory(x = [startX, endX],
+                                                  y = [startY, endY],
+                                                  angle = angle,
+                                                  h = currentWidth,
+                                                  w = currentWidth,
+                                                  color = protocol_parameters['color']).to_dict()   
+
+            epoch_parameters = {'name':stimulus_ID,
+                                'background':self.run_parameters['idle_color'],
+                                'trajectory':trajectory}
+            convenience_parameters = {'currentWidth': currentWidth}
 
         elif protocol_ID == 'MovingSquareMapping':
             stimulus_ID = 'MovingPatch'
@@ -107,9 +153,9 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                 
             # select current locations from sequence
             if self.persistent_parameters['movement_axis_sequence'][draw_ind] == 1:
-                current_movement_axis = 'azimuth'
+                current_search_axis = 'azimuth' #current location is an azimuth, movement along elevation
             elif self.persistent_parameters['movement_axis_sequence'][draw_ind] == 2:
-                current_movement_axis = 'elevation'
+                current_search_axis = 'elevation' #current location is an elevation, movement along azimuth
             current_location = self.persistent_parameters['location_sequence'][draw_ind]
 
             #where does the square begin? Should be just off screen...
@@ -117,28 +163,62 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             speed = protocol_parameters['speed']
             stim_time = self.run_parameters['stim_time']
             
-            if current_movement_axis == 'elevation': #movement along elevation, for a given azimuth
-                startPoint = (0,startingAzimuth,current_location)
-                endPoint = (stim_time,startingAzimuth + speed * stim_time,current_location)    
-            elif current_movement_axis == 'azimuth': #movement along azimuth, for a given elevation
-                startPoint = (0,current_location,startingElevation)
-                endPoint = (stim_time,current_location, startingElevation + speed * stim_time)     
+            if current_search_axis == 'elevation': #move along x (azimuth)
+                startX = (0,startingAzimuth)
+                endX = (stim_time,startingAzimuth + speed * stim_time)    
+                startY = (0,current_location)
+                endY = (stim_time,current_location)    
+            elif current_search_axis == 'azimuth':  #move along y (elevation)
+                startX = (0,current_location)
+                endX = (stim_time,current_location)
+                startY = (0,startingElevation)
+                endY = (stim_time,startingElevation + speed * stim_time)   
 
-            epoch_parameters = {'theta_width':protocol_parameters['square_width'],
-                                'phi_width':protocol_parameters['square_width'],
-                                'color':protocol_parameters['color'],
-                                'background':self.run_parameters['idle_color'],
-                                'trajectory':[startPoint, endPoint]}
+            trajectory = RectangleTrajectory(x = [startX, endX],
+                                                 y = [startY, endY],
+                                                 angle=0,
+                                                 h = protocol_parameters['square_width'],
+                                                 w = protocol_parameters['square_width'],
+                                                 color = protocol_parameters['color']).to_dict()
             
+            epoch_parameters = {'name':stimulus_ID,
+                                'background':self.run_parameters['idle_color'],
+                                'trajectory': trajectory}
+
             convenience_parameters = {'speed':speed,
-                                      'current_movement_axis':current_movement_axis,
+                                      'current_search_axis':current_search_axis,
                                       'current_location':current_location,
                                       'randomize_order':protocol_parameters['randomize_order']}
+            
+            
+        elif protocol_ID == 'FlickeringPatch':
+            stimulus_ID = 'MovingPatch'
+            stim_time = self.run_parameters['stim_time']
+            
+            current_temporal_frequency = self.selectCurrentParameterFromList(protocol_parameters['temporal_frequency'], randomize_flag = protocol_parameters['randomize_order'])
+
+            trajectory_sample_rate = 100 # Hz
+            nPoints = trajectory_sample_rate * stim_time
+            time_points = np.linspace(0, stim_time, nPoints)
+            color_values = np.sin(time_points * 2 * np.pi * current_temporal_frequency)
+            color_trajectory = list(zip(time_points,color_values))
+
+            trajectory = RectangleTrajectory(x = protocol_parameters['center'][0],
+                                                  y = protocol_parameters['center'][1],
+                                                  angle = 0,
+                                                  h = protocol_parameters['height'],
+                                                  w = protocol_parameters['width'],
+                                                  color = color_trajectory).to_dict()   
+
+            epoch_parameters = {'name':stimulus_ID,
+                                'background':self.run_parameters['idle_color'],
+                                'trajectory':trajectory}
+            convenience_parameters = {'current_temporal_frequency':current_temporal_frequency}
             
         else:
             raise NameError('Unrecognized stimulus ID')
             
-        return stimulus_ID, epoch_parameters, convenience_parameters
+        return epoch_parameters, convenience_parameters
     
     
     def getParameterDefaults(self, protocol_ID):
@@ -149,7 +229,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         to lower-level flystim parameters in your getEpochParameters() function
         """
         if protocol_ID == 'CheckerboardWhiteNoise':
-            params = {'checker_width':5.0,
+            params = {'checker_width':10.0,
                        'update_rate':60.0}
             
         elif protocol_ID == 'DriftingSquareGrating':
@@ -161,11 +241,21 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'randomize_order':True}
             
         elif protocol_ID == 'MovingRectangle':
-            params = {'theta_width':10.0,
-                       'phi_width':30.0,
+            params = {'width':10.0,
+                       'height':30.0,
                        'color':0.0,
-                       'elevation': 90.0,
-                       'speed':60.0}
+                       'center': [90.0, 90.0],
+                       'speed':60.0,
+                       'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
+                       'randomize_order':True}
+            
+        elif protocol_ID == 'ExpandingMovingSquare':
+            params = {'width':[5.0, 10.0, 20.0, 30.0, 40.0, 50.0],
+                       'color':0.0,
+                       'center': [90.0, 90.0],
+                       'speed':60.0,
+                       'angle': 0.0,
+                       'randomize_order':True}
             
         elif protocol_ID == 'MovingSquareMapping':
             params = {'square_width':10.0,
@@ -173,6 +263,13 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'elevation_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], # 60...120
                        'azimuth_locations': [40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0], #40...140
                        'speed':60.0,
+                       'randomize_order':True}
+            
+        elif protocol_ID == 'FlickeringPatch':
+            params = {'height':10.0,
+                       'width':10.0,
+                       'center': [90.0, 90.0],
+                       'temporal_frequency': [2.0, 4.0, 8.0, 16.0],
                        'randomize_order':True}
         else:
             raise NameError('Unrecognized stimulus ID')         

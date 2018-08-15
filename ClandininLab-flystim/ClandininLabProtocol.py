@@ -27,7 +27,7 @@ class ClandininLabProtocol():
         self.run_parameters = {'protocol_ID':'',
               'num_epochs':5,
               'pre_time':0.5,
-              'stim_time':5,
+              'stim_time':5.0,
               'tail_time':0.5,
               'idle_color':0.5}
         self.protocol_parameters = {}
@@ -59,7 +59,7 @@ class ClandininLabProtocol():
                 self.stop = False
                 break
             #  get stimulus parameters for this epoch
-            stimulus_ID, epoch_parameters, convenience_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
+            epoch_parameters, convenience_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
  
             # update epoch metadata
             epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
@@ -69,7 +69,6 @@ class ClandininLabProtocol():
             
             # send the stimulus to flystim
             passedParameters = epoch_parameters.copy()
-            passedParameters['name'] = stimulus_ID
             multicall = MultiCall(self.manager)
             multicall.load_stim(**passedParameters)
             

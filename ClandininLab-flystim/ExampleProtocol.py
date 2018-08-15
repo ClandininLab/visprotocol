@@ -53,7 +53,8 @@ class ExampleProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
             start_seed = int(np.random.choice(range(int(1e6))))
 
-            epoch_parameters = {'theta_period':protocol_parameters['checker_width'],
+            epoch_parameters = {'name':stimulus_ID,
+                                'theta_period':protocol_parameters['checker_width'],
                                 'phi_period':protocol_parameters['checker_width'],
                                 'rand_min':0.0,
                                 'rand_max':1.0,
@@ -65,7 +66,8 @@ class ExampleProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
             currentAngle = self.selectCurrentParameterFromList(protocol_parameters['angle'], randomize_flag = protocol_parameters['randomize_order'])
             
-            epoch_parameters = {'period':protocol_parameters['period'],
+            epoch_parameters = {'name':stimulus_ID,
+                                'period':protocol_parameters['period'],
                                 'duty_cycle':0.5,
                                 'rate':protocol_parameters['rate'],
                                 'color':protocol_parameters['color'],
@@ -75,7 +77,7 @@ class ExampleProtocol(ClandininLabProtocol.ClandininLabProtocol):
         else:
             raise NameError('Unrecognized stimulus ID')
             
-        return stimulus_ID, epoch_parameters, convenience_parameters
+        return epoch_parameters, convenience_parameters
     
     
     def getParameterDefaults(self, protocol_ID):
