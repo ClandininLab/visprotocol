@@ -11,14 +11,13 @@ handle things like initializing the screen, and passing parameters to flystim
 
 @author: mhturner
 """
-# TODO: hdf5 experiment file instead of pickle file?
-# TODO: port for remote server playing?
 
 from time import sleep
 from flystim.launch import MultiCall
 from datetime import datetime
-import squirrel
 from PyQt5.QtWidgets import QApplication
+import h5py
+import os
 
 class ClandininLabProtocol():
     def __init__(self):
@@ -41,14 +40,21 @@ class ClandininLabProtocol():
         self.experiment_file = None
         self.experiment_file_name = None
         
-    def start(self, run_parameters, protocol_parameters, port=62632):
+    def start(self, run_parameters, protocol_parameters):
         self.stop = False
         self.manager.set_idle_background(run_parameters['idle_color'])
-        run_parameters['run_start_time'] = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-        new_run = {'run_parameters':run_parameters,
-                   'epoch': []} # list epoch will grow with each iteration
+        run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+        
         if self.experiment_file is not None:
-            self.experiment_file['epoch_run'].append(new_run)
+            # create a new epoch run group
+            self.reOpenExperimentFile()
+            epochRuns = self.experiment_file['/epoch_runs']
+            newEpochRun = epochRuns.create_group(run_start_time)
+            newEpochRun.attrs['run_start_time'] = run_start_time
+            for key in run_parameters: #save out run parameters as an attribute of this epoch run
+                newEpochRun.attrs[key] = run_parameters[key]
+            self.experiment_file.close()
+
         else:
             print('Warning - you are not saving your metadata!')
     
@@ -61,12 +67,25 @@ class ClandininLabProtocol():
             #  get stimulus parameters for this epoch
             epoch_parameters, convenience_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
  
-            # update epoch metadata
-            epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-            new_run['epoch'].append({'epoch_time':epoch_time,
-                   'epoch_parameters':epoch_parameters.copy(),
-                   'convenience_parameters':convenience_parameters.copy()})
-            
+            if self.experiment_file is not None:
+                # update epoch metadata
+                self.reOpenExperimentFile()
+                epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                newEpoch = self.experiment_file['/epoch_runs/' + run_start_time].create_group('epoch_'+str(self.num_epochs_completed))
+                newEpoch.attrs['epoch_time'] = epoch_time
+                
+                epochParametersGroup = newEpoch.create_group('epoch_parameters')
+                for key in epoch_parameters: #save out epoch parameters
+                    newValue = epoch_parameters[key]
+                    if type(newValue) is dict: #TODO: Find a way to split this into subgroups. Hacky work around. 
+                        newValue = str(newValue)
+                    epochParametersGroup.attrs[key] = newValue
+              
+                convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
+                for key in convenience_parameters: #save out convenience parameters
+                    convenienceParametersGroup.attrs[key] = convenience_parameters[key]
+                self.experiment_file.close()
+                
             # send the stimulus to flystim
             passedParameters = epoch_parameters.copy()
             multicall = MultiCall(self.manager)
@@ -90,32 +109,34 @@ class ClandininLabProtocol():
             sleep(run_parameters['tail_time'])
             
             self.num_epochs_completed += 1
-            
-            # update experiment_file now, in case of interrupt in mid-run
-            if self.experiment_file is not None:
-                squirrel.stash(self.experiment_file, self.experiment_file_name , self.data_directory)
 
     def addNoteToExperimentFile(self, noteText):
         noteTime = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-        newNoteEntry = dict({'noteTime':noteTime, 'noteText':noteText})
-        self.experiment_file['notes'].append(newNoteEntry)
-        # update experiment_file
-        squirrel.stash(self.experiment_file, self.experiment_file_name , self.data_directory)
-        
+        self.reOpenExperimentFile()
+        notes = self.experiment_file['/notes']
+        notes.attrs[noteTime] = noteText
+        self.experiment_file.close()
+
     def initializeExperimentFile(self):
+        # Create HDF5 file
+        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'w-')
+        
+        # Experiment date/time
         init_now = datetime.now()
         date = init_now.isoformat()[:-16]
         init_time = init_now.strftime("%H:%M:%S")
         
-        experiment_metadata = {'date':date, 
-                               'init_time':init_time,
-                               'data_directory':self.data_directory,
-                               'experimenter':self.experimenter,
-                               'rig':self.rig}
-    
-        self.experiment_file = {'experiment_metadata':experiment_metadata,
-                           'epoch_run':[],
-                           'notes':[]}
+        # Write experiment metadata as top-level attributes
+        self.experiment_file.attrs['date'] = date;
+        self.experiment_file.attrs['init_time'] = init_time;
+        self.experiment_file.attrs['data_directory'] = self.data_directory;
+        self.experiment_file.attrs['experimenter'] = self.experimenter;
+        self.experiment_file.attrs['rig'] = self.rig;
         
-        squirrel.stash(self.experiment_file, self.experiment_file_name , self.data_directory)
+        # Create a top-level group for epoch runs and user-entered notes
+        self.experiment_file.create_group('epoch_runs')
+        self.experiment_file.create_group('notes')
+        self.experiment_file.close()
         
+    def reOpenExperimentFile(self):
+        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')

@@ -7,21 +7,26 @@ Created on Thu Jun 21 10:20:02 2018
 """
 
 import ClandininLabProtocol
-from flystim.launch import StimClient
+from flystim.launch import StimClient, StimManager
+from flystim.screen import Screen
 import numpy as np
 from sys import platform
 from flystim.trajectory import RectangleTrajectory, Trajectory
 
 # TODO: send trigger for bruker acquisition
-
+# TODO: split up sub-protocols maybe?
 class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
         super().__init__()
         # # # Define your data directory # # #             
         if platform == "darwin": #OSX (laptop, for dev.)
             self.data_directory = '/Users/mhturner/documents/stashedObjects'
+            addr = ('127.0.0.1', 60629)
+            use_server = False
         elif platform == "win32": #Windows (rig computer)
             self.data_directory = '/Users/Main/Documents/Data'
+            addr = ('192.168.1.232', 60629)
+            use_server = True
 
     
         # # # Other metadata defaults. These can be changed in the gui as well # # #
@@ -37,7 +42,12 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'FlickeringPatch']
         
         # # # Start the stim manager and set the frame tracker square to black # # #
-        self.manager = StimClient(addr = ('192.168.1.232', 60629)) # use a server
+        if use_server:
+            self.manager = StimClient(addr = addr) # use a server on rig computer
+        else:
+            screens = [Screen(fullscreen=False, vsync=None)]
+            self.manager = StimManager(screens)
+        
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
     def getEpochParameters(self, protocol_ID, protocol_parameters, epoch):

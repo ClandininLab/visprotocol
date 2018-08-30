@@ -11,10 +11,10 @@ from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayou
                              QMessageBox, QCheckBox)
 import PyQt5.QtGui as QtGui
 from datetime import datetime
-import squirrel
 import os
 
 # TODO: merge data manager / source manager GUI into this as a window ("start new fly" button)
+# TODO: handle params that are meant to be strings or floats. Generally work on restricting user input so no unexpected types get through and crash the thing
 
 class ImagingExperimentGUI(QWidget):
     
@@ -204,7 +204,8 @@ class ImagingExperimentGUI(QWidget):
             self.protocolObject.data_directory = os.path.split(filePath)[0]
             
             if self.protocolObject.experiment_file_name is not '':
-                self.protocolObject.experiment_file = squirrel.get(self.protocolObject.experiment_file_name, self.protocolObject.data_directory)
+                self.protocolObject.reOpenExperimentFile()
+                self.protocolObject.experiment_file.close()
                 self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
             self.updateStatusLabel()
 
@@ -250,8 +251,7 @@ class ImagingExperimentGUI(QWidget):
                     self.protocolObject.protocol_parameters[key] = to_a_list
                 else: 
                     self.protocolObject.protocol_parameters[key] = float(new_param_entry)
-                # TODO: handle params that are meant to be strings
-        
+
         # Send run and protocol parameters to protocol object
         self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
         
@@ -297,7 +297,7 @@ class InitializeExperimentGUI(QWidget):
        self.experimentGuiObject.protocolObject.rig = self.le_Rig.text()
 
        if os.path.isfile(os.path.join(self.experimentGuiObject.protocolObject.data_directory,
-                                      self.experimentGuiObject.protocolObject.experiment_file_name) + '.pkl'):
+                                      self.experimentGuiObject.protocolObject.experiment_file_name) + '.hdf5'):
            self.label_status.setText('Experiment file already exists!')
        elif not os.path.isdir(self.experimentGuiObject.protocolObject.data_directory):
            self.label_status.setText('Data directory does not exist!')
