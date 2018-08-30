@@ -37,7 +37,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'FlickeringPatch']
         
         # # # Start the stim manager and set the frame tracker square to black # # #
-        self.manager = StimClient() # use a server
+        self.manager = StimClient(addr = ('192.168.1.232', 60629)) # use a server
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
     def getEpochParameters(self, protocol_ID, protocol_parameters, epoch):
