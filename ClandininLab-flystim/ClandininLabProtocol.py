@@ -18,6 +18,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import QApplication
 import h5py
 import os
+# TODO: fly/source handling. Hierarchial or linked source?
 
 class ClandininLabProtocol():
     def __init__(self):

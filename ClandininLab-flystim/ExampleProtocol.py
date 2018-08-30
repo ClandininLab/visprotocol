@@ -25,7 +25,7 @@ class ExampleProtocol(ClandininLabProtocol.ClandininLabProtocol):
                      square_side=2e-2, square_loc='lr')]
     
         # # # Other metadata defaults. These can be changed in the gui as well # # #
-        self.experimenter = 'Max'
+        self.experimenter = 'MyName'
         self.rig = 'Bruker'
 
         # # #  List of your protocol IDs # # # 

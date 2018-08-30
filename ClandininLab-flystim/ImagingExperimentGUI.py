@@ -14,7 +14,7 @@ from datetime import datetime
 import os
 
 # TODO: merge data manager / source manager GUI into this as a window ("start new fly" button)
-# TODO: handle params that are meant to be strings or floats. Generally work on restricting user input so no unexpected types get through and crash the thing
+# TODO: handle params that are meant to be strings
 
 class ImagingExperimentGUI(QWidget):
     
@@ -72,13 +72,15 @@ class ImagingExperimentGUI(QWidget):
                 
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
-                    self.run_parameter_input[key].setValidator(QtGui.QIntValidator())
+                    validator = QtGui.QIntValidator()
+                    validator.setBottom(0)
                 elif isinstance(value, float):
-                    self.run_parameter_input[key].setValidator(QtGui.QDoubleValidator())
+                    validator = QtGui.QDoubleValidator()
+                    validator.setBottom(0)
+                self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
                 self.grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
          
-        
         # Start button:
         startButton = QPushButton("Start", self)
         startButton.clicked.connect(self.onPressedButton) 
@@ -119,13 +121,13 @@ class ImagingExperimentGUI(QWidget):
         
         # Current imaging series counter
         newLabel = QLabel('series counter:')
-        self.grid.addWidget(newLabel, 5 , 2)
+        self.grid.addWidget(newLabel, 7 , 2)
         self.series_counter_input = QSpinBox()
         self.series_counter_input.setMinimum(1)
         self.series_counter_input.setMaximum(1000)
         self.series_counter_input.setValue(1)
         self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
-        self.grid.addWidget(self.series_counter_input, 6, 2)
+        self.grid.addWidget(self.series_counter_input, 8, 2)
 
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
@@ -217,7 +219,7 @@ class ImagingExperimentGUI(QWidget):
                 self.protocolObject.reOpenExperimentFile()
                 self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
                 # update series count to reflect already-collected series
-                largest_prior_value = max(list(map(int,list(self.protocolObject.experiment_file['/epoch_runs'].keys()))))
+                largest_prior_value = max(list(map(int,list(self.protocolObject.experiment_file['/epoch_runs'].keys()))), default = 0)
                 self.protocolObject.experiment_file.close()
                 self.series_counter_input.setValue(largest_prior_value + 1)
 
@@ -250,24 +252,26 @@ class ImagingExperimentGUI(QWidget):
             
     def onEnteredSeriesCount(self):
         self.protocolObject.series_count = self.series_counter_input.value()
-        self.protocolObject.reOpenExperimentFile()
-        existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
-        self.protocolObject.experiment_file.close()
-        if any(str(self.protocolObject.series_count) in x for x in existing_groups):
-            self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
-        else:
-            self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
+        if self.protocolObject.experiment_file is not None:
+            self.protocolObject.reOpenExperimentFile()
+            existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
+            self.protocolObject.experiment_file.close()
+            if any(str(self.protocolObject.series_count) in x for x in existing_groups):
+                self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
+            else:
+                self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
             
     def sendRun(self):
-        self.protocolObject.series_count = self.series_counter_input.value()
-        self.protocolObject.reOpenExperimentFile()
-        existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
-        self.protocolObject.experiment_file.close()
-        if any(str(self.protocolObject.series_count) in x for x in existing_groups):
-            self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
-            return #group already exists
-        else:
-            self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
+        if self.protocolObject.experiment_file is not None:
+            self.protocolObject.series_count = self.series_counter_input.value()
+            self.protocolObject.reOpenExperimentFile()
+            existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
+            self.protocolObject.experiment_file.close()
+            if any(str(self.protocolObject.series_count) in x for x in existing_groups):
+                self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
+                return #group already exists
+            else:
+                self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
         
         # Populate parameters from filled fields
         for key, value in self.run_parameter_input.items():
@@ -289,9 +293,10 @@ class ImagingExperimentGUI(QWidget):
         # Send run and protocol parameters to protocol object
         self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
         
-        # Advance the series_count:
-        self.series_counter_input.setValue(self.protocolObject.series_count + 1)
-        self.protocolObject.series_count = self.series_counter_input.value()
+        if self.protocolObject.experiment_file is not None:
+            # Advance the series_count:
+            self.series_counter_input.setValue(self.protocolObject.series_count + 1)
+            self.protocolObject.series_count = self.series_counter_input.value()
         
 class InitializeExperimentGUI(QWidget):
    def setupUI(self, experimentGuiObject, parent = None):
@@ -344,6 +349,7 @@ class InitializeExperimentGUI(QWidget):
            self.experimentGuiObject.currentExperimentLabel.setText(self.experimentGuiObject.protocolObject.experiment_file_name)
            self.experimentGuiObject.protocolObject.initializeExperimentFile()
            self.experimentGuiObject.updateStatusLabel()
+           self.experimentGuiObject.series_counter_input.setValue(1)
            self.close()
            self.parent.close()
            

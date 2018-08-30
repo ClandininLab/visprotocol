@@ -289,6 +289,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def selectCurrentParameterFromList(self, parameter_list, randomize_flag = False):
         if self.num_epochs_completed == 0: #new run: initialize location sequences
             parameter_sequence = parameter_list
+            if type(parameter_sequence) is not list:
+                parameter_sequence = [parameter_sequence] #somebody probably entered a float instead of a list in the GUI
             self.persistent_parameters = {'parameter_sequence':parameter_sequence}
                 
         draw_ind = np.mod(self.num_epochs_completed,len(self.persistent_parameters['parameter_sequence']))
