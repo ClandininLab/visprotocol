@@ -8,7 +8,7 @@ Created on Thu Jun 21 10:51:42 2018
 import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
-                             QMessageBox, QCheckBox)
+                             QMessageBox, QCheckBox, QSpinBox)
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
@@ -117,6 +117,16 @@ class ImagingExperimentGUI(QWidget):
         loadButton.clicked.connect(self.onPressedButton) 
         self.grid.addWidget(loadButton, 3, 2)
         
+        # Current imaging series counter
+        newLabel = QLabel('series counter:')
+        self.grid.addWidget(newLabel, 5 , 2)
+        self.series_counter_input = QSpinBox()
+        self.series_counter_input.setMinimum(1)
+        self.series_counter_input.setMaximum(1000)
+        self.series_counter_input.setValue(1)
+        self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
+        self.grid.addWidget(self.series_counter_input, 6, 2)
+
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
             return
@@ -205,8 +215,12 @@ class ImagingExperimentGUI(QWidget):
             
             if self.protocolObject.experiment_file_name is not '':
                 self.protocolObject.reOpenExperimentFile()
-                self.protocolObject.experiment_file.close()
                 self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
+                # update series count to reflect already-collected series
+                largest_prior_value = max(list(map(int,list(self.protocolObject.experiment_file['/epoch_runs'].keys()))))
+                self.protocolObject.experiment_file.close()
+                self.series_counter_input.setValue(largest_prior_value + 1)
+
             self.updateStatusLabel()
 
     def resetLayout(self):
@@ -233,8 +247,28 @@ class ImagingExperimentGUI(QWidget):
         elif input.text() == 'Ignore':
             self.ignoreWarnings = True
             self.sendRun()
-        
+            
+    def onEnteredSeriesCount(self):
+        self.protocolObject.series_count = self.series_counter_input.value()
+        self.protocolObject.reOpenExperimentFile()
+        existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
+        self.protocolObject.experiment_file.close()
+        if any(str(self.protocolObject.series_count) in x for x in existing_groups):
+            self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
+        else:
+            self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
+            
     def sendRun(self):
+        self.protocolObject.series_count = self.series_counter_input.value()
+        self.protocolObject.reOpenExperimentFile()
+        existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
+        self.protocolObject.experiment_file.close()
+        if any(str(self.protocolObject.series_count) in x for x in existing_groups):
+            self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
+            return #group already exists
+        else:
+            self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
+        
         # Populate parameters from filled fields
         for key, value in self.run_parameter_input.items():
             self.protocolObject.run_parameters[key] = float(self.run_parameter_input[key].text())
@@ -254,6 +288,10 @@ class ImagingExperimentGUI(QWidget):
 
         # Send run and protocol parameters to protocol object
         self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
+        
+        # Advance the series_count:
+        self.series_counter_input.setValue(self.protocolObject.series_count + 1)
+        self.protocolObject.series_count = self.series_counter_input.value()
         
 class InitializeExperimentGUI(QWidget):
    def setupUI(self, experimentGuiObject, parent = None):

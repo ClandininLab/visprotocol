@@ -32,6 +32,8 @@ class ClandininLabProtocol():
         self.protocol_parameters = {}
         self.stop = False
         self.num_epochs_completed = 0
+        
+        self.series_count = 1
 
         # Fly should be initialized by the user
         self.currentFly = None
@@ -49,7 +51,7 @@ class ClandininLabProtocol():
             # create a new epoch run group
             self.reOpenExperimentFile()
             epochRuns = self.experiment_file['/epoch_runs']
-            newEpochRun = epochRuns.create_group(run_start_time)
+            newEpochRun = epochRuns.create_group(str(self.series_count))
             newEpochRun.attrs['run_start_time'] = run_start_time
             for key in run_parameters: #save out run parameters as an attribute of this epoch run
                 newEpochRun.attrs[key] = run_parameters[key]
@@ -71,7 +73,7 @@ class ClandininLabProtocol():
                 # update epoch metadata
                 self.reOpenExperimentFile()
                 epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-                newEpoch = self.experiment_file['/epoch_runs/' + run_start_time].create_group('epoch_'+str(self.num_epochs_completed))
+                newEpoch = self.experiment_file['/epoch_runs/' + str(self.series_count)].create_group('epoch_'+str(self.num_epochs_completed))
                 newEpoch.attrs['epoch_time'] = epoch_time
                 
                 epochParametersGroup = newEpoch.create_group('epoch_parameters')
