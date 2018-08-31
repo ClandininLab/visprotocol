@@ -90,14 +90,14 @@ class ClandininLabProtocol():
                     convenienceParametersGroup.attrs[key] = convenience_parameters[key]
                 self.experiment_file.close()
 
-                # Send a TTL pulse through the NI-USB to trigger acquisition
-                with nidaqmx.Task() as task:
-                    task.co_channels.add_co_pulse_chan_time("Dev5/ctr0",
-                                                            low_time=0.002,
-                                                            high_time=0.001)
-                    task.start()
 
-                
+            # Send a TTL pulse through the NI-USB to trigger acquisition
+            with nidaqmx.Task() as task:
+                task.co_channels.add_co_pulse_chan_time("Dev5/ctr0",
+                                                        low_time=0.002,
+                                                        high_time=0.001)
+                task.start()
+
             # send the stimulus to flystim
             passedParameters = epoch_parameters.copy()
             multicall = MultiCall(self.manager)
