@@ -24,7 +24,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             addr = ('127.0.0.1', 60629)
             use_server = False
         elif platform == "win32": #Windows (rig computer)
-            self.data_directory = '/Users/Main/Documents/Data'
+            self.data_directory = '/Users/User/Documents/ExperimentDataFiles'
             addr = ('192.168.1.232', 60629)
             use_server = True
 
@@ -254,7 +254,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             params = {'width':10.0,
                        'height':30.0,
                        'color':0.0,
-                       'center': [90.0, 90.0],
+                       'center': [90.0, 120.0],
                        'speed':60.0,
                        'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                        'randomize_order':True}
@@ -262,7 +262,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         elif protocol_ID == 'ExpandingMovingSquare':
             params = {'width':[5.0, 10.0, 20.0, 30.0, 40.0, 50.0],
                        'color':0.0,
-                       'center': [90.0, 90.0],
+                       'center': [90.0, 120.0],
                        'speed':60.0,
                        'angle': 0.0,
                        'randomize_order':True}
@@ -270,15 +270,15 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         elif protocol_ID == 'MovingSquareMapping':
             params = {'square_width':10.0,
                        'color':0.0,
-                       'elevation_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], # 60...120
-                       'azimuth_locations': [40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0, 140.0], #40...140
+                       'elevation_locations': [100.0, 110.0, 120.0, 130.0, 140.0], # 100...140
+                       'azimuth_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], #60...120
                        'speed':60.0,
                        'randomize_order':True}
             
         elif protocol_ID == 'FlickeringPatch':
             params = {'height':10.0,
                        'width':10.0,
-                       'center': [90.0, 90.0],
+                       'center': [90.0, 120.0],
                        'temporal_frequency': [2.0, 4.0, 8.0, 16.0],
                        'randomize_order':True}
         else:
