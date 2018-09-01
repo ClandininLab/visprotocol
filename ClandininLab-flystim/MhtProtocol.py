@@ -13,7 +13,6 @@ import numpy as np
 from sys import platform
 from flystim.trajectory import RectangleTrajectory, Trajectory
 
-# TODO: send trigger for bruker acquisition
 # TODO: split up sub-protocols maybe?
 class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
