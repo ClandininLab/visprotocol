@@ -72,7 +72,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                 'rand_min':0.0,
                                 'rand_max':1.0,
                                 'start_seed':start_seed,
-                                'update_rate':protocol_parameters['update_rate']}
+                                'update_rate':protocol_parameters['update_rate'],
+                                'binary_distribution':protocol_parameters['binary_distribution']}
 
         elif protocol_ID == 'DriftingSquareGrating':
             stimulus_ID = 'RotatingBars'
@@ -239,7 +240,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         """
         if protocol_ID == 'CheckerboardWhiteNoise':
             params = {'checker_width':10.0,
-                       'update_rate':60.0}
+                       'update_rate':5.0,
+                       'binary_distribution':True}
             
         elif protocol_ID == 'DriftingSquareGrating':
             params = {'period':20.0,
