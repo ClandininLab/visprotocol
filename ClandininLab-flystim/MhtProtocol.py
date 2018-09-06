@@ -125,7 +125,9 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             epoch_parameters = {'name':stimulus_ID,
                                 'background':self.run_parameters['idle_color'],
                                 'trajectory':trajectory}
-            convenience_parameters = {'currentAngle': currentAngle}
+            convenience_parameters = {'currentAngle': currentAngle,
+                                      'center':protocol_parameters['center'],
+                                      'speed':protocol_parameters['speed']}
             
         elif protocol_ID == 'ExpandingMovingSquare':
             stimulus_ID = 'MovingPatch'
@@ -154,7 +156,10 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             epoch_parameters = {'name':stimulus_ID,
                                 'background':self.run_parameters['idle_color'],
                                 'trajectory':trajectory}
-            convenience_parameters = {'currentWidth': currentWidth}
+            convenience_parameters = {'currentWidth': currentWidth,
+                                      'center':protocol_parameters['center'],
+                                      'angle':protocol_parameters['angle'],
+                                      'speed':protocol_parameters['speed']}
 
         elif protocol_ID == 'MovingSquareMapping':
             stimulus_ID = 'MovingPatch'
@@ -209,7 +214,9 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             convenience_parameters = {'speed':speed,
                                       'current_search_axis':current_search_axis,
                                       'current_location':current_location,
-                                      'randomize_order':protocol_parameters['randomize_order']}
+                                      'randomize_order':protocol_parameters['randomize_order'],
+                                      'square_width':protocol_parameters['square_width'],
+                                      'color':protocol_parameters['color']}
             
             
         elif protocol_ID == 'FlickeringPatch':
@@ -234,7 +241,10 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             epoch_parameters = {'name':stimulus_ID,
                                 'background':self.run_parameters['idle_color'],
                                 'trajectory':trajectory}
-            convenience_parameters = {'current_temporal_frequency':current_temporal_frequency}
+            convenience_parameters = {'current_temporal_frequency':current_temporal_frequency,
+                                      'center':protocol_parameters['center'],
+                                      'width':protocol_parameters['width'],
+                                      'height':protocol_parameters['height']}
             
         else:
             raise NameError('Unrecognized stimulus ID')
