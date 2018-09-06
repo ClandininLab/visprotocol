@@ -21,8 +21,6 @@ import os
 import nidaqmx
 from sys import platform
 
-# TODO: fly/source handling. Hierarchial or linked source?
-
 class ClandininLabProtocol():
     def __init__(self):
         super().__init__()
@@ -33,20 +31,18 @@ class ClandininLabProtocol():
               'stim_time':5.0,
               'tail_time':0.5,
               'idle_color':0.5}
-        self.protocol_parameters = {}
+        self.protocol_parameters = {} # populated in GUI or user protocol
+        self.fly_metadata = {}  # populated in GUI or user protocol
         self.stop = False
         self.num_epochs_completed = 0
         
         self.series_count = 1
 
-        # Fly should be initialized by the user
-        self.currentFly = None
-        
         # Experiment file should be initialized by the user
         self.experiment_file = None
         self.experiment_file_name = None
         
-    def start(self, run_parameters, protocol_parameters, save_metadata_flag):
+    def start(self, run_parameters, protocol_parameters, fly_metadata, save_metadata_flag):
         self.stop = False
         self.manager.set_idle_background(run_parameters['idle_color'])
         run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
@@ -59,6 +55,10 @@ class ClandininLabProtocol():
             newEpochRun.attrs['run_start_time'] = run_start_time
             for key in run_parameters: #save out run parameters as an attribute of this epoch run
                 newEpochRun.attrs[key] = run_parameters[key]
+
+            for key in fly_metadata: #save out fly metadata as an attribute of this epoch run
+                newEpochRun.attrs[key] = fly_metadata[key]
+                
             self.experiment_file.close()
 
         else:

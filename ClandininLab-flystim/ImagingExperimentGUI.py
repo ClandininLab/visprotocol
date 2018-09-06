@@ -8,12 +8,12 @@ Created on Thu Jun 21 10:51:42 2018
 import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
-                             QMessageBox, QCheckBox, QSpinBox)
+                             QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame)
+import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
 
-# TODO: merge data manager / source manager GUI into this as a window ("start new fly" button)
 # TODO: handle params that are meant to be strings
 
 class ImagingExperimentGUI(QWidget):
@@ -43,9 +43,24 @@ class ImagingExperimentGUI(QWidget):
         self.initUI()
 
     def initUI(self):  
-        self.grid = QGridLayout()
-        self.grid.setSpacing(10)
+        self.layout = QVBoxLayout(self)
+        self.tabs = QTabWidget()
         
+        self.tab1 = QWidget()
+        self.grid1 = QGridLayout()
+        self.grid1.setSpacing(10)
+        
+        self.tab2 = QWidget()
+        self.grid2 = QFormLayout()
+        self.grid2.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        self.grid2.setLabelAlignment(QtCore.Qt.AlignCenter)
+
+        self.tabs.addTab(self.tab1,"Main")
+        self.tabs.addTab(self.tab2,"Expt. Data")
+        
+        self.tabs.resize(450, 500) 
+        
+        # # # TAB 1: Main controls, for selecting / playing stimuli
         # Protocol ID drop-down:
         comboBox = QComboBox(self)
         comboBox.addItem("(select a protocol to run)")
@@ -53,14 +68,8 @@ class ImagingExperimentGUI(QWidget):
             comboBox.addItem(protID)
         protocol_label = QLabel('Protocol:')
         comboBox.activated[str].connect(self.onSelectedProtocolID)
-
-        self.grid.addWidget(protocol_label, 1, 0)
-        self.grid.addWidget(comboBox, 1, 1, 1, 1)
-        
-        # status label showing init expt, selected source, protocol chosen etc
-        self.statusLabel = QLabel()
-        self.grid.addWidget(self.statusLabel, 2 , 0, 1, 2)
-        self.updateStatusLabel()
+        self.grid1.addWidget(protocol_label, 1, 0)
+        self.grid1.addWidget(comboBox, 1, 1, 1, 1)
         
         self.run_params_ct = 0
         # Run parameters list
@@ -68,7 +77,7 @@ class ImagingExperimentGUI(QWidget):
             if key not in ['protocol_ID', 'run_start_time']:
                 self.run_params_ct += 1
                 newLabel = QLabel(key + ':')
-                self.grid.addWidget(newLabel, 2 + self.run_params_ct , 0)
+                self.grid1.addWidget(newLabel, 1 + self.run_params_ct , 0)
                 
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
@@ -79,60 +88,127 @@ class ImagingExperimentGUI(QWidget):
                     validator.setBottom(0)
                 self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
-                self.grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
-         
-        # Record button:
-        recordButton = QPushButton("Record", self)
-        recordButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(recordButton, self.run_params_ct+3, 0)
-        
+                self.grid1.addWidget(self.run_parameter_input[key], 1 + self.run_params_ct, 1, 1, 1)
+
         # View button:
         viewButton = QPushButton("View", self)
         viewButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(viewButton, self.run_params_ct+3, 1)
+        self.grid1.addWidget(viewButton, self.run_params_ct+3, 0)
+        
+        # Record button:
+        recordButton = QPushButton("Record", self)
+        recordButton.clicked.connect(self.onPressedButton) 
+        self.grid1.addWidget(recordButton, self.run_params_ct+3, 1)
         
         # Stop button:
         stopButton = QPushButton("Stop", self)
         stopButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(stopButton, self.run_params_ct+3, 2)
+        self.grid1.addWidget(stopButton, self.run_params_ct+3, 2)
         
         # Enter note button:
         noteButton = QPushButton("Enter note", self)
         noteButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(noteButton, self.run_params_ct+4, 0)
+        self.grid1.addWidget(noteButton, self.run_params_ct+4, 0)
 
         # Notes field:
         self.notesEdit = QTextEdit()
-        self.grid.addWidget(self.notesEdit, self.run_params_ct+4, 1, 1, 1)
+        self.grid1.addWidget(self.notesEdit, self.run_params_ct+4, 1, 1, 2)
         
-        self.setLayout(self.grid) 
-        self.setGeometry(300, 300, 450, 500)
-        self.setWindowTitle('FlyStim')    
-        self.show()
         
-        # Initialize new experiment button
-        initializeButton = QPushButton("Initialize experiment", self)
-        initializeButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(initializeButton, 1, 2)
-        
-        # Label with current expt file
-        self.currentExperimentLabel = QLabel('')
-        self.grid.addWidget(self.currentExperimentLabel, 2, 2)
-        
-        # Load existing experiment button
-        loadButton = QPushButton("Load experiment", self)
-        loadButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(loadButton, 3, 2)
-        
+        # Status window:
+        newLabel = QLabel('Status:')
+        self.grid1.addWidget(newLabel, 2, 2)
+        self.status_label = QLabel()
+        self.status_label.setFrameShadow(QFrame.Shadow(1))
+        self.grid1.addWidget(self.status_label, 3, 2)
+        self.status_label.setText('')
+
         # Current imaging series counter
         newLabel = QLabel('series counter:')
-        self.grid.addWidget(newLabel, 6 , 2)
+        self.grid1.addWidget(newLabel, self.run_params_ct , 2)
         self.series_counter_input = QSpinBox()
         self.series_counter_input.setMinimum(1)
         self.series_counter_input.setMaximum(1000)
         self.series_counter_input.setValue(1)
         self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
-        self.grid.addWidget(self.series_counter_input, 7, 2)
+        self.grid1.addWidget(self.series_counter_input, self.run_params_ct+1, 2)
+        
+        
+        # # # TAB 2: Data file and fly metadata information
+        # Data file info
+        # Initialize new experiment button
+        initializeButton = QPushButton("Initialize experiment", self)
+        initializeButton.clicked.connect(self.onPressedButton) 
+        newLabel = QLabel('Current data file:')
+        self.grid2.addRow(initializeButton, newLabel)
+        # Load existing experiment button
+        loadButton = QPushButton("Load experiment", self)
+        loadButton.clicked.connect(self.onPressedButton) 
+        # Label with current expt file
+        self.currentExperimentLabel = QLabel('')
+        self.grid2.addRow(loadButton, self.currentExperimentLabel)
+        
+        new_separator_line = QFrame()
+        new_separator_line.setFrameShape(new_separator_line.HLine)
+        self.grid2.addRow(new_separator_line)
+
+        # # Fly info:
+        newLabel = QLabel('Current fly info:')
+        newLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.grid2.addRow(newLabel)
+        # Sex:
+        newLabel = QLabel('Sex:')
+        self.fly_sex_input = QComboBox()
+        self.fly_sex_input.addItems(['Female','Male'])
+        self.grid2.addRow(newLabel, self.fly_sex_input)
+        # Age:
+        newLabel = QLabel('Age:')
+        self.fly_age_input = QSpinBox()
+        self.fly_age_input.setMinimum(0)
+        self.fly_age_input.setValue(1)
+        self.grid2.addRow(newLabel, self.fly_age_input)
+        # Prep ID:
+        newLabel = QLabel('Prep:')
+        self.fly_prep_input = QComboBox()
+        self.fly_prep_input.addItem("")
+        for prepID in self.protocolObject.prepChoices:
+            self.fly_prep_input.addItem(prepID)
+        self.grid2.addRow(newLabel, self.fly_prep_input)
+        # Driver1:
+        newLabel = QLabel('Driver_1:')
+        self.fly_driver_1 = QComboBox()
+        self.fly_driver_1.addItem("")
+        for prepID in self.protocolObject.driverChoices:
+            self.fly_driver_1.addItem(prepID)
+        self.grid2.addRow(newLabel, self.fly_driver_1)
+        # Indicator1:
+        newLabel = QLabel('Indicator_1:')
+        self.fly_indicator_1 = QComboBox()
+        self.fly_indicator_1.addItem("")
+        for prepID in self.protocolObject.indicatorChoices:
+            self.fly_indicator_1.addItem(prepID)
+        self.grid2.addRow(newLabel, self.fly_indicator_1)
+        # Driver2:
+        newLabel = QLabel('Driver_2:')
+        self.fly_driver_2 = QComboBox()
+        self.fly_driver_2.addItem("")
+        for prepID in self.protocolObject.driverChoices:
+            self.fly_driver_2.addItem(prepID)
+        self.grid2.addRow(newLabel, self.fly_driver_2)
+        # Indicator2:
+        newLabel = QLabel('Indicator_2:')
+        self.fly_indicator_2 = QComboBox()
+        self.fly_indicator_2.addItem("")
+        for prepID in self.protocolObject.indicatorChoices:
+            self.fly_indicator_2.addItem(prepID)
+        self.grid2.addRow(newLabel, self.fly_indicator_2)
+
+        self.layout.addWidget(self.tabs)
+        self.tab1.setLayout(self.grid1)
+        self.tab2.setLayout(self.grid2)
+        self.setWindowTitle('FlyStim GUI')    
+        self.show()
+        
 
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
@@ -152,12 +228,11 @@ class ImagingExperimentGUI(QWidget):
         for key, value in self.protocolObject.protocol_parameters.items():
             ct += 1
             newLabel = QLabel(key + ':')
-            self.grid.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
+            self.grid1.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
             
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
                 self.protocol_parameter_input[key].setChecked(value)
-                self.grid.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 1)
             else:
                 self.protocol_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
@@ -166,9 +241,7 @@ class ImagingExperimentGUI(QWidget):
                     self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
                     
                 self.protocol_parameter_input[key].setText(str(value)) #set to default value
-                self.grid.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 1)
-            
-        self.updateStatusLabel()
+            self.grid1.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 2)
         self.show()
        
     def onPressedButton(self):
@@ -184,8 +257,12 @@ class ImagingExperimentGUI(QWidget):
                 msg.setStandardButtons(QMessageBox.Ok)
                 msg.exec_()
             else:
+                self.status_label.setText('Recording ...')
+                QApplication.processEvents()
                 self.sendRun(save_metadata_flag = True)         
         elif sender.text() == 'View':
+            self.status_label.setText('Viewing ...')
+            QApplication.processEvents()
             self.sendRun(save_metadata_flag = False)         
 
         elif sender.text() == 'Stop':
@@ -225,25 +302,15 @@ class ImagingExperimentGUI(QWidget):
                 self.protocolObject.experiment_file.close()
                 self.series_counter_input.setValue(largest_prior_value + 1)
 
-            self.updateStatusLabel()
-
     def resetLayout(self):
         for ii in range(len(self.protocolObject.protocol_parameters.items())):
-            item = self.grid.itemAtPosition(self.run_params_ct+5+ii,0)
+            item = self.grid1.itemAtPosition(self.run_params_ct+5+ii,0)
             if item != None:
                 item.widget().deleteLater()
-            item = self.grid.itemAtPosition(self.run_params_ct+5+ii,1)
+            item = self.grid1.itemAtPosition(self.run_params_ct+5+ii,1)
             if item != None:
                 item.widget().deleteLater()
         self.show()
-        
-    def updateStatusLabel(self):
-        if self.protocolObject.run_parameters['protocol_ID'] == '':
-            self.statusLabel.setText('Select a protocol to run')
-        elif self.protocolObject.experiment_file is None:
-            self.statusLabel.setText('Initialize an experiment file to save data')
-        elif self.protocolObject.currentFly is None:
-            self.statusLabel.setText('Warning: No fly defined!')
 
     def onEnteredSeriesCount(self):
         self.protocolObject.series_count = self.series_counter_input.value()
@@ -258,7 +325,7 @@ class ImagingExperimentGUI(QWidget):
             
     def sendRun(self, save_metadata_flag = True):
         if self.protocolObject.run_parameters['protocol_ID'] == '':
-                print('Select a protocol to run, first')
+                self.status_label.setText('Select a protocol')
                 return
 
         if save_metadata_flag:
@@ -288,14 +355,29 @@ class ImagingExperimentGUI(QWidget):
                     self.protocolObject.protocol_parameters[key] = to_a_list
                 else: 
                     self.protocolObject.protocol_parameters[key] = float(new_param_entry)
+                    
+        # Populate fly metadata from fly data fields
+        self.protocolObject.fly_metadata = {'fly:sex':self.fly_sex_input.currentText(),
+                                            'fly:age':self.fly_age_input.value(), 
+                                            'fly:prep':self.fly_prep_input.currentText(),
+                                            'fly:driver_1':self.fly_driver_1.currentText(),
+                                            'fly:indicator_1':self.fly_indicator_1.currentText(), 
+                                            'fly:driver_2':self.fly_driver_2.currentText(),
+                                            'fly:indicator_2':self.fly_driver_2.currentText()}
+
 
         # Send run and protocol parameters to protocol object
-        self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters, save_metadata_flag = save_metadata_flag)
+        self.protocolObject.start(self.protocolObject.run_parameters, 
+                                  self.protocolObject.protocol_parameters, 
+                                  self.protocolObject.fly_metadata, 
+                                  save_metadata_flag = save_metadata_flag)
         
+        self.status_label.setText('Ready')
         if save_metadata_flag:
             # Advance the series_count:
             self.series_counter_input.setValue(self.protocolObject.series_count + 1)
             self.protocolObject.series_count = self.series_counter_input.value()
+        QApplication.processEvents()
         
 class InitializeExperimentGUI(QWidget):
    def setupUI(self, experimentGuiObject, parent = None):
@@ -347,7 +429,6 @@ class InitializeExperimentGUI(QWidget):
            self.label_status.setText('Data entered')
            self.experimentGuiObject.currentExperimentLabel.setText(self.experimentGuiObject.protocolObject.experiment_file_name)
            self.experimentGuiObject.protocolObject.initializeExperimentFile()
-           self.experimentGuiObject.updateStatusLabel()
            self.experimentGuiObject.series_counter_input.setValue(1)
            self.close()
            self.parent.close()

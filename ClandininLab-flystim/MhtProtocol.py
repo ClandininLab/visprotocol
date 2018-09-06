@@ -13,7 +13,7 @@ import numpy as np
 from sys import platform
 from flystim.trajectory import RectangleTrajectory, Trajectory
 
-# TODO: split up sub-protocols maybe?
+
 class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
         super().__init__()
@@ -39,6 +39,17 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'ExpandingMovingSquare',
                                'MovingSquareMapping',
                                'FlickeringPatch']
+        # # #  List of fly metadata # # # 
+        self.prepChoices = ['Left optic lobe',
+                            'Right optic lobe',
+                            'Whole brain']
+        self.driverChoices = ['L2 (21Dhh)','LC11 (R22H02; R20G06)','LC17 (R21D03; R65C12)',
+                              'LC18 (R82D11; R92B11)', 'LC26 (VT007747; R85H06)']
+        self.indicatorChoices = ['GCaMP6f',
+                                 'GCaMP6m',
+                                 'ASAP2f',
+                                 'ASAP4c']
+        
         
         # # # Start the stim manager and set the frame tracker square to black # # #
         if use_server:
