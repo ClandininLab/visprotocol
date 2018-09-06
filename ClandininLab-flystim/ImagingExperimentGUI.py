@@ -81,15 +81,20 @@ class ImagingExperimentGUI(QWidget):
                 self.run_parameter_input[key].setText(str(value))
                 self.grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
          
-        # Start button:
-        startButton = QPushButton("Start", self)
-        startButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(startButton, self.run_params_ct+3, 0)
+        # Record button:
+        recordButton = QPushButton("Record", self)
+        recordButton.clicked.connect(self.onPressedButton) 
+        self.grid.addWidget(recordButton, self.run_params_ct+3, 0)
+        
+        # View button:
+        viewButton = QPushButton("View", self)
+        viewButton.clicked.connect(self.onPressedButton) 
+        self.grid.addWidget(viewButton, self.run_params_ct+3, 1)
         
         # Stop button:
         stopButton = QPushButton("Stop", self)
         stopButton.clicked.connect(self.onPressedButton) 
-        self.grid.addWidget(stopButton, self.run_params_ct+3, 1)
+        self.grid.addWidget(stopButton, self.run_params_ct+3, 2)
         
         # Enter note button:
         noteButton = QPushButton("Enter note", self)
@@ -121,13 +126,13 @@ class ImagingExperimentGUI(QWidget):
         
         # Current imaging series counter
         newLabel = QLabel('series counter:')
-        self.grid.addWidget(newLabel, 7 , 2)
+        self.grid.addWidget(newLabel, 6 , 2)
         self.series_counter_input = QSpinBox()
         self.series_counter_input.setMinimum(1)
         self.series_counter_input.setMaximum(1000)
         self.series_counter_input.setValue(1)
         self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
-        self.grid.addWidget(self.series_counter_input, 8, 2)
+        self.grid.addWidget(self.series_counter_input, 7, 2)
 
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
@@ -168,23 +173,20 @@ class ImagingExperimentGUI(QWidget):
        
     def onPressedButton(self):
         sender = self.sender()
-        if sender.text() == 'Start':
-            if self.protocolObject.run_parameters['protocol_ID'] == '':
-                print('Select a protocol to run, first')
-                return
-            
-            if self.protocolObject.experiment_file is None and not self.ignoreWarnings:
+        if sender.text() == 'Record':
+            if self.protocolObject.experiment_file is None:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
-                msg.setText("You are not saving your metadata")
-                msg.setInformativeText("Would you like to present stimuli anyway?")
-                msg.setWindowTitle("MessageBox demo")
+                msg.setText("You have not initialized a data file yet")
+                msg.setInformativeText("You can show stimuli by clicking the View button, but no metadata will be saved")
+                msg.setWindowTitle("No experiment file")
                 msg.setDetailedText("Initialize or load an experiment file if you'd like to save your metadata")
-                msg.setStandardButtons(QMessageBox.Ignore | QMessageBox.No | QMessageBox.Yes )
-                msg.buttonClicked.connect(self.onClickedWarningMessageButton)
+                msg.setStandardButtons(QMessageBox.Ok)
                 msg.exec_()
             else:
-                self.sendRun()
+                self.sendRun(save_metadata_flag = True)         
+        elif sender.text() == 'View':
+            self.sendRun(save_metadata_flag = False)         
 
         elif sender.text() == 'Stop':
             self.protocolObject.stop = True
@@ -242,14 +244,7 @@ class ImagingExperimentGUI(QWidget):
             self.statusLabel.setText('Initialize an experiment file to save data')
         elif self.protocolObject.currentFly is None:
             self.statusLabel.setText('Warning: No fly defined!')
-            
-    def onClickedWarningMessageButton(self, input):
-        if input.text() == '&Yes':
-            self.sendRun()
-        elif input.text() == 'Ignore':
-            self.ignoreWarnings = True
-            self.sendRun()
-            
+
     def onEnteredSeriesCount(self):
         self.protocolObject.series_count = self.series_counter_input.value()
         if self.protocolObject.experiment_file is not None:
@@ -261,8 +256,12 @@ class ImagingExperimentGUI(QWidget):
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
             
-    def sendRun(self):
-        if self.protocolObject.experiment_file is not None:
+    def sendRun(self, save_metadata_flag = True):
+        if self.protocolObject.run_parameters['protocol_ID'] == '':
+                print('Select a protocol to run, first')
+                return
+
+        if save_metadata_flag:
             self.protocolObject.series_count = self.series_counter_input.value()
             self.protocolObject.reOpenExperimentFile()
             existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
@@ -291,9 +290,9 @@ class ImagingExperimentGUI(QWidget):
                     self.protocolObject.protocol_parameters[key] = float(new_param_entry)
 
         # Send run and protocol parameters to protocol object
-        self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters)
+        self.protocolObject.start(self.protocolObject.run_parameters, self.protocolObject.protocol_parameters, save_metadata_flag = save_metadata_flag)
         
-        if self.protocolObject.experiment_file is not None:
+        if save_metadata_flag:
             # Advance the series_count:
             self.series_counter_input.setValue(self.protocolObject.series_count + 1)
             self.protocolObject.series_count = self.series_counter_input.value()

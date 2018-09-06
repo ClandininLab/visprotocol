@@ -46,12 +46,12 @@ class ClandininLabProtocol():
         self.experiment_file = None
         self.experiment_file_name = None
         
-    def start(self, run_parameters, protocol_parameters):
+    def start(self, run_parameters, protocol_parameters, save_metadata_flag):
         self.stop = False
         self.manager.set_idle_background(run_parameters['idle_color'])
         run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
         
-        if self.experiment_file is not None:
+        if save_metadata_flag:
             # create a new epoch run group
             self.reOpenExperimentFile()
             epochRuns = self.experiment_file['/epoch_runs']
@@ -73,7 +73,7 @@ class ClandininLabProtocol():
             #  get stimulus parameters for this epoch
             epoch_parameters, convenience_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
  
-            if self.experiment_file is not None:
+            if save_metadata_flag:
                 # update epoch metadata
                 self.reOpenExperimentFile()
                 epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
