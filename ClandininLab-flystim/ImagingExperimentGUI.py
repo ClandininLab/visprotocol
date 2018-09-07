@@ -156,6 +156,10 @@ class ImagingExperimentGUI(QWidget):
         newLabel = QLabel('Current fly info:')
         newLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.grid2.addRow(newLabel)
+        newLabel = QLabel('Fly ID:')
+        self.fly_id_input = QLineEdit()
+        self.grid2.addRow(newLabel, self.fly_id_input)
+        
         # Sex:
         newLabel = QLabel('Sex:')
         self.fly_sex_input = QComboBox()
@@ -357,7 +361,8 @@ class ImagingExperimentGUI(QWidget):
                     self.protocolObject.protocol_parameters[key] = float(new_param_entry)
                     
         # Populate fly metadata from fly data fields
-        self.protocolObject.fly_metadata = {'fly:sex':self.fly_sex_input.currentText(),
+        self.protocolObject.fly_metadata = {'fly:fly_id_input':self.fly_id_input.text(),
+                                            'fly:sex':self.fly_sex_input.currentText(),
                                             'fly:age':self.fly_age_input.value(), 
                                             'fly:prep':self.fly_prep_input.currentText(),
                                             'fly:driver_1':self.fly_driver_1.currentText(),
