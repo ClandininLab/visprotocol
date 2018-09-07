@@ -127,7 +127,10 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                 'trajectory':trajectory}
             convenience_parameters = {'currentAngle': currentAngle,
                                       'center':protocol_parameters['center'],
-                                      'speed':protocol_parameters['speed']}
+                                      'speed':protocol_parameters['speed'],
+                                      'color':protocol_parameters['color'],
+                                      'height':protocol_parameters['height'],
+                                      'width':protocol_parameters['width']}
             
         elif protocol_ID == 'ExpandingMovingSquare':
             stimulus_ID = 'MovingPatch'
@@ -159,7 +162,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             convenience_parameters = {'currentWidth': currentWidth,
                                       'center':protocol_parameters['center'],
                                       'angle':protocol_parameters['angle'],
-                                      'speed':protocol_parameters['speed']}
+                                      'speed':protocol_parameters['speed'],
+                                      'color':protocol_parameters['color']}
 
         elif protocol_ID == 'MovingSquareMapping':
             stimulus_ID = 'MovingPatch'
@@ -265,16 +269,16 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'binary_distribution':True}
             
         elif protocol_ID == 'DriftingSquareGrating':
-            params = {'period':20.0,
-                       'rate':40.0,
+            params = {'period':10.0,
+                       'rate':60.0,
                        'color':1.0,
                        'background':0.5,
                        'angle':[0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                        'randomize_order':True}
             
         elif protocol_ID == 'MovingRectangle':
-            params = {'width':10.0,
-                       'height':30.0,
+            params = {'width':5.0,
+                       'height':5.0,
                        'color':0.0,
                        'center': [90.0, 120.0],
                        'speed':60.0,
