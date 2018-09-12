@@ -361,7 +361,7 @@ class ImagingExperimentGUI(QWidget):
                     self.protocolObject.protocol_parameters[key] = float(new_param_entry)
                     
         # Populate fly metadata from fly data fields
-        self.protocolObject.fly_metadata = {'fly:fly_id_input':self.fly_id_input.text(),
+        self.protocolObject.fly_metadata = {'fly:fly_id':self.fly_id_input.text(),
                                             'fly:sex':self.fly_sex_input.currentText(),
                                             'fly:age':self.fly_age_input.value(), 
                                             'fly:prep':self.fly_prep_input.currentText(),
