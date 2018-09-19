@@ -350,6 +350,8 @@ class ImagingExperimentGUI(QWidget):
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key],QCheckBox): #QCheckBox
                 self.protocolObject.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
+            elif isinstance(self.protocolObject.protocol_parameters[key],str):
+                self.protocolObject.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else: #QLineEdit
                 new_param_entry = self.protocol_parameter_input[key].text()
                 

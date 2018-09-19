@@ -80,11 +80,11 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             epoch_parameters = {'name':stimulus_ID,
                                 'theta_period':protocol_parameters['checker_width'],
                                 'phi_period':protocol_parameters['checker_width'],
-                                'rand_min':0.0,
-                                'rand_max':1.0,
+                                'rand_min':protocol_parameters['rand_min'],
+                                'rand_max':protocol_parameters['rand_max'],
                                 'start_seed':start_seed,
                                 'update_rate':protocol_parameters['update_rate'],
-                                'binary_distribution':protocol_parameters['binary_distribution']}
+                                'distribution_type':protocol_parameters['distribution_type']}
 
         elif protocol_ID == 'DriftingSquareGrating':
             stimulus_ID = 'RotatingBars'
@@ -266,7 +266,9 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         if protocol_ID == 'CheckerboardWhiteNoise':
             params = {'checker_width':10.0,
                        'update_rate':5.0,
-                       'binary_distribution':True}
+                       'rand_min': 0.0,
+                       'rand_max':1.0,
+                       'distribution_type':'binary'}
             
         elif protocol_ID == 'DriftingSquareGrating':
             params = {'period':10.0,
