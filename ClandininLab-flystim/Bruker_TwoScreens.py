@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from flystim.launch import StimManager, stim_server
 from flystim.screen import Screen
+from math import pi
 
 from flystim.dlpc350 import make_dlpc350_objects
 
