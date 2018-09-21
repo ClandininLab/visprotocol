@@ -44,11 +44,15 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                             'Right optic lobe',
                             'Whole brain']
         self.driverChoices = ['L2 (21Dhh)','LC11 (R22H02; R20G06)','LC17 (R21D03; R65C12)',
-                              'LC18 (R82D11; R92B11)', 'LC26 (VT007747; R85H06)']
+                              'LC18 (R82D11; R92B11)', 'LC26 (VT007747; R85H06)', 
+                              'LC9 (VT032961; VT040569)','LC20 (R17A04, R35B06)']
         self.indicatorChoices = ['GCaMP6f',
                                  'GCaMP6m',
                                  'ASAP2f',
-                                 'ASAP4c']
+                                 'ASAP4c',
+                                 '10_90_GCaMP6f',
+                                 'SF-iGluSnFR.A184V']
+ 
         
         
         # # # Start the stim manager and set the frame tracker square to black # # #
