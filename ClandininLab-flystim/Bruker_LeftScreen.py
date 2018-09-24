@@ -7,24 +7,24 @@ from math import pi
 
 
 def main():
-    addr = ('', 60629)
-    # put lightcrafter(s) in pattern mode
+    # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
          dlpc350_object.pattern_mode(fps=115.06)
      
+     
     # Define screen(s) for the rig
     # TODO: check perspective correction measurements
-    w = 14.2e-2; h = 9e-2; # meters of image at projection plane, screen only shows 9x9 of this
-    zDistToScreen = 5.36e-2; # meters
+    w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
 
-    bruker_left_screen = Screen(width=w, height=h, rotation=pi/4, offset=(-w/2, zDistToScreen, -h/2), id=1, fullscreen=True, vsync=None, square_side=2e-2, square_loc='lr')
+    bruker_left_screen = Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=3.75e-2, square_loc='lr')
     screens = [bruker_left_screen]
     
     manager = StimManager(screens)
     manager.black_corner_square()
     manager.set_idle_background(0)
-    stim_server(manager, addr = addr)
+    print('Serving on port 60629')
+    stim_server(manager, addr = ('', 60629))
 
 if __name__ == '__main__':
     main()
