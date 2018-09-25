@@ -375,8 +375,8 @@ class ImagingExperimentGUI(QWidget):
                                             'fly:driver_1':self.fly_driver_1.currentText(),
                                             'fly:indicator_1':self.fly_indicator_1.currentText(), 
                                             'fly:driver_2':self.fly_driver_2.currentText(),
-                                            'fly:indicator_2':self.indicator_2.currentText(),
-                                            'fly:genotype':self.fly_genotype_input.currentText()}
+                                            'fly:indicator_2':self.fly_indicator_2.currentText(),
+                                            'fly:genotype':self.fly_genotype_input.text()}
 
 
         # Send run and protocol parameters to protocol object
