@@ -44,11 +44,15 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                             'Right optic lobe',
                             'Whole brain']
         self.driverChoices = ['L2 (21Dhh)','LC11 (R22H02; R20G06)','LC17 (R21D03; R65C12)',
-                              'LC18 (R82D11; R92B11)', 'LC26 (VT007747; R85H06)']
+                              'LC18 (R82D11; R92B11)', 'LC26 (VT007747; R85H06)', 
+                              'LC9 (VT032961; VT040569)','LC20 (R17A04, R35B06)']
         self.indicatorChoices = ['GCaMP6f',
                                  'GCaMP6m',
                                  'ASAP2f',
-                                 'ASAP4c']
+                                 'ASAP4c',
+                                 '10_90_GCaMP6f',
+                                 'SF-iGluSnFR.A184V']
+ 
         
         
         # # # Start the stim manager and set the frame tracker square to black # # #
@@ -264,17 +268,17 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         to lower-level flystim parameters in your getEpochParameters() function
         """
         if protocol_ID == 'CheckerboardWhiteNoise':
-            params = {'checker_width':10.0,
-                       'update_rate':5.0,
+            params = {'checker_width':5.0,
+                       'update_rate':0.5,
                        'rand_min': 0.0,
                        'rand_max':1.0,
                        'distribution_type':'binary'}
             
         elif protocol_ID == 'DriftingSquareGrating':
-            params = {'period':10.0,
-                       'rate':60.0,
+            params = {'period':20.0,
+                       'rate':20.0,
                        'color':1.0,
-                       'background':0.5,
+                       'background':0,
                        'angle':[0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                        'randomize_order':True}
             
@@ -288,7 +292,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'randomize_order':True}
             
         elif protocol_ID == 'ExpandingMovingSquare':
-            params = {'width':[5.0, 10.0, 20.0, 30.0, 40.0, 50.0],
+            params = {'width':[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
                        'color':0.0,
                        'center': [90.0, 120.0],
                        'speed':60.0,
@@ -296,7 +300,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'randomize_order':True}
             
         elif protocol_ID == 'MovingSquareMapping':
-            params = {'square_width':10.0,
+            params = {'square_width':5.0,
                        'color':0.0,
                        'elevation_locations': [100.0, 110.0, 120.0, 130.0, 140.0], # 100...140
                        'azimuth_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], #60...120
@@ -304,10 +308,10 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'randomize_order':True}
             
         elif protocol_ID == 'FlickeringPatch':
-            params = {'height':10.0,
-                       'width':10.0,
+            params = {'height':5.0,
+                       'width':5.0,
                        'center': [90.0, 120.0],
-                       'temporal_frequency': [2.0, 4.0, 8.0, 16.0],
+                       'temporal_frequency': [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
                        'randomize_order':True}
         else:
             raise NameError('Unrecognized stimulus ID')         

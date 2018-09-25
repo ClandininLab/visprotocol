@@ -156,10 +156,11 @@ class ImagingExperimentGUI(QWidget):
         newLabel = QLabel('Current fly info:')
         newLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.grid2.addRow(newLabel)
+        
+        # Fly ID:
         newLabel = QLabel('Fly ID:')
         self.fly_id_input = QLineEdit()
         self.grid2.addRow(newLabel, self.fly_id_input)
-        
         # Sex:
         newLabel = QLabel('Sex:')
         self.fly_sex_input = QComboBox()
@@ -206,6 +207,10 @@ class ImagingExperimentGUI(QWidget):
         for prepID in self.protocolObject.indicatorChoices:
             self.fly_indicator_2.addItem(prepID)
         self.grid2.addRow(newLabel, self.fly_indicator_2)
+        # Fly genotype:
+        newLabel = QLabel('Genotype:')
+        self.fly_genotype_input = QLineEdit()
+        self.grid2.addRow(newLabel, self.fly_genotype_input)
 
         self.layout.addWidget(self.tabs)
         self.tab1.setLayout(self.grid1)
@@ -370,7 +375,8 @@ class ImagingExperimentGUI(QWidget):
                                             'fly:driver_1':self.fly_driver_1.currentText(),
                                             'fly:indicator_1':self.fly_indicator_1.currentText(), 
                                             'fly:driver_2':self.fly_driver_2.currentText(),
-                                            'fly:indicator_2':self.fly_driver_2.currentText()}
+                                            'fly:indicator_2':self.indicator_2.currentText(),
+                                            'fly:genotype':self.fly_genotype_input.currentText()}
 
 
         # Send run and protocol parameters to protocol object
