@@ -38,6 +38,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'MovingRectangle',
                                'ExpandingMovingSquare',
                                'MovingSquareMapping',
+                               'SimulatedOrRandomMotion',
                                'FlickeringPatch']
         # # #  List of fly metadata # # # 
         self.prepChoices = ['Left optic lobe',
@@ -227,6 +228,41 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                       'color':protocol_parameters['color']}
             
             
+        elif protocol_ID == 'SimulatedOrRandomMotion':
+            stimulus_ID = 'MovingPatch'
+            
+            
+            params = {'square_width':5.0,
+                       'color':0.0,
+                       'elevation': 120.0,
+                       'azimuth_boundaries': [80.0, 110.0], #90, 120
+                       'no_steps': 10,
+                       'randomize_order':True}
+            
+            stim_time = self.run_parameters['stim_time']
+            no_steps = protocol_parameters['no_steps']
+            
+            time_steps = np.linspace(0,stim_time,no_steps)
+            x_steps = np.linspace(protocol_parameters['azimuth_boundaries'][0],protocol_parameters['azimuth_boundaries'][1],no_steps)
+            y_steps = np.linspace(protocol_parameters['elevation'],protocol_parameters['elevation'],no_steps)
+            
+            x = list(zip(time_steps,x_steps))
+            y = list(zip(time_steps,y_steps))
+
+            trajectory = RectangleTrajectory(x = x,
+                                    y = y,
+                                    angle = 0,
+                                    h = protocol_parameters['square_width'],
+                                    w = protocol_parameters['square_width'],
+                                    color = protocol_parameters['color']).to_dict() 
+            
+            trajectory = 
+
+            epoch_parameters = {'name':stimulus_ID,
+                                'background':self.run_parameters['idle_color'],
+                                'trajectory':trajectory}
+#            convenience_parameters = {}
+            
         elif protocol_ID == 'FlickeringPatch':
             stimulus_ID = 'MovingPatch'
             stim_time = self.run_parameters['stim_time']
@@ -305,6 +341,13 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'elevation_locations': [100.0, 110.0, 120.0, 130.0, 140.0], # 100...140
                        'azimuth_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], #60...120
                        'speed':60.0,
+                       'randomize_order':True}
+        elif protocol_ID == 'SimulatedOrRandomMotion':
+            params = {'square_width':5.0,
+                       'color':0.0,
+                       'elevation': 120.0,
+                       'azimuth_boundaries': [80.0, 110.0], #90, 120
+                       'no_steps': 10,
                        'randomize_order':True}
             
         elif protocol_ID == 'FlickeringPatch':
