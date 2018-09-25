@@ -286,7 +286,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             params = {'width':5.0,
                        'height':5.0,
                        'color':0.0,
-                       'center': [90.0, 120.0],
+                       'center': [55.0, 120],
                        'speed':60.0,
                        'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                        'randomize_order':True}
@@ -294,7 +294,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         elif protocol_ID == 'ExpandingMovingSquare':
             params = {'width':[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
                        'color':0.0,
-                       'center': [90.0, 120.0],
+                       'center': [55.0, 120.0],
                        'speed':60.0,
                        'angle': 0.0,
                        'randomize_order':True}
@@ -302,15 +302,15 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         elif protocol_ID == 'MovingSquareMapping':
             params = {'square_width':5.0,
                        'color':0.0,
-                       'elevation_locations': [100.0, 110.0, 120.0, 130.0, 140.0], # 100...140
-                       'azimuth_locations': [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0], #60...120
+                       'elevation_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0], # 100...140
+                       'azimuth_locations': [30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0], #30...80
                        'speed':60.0,
                        'randomize_order':True}
             
         elif protocol_ID == 'FlickeringPatch':
             params = {'height':5.0,
                        'width':5.0,
-                       'center': [90.0, 120.0],
+                       'center': [55.0, 120.0],
                        'temporal_frequency': [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
                        'randomize_order':True}
         else:
