@@ -24,6 +24,8 @@ def main():
     manager.black_corner_square()
     manager.set_idle_background(0)
     print('Serving on port 60629')
+    if len(dlpc350_objects) == 0:
+        print('No lightcrafters detected! Try sudo')
     stim_server(manager, addr = ('', 60629))
 
 if __name__ == '__main__':
