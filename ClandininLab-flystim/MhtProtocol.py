@@ -23,7 +23,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             addr = ('127.0.0.1', 60629)
             use_server = False
         elif platform == "win32": #Windows (rig computer)
-            self.data_directory = '/Users/User/Documents/ExperimentDataFiles'
+            self.data_directory = 'E:/Max/FlystimData/'
             addr = ('192.168.1.232', 60629)
             use_server = True
 
