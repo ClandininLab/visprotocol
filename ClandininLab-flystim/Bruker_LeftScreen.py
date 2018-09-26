@@ -14,7 +14,6 @@ def main():
      
      
     # Define screen(s) for the rig
-    # TODO: check perspective correction measurements
     w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
 
     bruker_left_screen = Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=3.75e-2, square_loc='lr')

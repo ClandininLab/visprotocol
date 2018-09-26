@@ -12,6 +12,7 @@ from flystim.screen import Screen
 import numpy as np
 from sys import platform
 from flystim.trajectory import RectangleTrajectory, Trajectory
+from math import pi
 
 
 class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
@@ -60,7 +61,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
         if use_server:
             self.manager = StimClient(addr = addr) # use a server on rig computer
         else:
-            screens = [Screen(fullscreen=False, vsync=None)]
+            w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
+            screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
             self.manager = StimManager(screens)
         
         self.manager.black_corner_square()
@@ -230,15 +232,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
         elif protocol_ID == 'SimulatedOrRandomMotion':
             stimulus_ID = 'MovingPatch'
-            
-            
-            params = {'square_width':5.0,
-                       'color':0.0,
-                       'elevation': 120.0,
-                       'azimuth_boundaries': [80.0, 110.0], #90, 120
-                       'no_steps': 10,
-                       'randomize_order':True}
-            
+
             stim_time = self.run_parameters['stim_time']
             no_steps = protocol_parameters['no_steps']
             
@@ -246,22 +240,33 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             x_steps = np.linspace(protocol_parameters['azimuth_boundaries'][0],protocol_parameters['azimuth_boundaries'][1],no_steps)
             y_steps = np.linspace(protocol_parameters['elevation'],protocol_parameters['elevation'],no_steps)
             
-            x = list(zip(time_steps,x_steps))
-            y = list(zip(time_steps,y_steps))
-
-            trajectory = RectangleTrajectory(x = x,
-                                    y = y,
-                                    angle = 0,
-                                    h = protocol_parameters['square_width'],
-                                    w = protocol_parameters['square_width'],
-                                    color = protocol_parameters['color']).to_dict() 
+            #switch back and forth between sequential and random
+            randomized_order = bool(np.mod(self.num_epochs_completed,2))
+            if randomized_order:
+                x_steps = np.random.permutation(x_steps)
             
-            trajectory = 
+            # time-modulated trajectories
+            x = Trajectory(list(zip(time_steps,x_steps)), kind = 'previous') #note interp kind is previous
+            y = Trajectory(list(zip(time_steps,y_steps)), kind = 'previous')
+            # constant trajectories:
+            w = Trajectory(protocol_parameters['square_width'])
+            h = Trajectory(protocol_parameters['square_width'])
+            angle = Trajectory(0)
+            color = Trajectory(protocol_parameters['color'])
+            trajectory = {'x': x.to_dict(), 'y': y.to_dict(), 'w': w.to_dict(), 'h': h.to_dict(),
+                'angle': angle.to_dict(), 'color': color.to_dict()}
 
             epoch_parameters = {'name':stimulus_ID,
                                 'background':self.run_parameters['idle_color'],
                                 'trajectory':trajectory}
-#            convenience_parameters = {}
+            convenience_parameters = {'square_width':protocol_parameters['square_width'],
+                                      'angle':0,
+                                      'color':protocol_parameters['color'],
+                                      'elevation':protocol_parameters['elevation'],
+                                      'azimuth_boundaries':protocol_parameters['azimuth_boundaries'],
+                                      'no_steps':protocol_parameters['no_steps'],
+                                      'randomized_order':randomized_order,
+                                      'x_steps':x_steps}
             
         elif protocol_ID == 'FlickeringPatch':
             stimulus_ID = 'MovingPatch'
@@ -346,9 +351,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
             params = {'square_width':5.0,
                        'color':0.0,
                        'elevation': 120.0,
-                       'azimuth_boundaries': [80.0, 110.0], #90, 120
-                       'no_steps': 10,
-                       'randomize_order':True}
+                       'azimuth_boundaries': [40.0, 70.0],
+                       'no_steps': 12}
             
         elif protocol_ID == 'FlickeringPatch':
             params = {'height':5.0,
