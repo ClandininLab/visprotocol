@@ -38,8 +38,9 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'DriftingSquareGrating',
                                'MovingRectangle',
                                'ExpandingMovingSquare',
+                               'SpeedTuningSquare',
                                'MovingSquareMapping',
-                               'SimulatedOrRandomMotion',
+                               'SequentialOrRandomMotion',
                                'FlickeringPatch']
         # # #  List of fly metadata # # # 
         self.prepChoices = ['Left optic lobe',
@@ -171,6 +172,53 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                       'angle':protocol_parameters['angle'],
                                       'speed':protocol_parameters['speed'],
                                       'color':protocol_parameters['color']}
+            
+        elif protocol_ID == 'SpeedTuningSquare':
+            stimulus_ID = 'MovingPatch'
+            
+            currentSpeed = self.selectCurrentParameterFromList(protocol_parameters['speed'], randomize_flag = protocol_parameters['randomize_order'])
+            
+            centerX = protocol_parameters['center'][0]
+            centerY = protocol_parameters['center'][1]
+            angle = protocol_parameters['angle']
+            width = protocol_parameters['width']
+            stim_time = self.run_parameters['stim_time']
+            
+            distance_to_travel = 120 # deg
+            #travel time in sec, at start of stim_time. Remaining stim_time spot just hangs at the end of the trajectory
+            travel_time = distance_to_travel / currentSpeed  
+            
+            startX = (0,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endX = (travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            endY = (travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            
+            if  travel_time < stim_time:
+                hangX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+                hangY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+                x = [startX, endX, hangX]
+                y = [startY, endY, hangY]
+            elif travel_time >= stim_time:
+                print('Warning: stim_time is too short to show whole trajectory')
+                x = [startX, endX]
+                y = [startY, endY]
+
+            trajectory = RectangleTrajectory(x = x,
+                                                  y = y,
+                                                  angle = angle,
+                                                  h = width,
+                                                  w = width,
+                                                  color = protocol_parameters['color']).to_dict()   
+
+            epoch_parameters = {'name':stimulus_ID,
+                                'background':self.run_parameters['idle_color'],
+                                'trajectory':trajectory}
+            convenience_parameters = {'width': width,
+                                      'center':protocol_parameters['center'],
+                                      'angle':angle,
+                                      'currentSpeed':currentSpeed,
+                                      'color':protocol_parameters['color']}
+            
 
         elif protocol_ID == 'MovingSquareMapping':
             stimulus_ID = 'MovingPatch'
@@ -230,7 +278,7 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                       'color':protocol_parameters['color']}
             
             
-        elif protocol_ID == 'SimulatedOrRandomMotion':
+        elif protocol_ID == 'SequentialOrRandomMotion':
             stimulus_ID = 'MovingPatch'
 
             stim_time = self.run_parameters['stim_time']
@@ -339,6 +387,14 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'speed':60.0,
                        'angle': 0.0,
                        'randomize_order':True}
+
+        elif protocol_ID == 'SpeedTuningSquare':
+            params = {'width': 5.0,
+                       'color':0.0,
+                       'center': [55.0, 120.0],
+                       'speed':[20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0, 200.0],
+                       'angle': 0.0,
+                       'randomize_order':True}
             
         elif protocol_ID == 'MovingSquareMapping':
             params = {'square_width':5.0,
@@ -347,7 +403,8 @@ class MhtProtocol(ClandininLabProtocol.ClandininLabProtocol):
                        'azimuth_locations': [30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0], #30...80
                        'speed':60.0,
                        'randomize_order':True}
-        elif protocol_ID == 'SimulatedOrRandomMotion':
+            
+        elif protocol_ID == 'SequentialOrRandomMotion':
             params = {'square_width':5.0,
                        'color':0.0,
                        'elevation': 120.0,
