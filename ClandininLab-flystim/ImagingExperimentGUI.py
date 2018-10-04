@@ -35,14 +35,16 @@ class ImagingExperimentGUI(QWidget):
             import MhtProtocol as protocol_parent
             self.protocolObject = protocolObject()
             self.protocol_parent = protocol_parent
-
-#            self.protocolObject = self.protocol_parent.MhtProtocol.MhtProtocol()
         elif item == 'ExampleProtocol':
-            import ExampleProtocol
-            self.protocolObject = ExampleProtocol.ExampleProtocol()
+            from ExampleProtocol.ExampleProtocol import BaseProtocol as protocolObject
+            import ExampleProtocol as protocol_parent
+            self.protocolObject = protocolObject()
+            self.protocol_parent = protocol_parent
         elif item == '':
-            import ExampleProtocol
-            self.protocolObject = ExampleProtocol.ExampleProtocol()
+            from ExampleProtocol.ExampleProtocol import BaseProtocol as protocolObject
+            import ExampleProtocol as protocol_parent
+            self.protocolObject = protocolObject()
+            self.protocol_parent = protocol_parent
             
         self.initUI()
 
