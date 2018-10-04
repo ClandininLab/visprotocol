@@ -31,14 +31,18 @@ class ImagingExperimentGUI(QWidget):
          "Available protocols", items, 0, False)
         
         if item == 'MhtProtocol':
-            import MhtProtocol
-            self.protocolObject = MhtProtocol.MhtProtocol();
+            from MhtProtocol.MhtProtocol import BaseProtocol as protocolObject
+            import MhtProtocol as protocol_parent
+            self.protocolObject = protocolObject()
+            self.protocol_parent = protocol_parent
+
+#            self.protocolObject = self.protocol_parent.MhtProtocol.MhtProtocol()
         elif item == 'ExampleProtocol':
             import ExampleProtocol
-            self.protocolObject = ExampleProtocol.ExampleProtocol();
+            self.protocolObject = ExampleProtocol.ExampleProtocol()
         elif item == '':
             import ExampleProtocol
-            self.protocolObject = ExampleProtocol.ExampleProtocol();
+            self.protocolObject = ExampleProtocol.ExampleProtocol()
             
         self.initUI()
 
@@ -229,7 +233,8 @@ class ImagingExperimentGUI(QWidget):
         self.resetLayout()
         
         # Get default protocol parameters for this protocol ID
-        self.protocolObject.protocol_parameters = self.protocolObject.getParameterDefaults(self.protocolObject.run_parameters['protocol_ID'])
+        self.protocolObject.protocol_ID_object = getattr(getattr(self.protocol_parent,text),text)
+        self.protocolObject.protocol_parameters = self.protocolObject.protocol_ID_object.getParameterDefaults()
         
         # update display window to show parameters for this protocol
         self.protocol_parameter_input = {}; # clear old input params dict

@@ -71,7 +71,7 @@ class ClandininLabProtocol():
                 self.stop = False
                 break
             #  get stimulus parameters for this epoch
-            epoch_parameters, convenience_parameters = self.getEpochParameters(run_parameters['protocol_ID'], protocol_parameters, epoch)
+            epoch_parameters, convenience_parameters = self.protocol_ID_object.getEpochParameters(self)
  
             if save_metadata_flag:
                 # update epoch metadata
