@@ -11,7 +11,9 @@ setup(
     install_requires=[
         'PyQT5',
         'numpy',
-        'flystim'],
+        'flystim',
+        'nidaqmx',
+        'h5py'],
     include_package_data=True,
     zip_safe=False,
 )
