@@ -26,3 +26,12 @@ class DriftingSquareGrating():
                        'randomize_order':True}
         
         return protocol_parameters
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'DriftingSquareGrating',
+              'num_epochs':40,
+              'pre_time':0.5,
+              'stim_time':4.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
+        return run_parameters

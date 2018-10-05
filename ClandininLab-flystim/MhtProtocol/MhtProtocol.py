@@ -44,7 +44,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'SpeedTuningSquare',
                                'StationaryMapping']
         
-        # # #  List of fly metadata # # # 
+        # # #  Lists of fly metadata # # # 
         self.prepChoices = ['Left optic lobe',
                             'Right optic lobe',
                             'Whole brain']
@@ -72,7 +72,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         self.manager.set_idle_background(0)
 
 
-    # Convenience functions across protocols...
+    # Convenience functions shared across protocols...
     def selectCurrentParameterFromList(self, parameter_string):
         
         if self.num_epochs_completed == 0: #new run: initialize location sequences

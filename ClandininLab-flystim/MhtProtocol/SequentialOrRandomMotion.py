@@ -47,7 +47,17 @@ class SequentialOrRandomMotion():
         protocol_parameters = {'square_width':5.0,
                        'color':0.0,
                        'elevation': 120.0,
-                       'azimuth_boundaries': [40.0, 70.0],
-                       'no_steps': 12}
+                       'azimuth_boundaries': [50.0, 70.0],
+                       'no_steps': 8}
         
         return protocol_parameters
+    
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'SequentialOrRandomMotion',
+              'num_epochs':20,
+              'pre_time':0.5,
+              'stim_time':0.5,
+              'tail_time':1.0,
+              'idle_color':0.5}
+        return run_parameters

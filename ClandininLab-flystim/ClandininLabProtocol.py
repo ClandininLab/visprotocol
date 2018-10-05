@@ -21,16 +21,12 @@ import os
 import nidaqmx
 from sys import platform
 
+#TODO: clean up var names etc
 class ClandininLabProtocol():
     def __init__(self):
         super().__init__()
-        # Run parameters that are constant across all protocols
-        self.run_parameters = {'protocol_ID':'',
-              'num_epochs':5,
-              'pre_time':0.5,
-              'stim_time':5.0,
-              'tail_time':0.5,
-              'idle_color':0.5}
+        
+        self.getDefaultRunParameters() # Run parameters that are constant across all protocols
         self.protocol_parameters = {} # populated in GUI or user protocol
         self.fly_metadata = {}  # populated in GUI or user protocol
         self.stop = False
@@ -123,6 +119,15 @@ class ClandininLabProtocol():
             sleep(run_parameters['tail_time'])
             
             self.num_epochs_completed += 1
+            
+            
+    def getDefaultRunParameters(self):
+        self.run_parameters = {'protocol_ID':'',
+              'num_epochs':5,
+              'pre_time':0.5,
+              'stim_time':5.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
 
     def addNoteToExperimentFile(self, noteText):
         noteTime = datetime.now().strftime('%H:%M:%S.%f')[:-4]

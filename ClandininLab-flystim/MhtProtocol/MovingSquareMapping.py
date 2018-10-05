@@ -71,3 +71,13 @@ class MovingSquareMapping():
                        'randomize_order':True}
         
         return protocol_parameters
+    
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'MovingSquareMapping',
+              'num_epochs':100,
+              'pre_time':0.5,
+              'stim_time':2.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
+        return run_parameters

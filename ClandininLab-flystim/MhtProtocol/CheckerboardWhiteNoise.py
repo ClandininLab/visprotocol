@@ -27,3 +27,12 @@ class CheckerboardWhiteNoise():
                        'distribution_type':'binary'}
         
         return protocol_parameters
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'CheckerboardWhiteNoise',
+              'num_epochs':10,
+              'pre_time':1.0,
+              'stim_time':30.0,
+              'tail_time':1.0,
+              'idle_color':0.5}
+        return run_parameters

@@ -49,3 +49,13 @@ class StationaryMapping():
                        'flash_duration':0.25}
         
         return protocol_parameters
+    
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'StationaryMapping',
+              'num_epochs':6,
+              'pre_time':2.0,
+              'stim_time':100.0,
+              'tail_time':2.0,
+              'idle_color':0.5}
+        return run_parameters

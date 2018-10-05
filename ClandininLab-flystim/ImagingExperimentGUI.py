@@ -15,6 +15,7 @@ from datetime import datetime
 import os
 
 # TODO: handle params that are meant to be strings
+# TODO: save/load parameter sets
 
 class ImagingExperimentGUI(QWidget):
     
@@ -77,24 +78,8 @@ class ImagingExperimentGUI(QWidget):
         self.grid1.addWidget(protocol_label, 1, 0)
         self.grid1.addWidget(comboBox, 1, 1, 1, 1)
         
-        self.run_params_ct = 0
-        # Run parameters list
-        for key, value in self.protocolObject.run_parameters.items():
-            if key not in ['protocol_ID', 'run_start_time']:
-                self.run_params_ct += 1
-                newLabel = QLabel(key + ':')
-                self.grid1.addWidget(newLabel, 1 + self.run_params_ct , 0)
-                
-                self.run_parameter_input[key] = QLineEdit()
-                if isinstance(value, int):
-                    validator = QtGui.QIntValidator()
-                    validator.setBottom(0)
-                elif isinstance(value, float):
-                    validator = QtGui.QDoubleValidator()
-                    validator.setBottom(0)
-                self.run_parameter_input[key].setValidator(validator)
-                self.run_parameter_input[key].setText(str(value))
-                self.grid1.addWidget(self.run_parameter_input[key], 1 + self.run_params_ct, 1, 1, 1)
+        # Run paramters input:
+        self.updateRunParamtersInput()
 
         # View button:
         viewButton = QPushButton("View", self)
@@ -238,26 +223,15 @@ class ImagingExperimentGUI(QWidget):
         self.protocolObject.protocol_ID_object = getattr(getattr(self.protocol_parent,text),text)
         self.protocolObject.protocol_parameters = self.protocolObject.protocol_ID_object.getParameterDefaults()
         
-        # update display window to show parameters for this protocol
-        self.protocol_parameter_input = {}; # clear old input params dict
-        ct = 0
-        for key, value in self.protocolObject.protocol_parameters.items():
-            ct += 1
-            newLabel = QLabel(key + ':')
-            self.grid1.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
-            
-            if isinstance(value, bool):
-                self.protocol_parameter_input[key] = QCheckBox()
-                self.protocol_parameter_input[key].setChecked(value)
-            else:
-                self.protocol_parameter_input[key] = QLineEdit()
-                if isinstance(value, int):
-                    self.protocol_parameter_input[key].setValidator(QtGui.QIntValidator())
-                elif isinstance(value, float):
-                    self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
-                    
-                self.protocol_parameter_input[key].setText(str(value)) #set to default value
-            self.grid1.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 2)
+        # Get default run parameters, if they're defined for this protocol
+        if hasattr(self.protocolObject.protocol_ID_object,'getRunParameterDefaults'):
+            self.protocolObject.run_parameters = self.protocolObject.protocol_ID_object.getRunParameterDefaults()
+        else:
+            self.protocolObject.getDefaultRunParameters()
+        
+        #update display lists of run & protocol parameters
+        self.updateProtocolParametersInput()
+        self.updateRunParamtersInput()
         self.show()
        
     def onPressedButton(self):
@@ -327,6 +301,48 @@ class ImagingExperimentGUI(QWidget):
             if item != None:
                 item.widget().deleteLater()
         self.show()
+
+    def updateProtocolParametersInput(self):
+        # update display window to show parameters for this protocol
+        self.protocol_parameter_input = {}; # clear old input params dict
+        ct = 0
+        for key, value in self.protocolObject.protocol_parameters.items():
+            ct += 1
+            newLabel = QLabel(key + ':')
+            self.grid1.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
+            
+            if isinstance(value, bool):
+                self.protocol_parameter_input[key] = QCheckBox()
+                self.protocol_parameter_input[key].setChecked(value)
+            else:
+                self.protocol_parameter_input[key] = QLineEdit()
+                if isinstance(value, int):
+                    self.protocol_parameter_input[key].setValidator(QtGui.QIntValidator())
+                elif isinstance(value, float):
+                    self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
+                    
+                self.protocol_parameter_input[key].setText(str(value)) #set to default value
+            self.grid1.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 2)
+        
+    def updateRunParamtersInput(self):
+        self.run_params_ct = 0
+        # Run parameters list
+        for key, value in self.protocolObject.run_parameters.items():
+            if key not in ['protocol_ID', 'run_start_time']:
+                self.run_params_ct += 1
+                newLabel = QLabel(key + ':')
+                self.grid1.addWidget(newLabel, 1 + self.run_params_ct , 0)
+                
+                self.run_parameter_input[key] = QLineEdit()
+                if isinstance(value, int):
+                    validator = QtGui.QIntValidator()
+                    validator.setBottom(0)
+                elif isinstance(value, float):
+                    validator = QtGui.QDoubleValidator()
+                    validator.setBottom(0)
+                self.run_parameter_input[key].setValidator(validator)
+                self.run_parameter_input[key].setText(str(value))
+                self.grid1.addWidget(self.run_parameter_input[key], 1 + self.run_params_ct, 1, 1, 1)
 
     def onEnteredSeriesCount(self):
         self.protocolObject.series_count = self.series_counter_input.value()

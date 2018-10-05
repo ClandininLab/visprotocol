@@ -60,3 +60,12 @@ class SpeedTuningSquare():
                        'randomize_order':True}
         
         return protocol_parameters
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'SpeedTuningSquare',
+              'num_epochs':50,
+              'pre_time':0.5,
+              'stim_time':5.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
+        return run_parameters

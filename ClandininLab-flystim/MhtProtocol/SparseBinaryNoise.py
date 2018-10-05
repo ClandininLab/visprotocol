@@ -50,3 +50,13 @@ class SparseBinaryNoise():
                        'flash_duration':0.25}
         
         return protocol_parameters
+    
+    
+    def getRunParameterDefaults():
+        run_parameters = {'protocol_ID':'SparseBinaryNoise',
+              'num_epochs':5,
+              'pre_time':5.0,
+              'stim_time':60.0,
+              'tail_time':5.0,
+              'idle_color':0.5}
+        return run_parameters
