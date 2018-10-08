@@ -213,8 +213,6 @@ class ImagingExperimentGUI(QWidget):
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
             return
-        else:
-            self.protocolObject.run_parameters['protocol_ID'] = text
             
         # Clear old params list from grid
         self.resetLayout()
@@ -228,6 +226,7 @@ class ImagingExperimentGUI(QWidget):
             self.protocolObject.run_parameters = self.protocolObject.protocol_ID_object.getRunParameterDefaults()
         else:
             self.protocolObject.getDefaultRunParameters()
+            self.protocolObject.run_parameters['protocol_ID'] = text
         
         #update display lists of run & protocol parameters
         self.updateProtocolParametersInput()
@@ -359,7 +358,7 @@ class ImagingExperimentGUI(QWidget):
         if self.protocolObject.run_parameters['protocol_ID'] == '':
                 self.status_label.setText('Select a protocol')
                 return
-
+            
         if save_metadata_flag:
             self.protocolObject.series_count = self.series_counter_input.value()
             self.protocolObject.reOpenExperimentFile()
