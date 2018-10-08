@@ -13,7 +13,7 @@ handle things like initializing the screen, and passing parameters to flystim
 """
 
 from time import sleep
-from flystim.launch import MultiCall
+import flyrpc.multicall
 from datetime import datetime
 from PyQt5.QtWidgets import QApplication
 import h5py
@@ -98,7 +98,7 @@ class ClandininLabProtocol():
 
             # send the stimulus to flystim
             passedParameters = epoch_parameters.copy()
-            multicall = MultiCall(self.manager)
+            multicall = flyrpc.multicall.MyMultiCall(self.manager)
             multicall.load_stim(**passedParameters)
             
             # play the presentation
@@ -112,7 +112,6 @@ class ClandininLabProtocol():
             sleep(run_parameters['stim_time'])
             
             #tail time
-            multicall = MultiCall(self.manager)
             multicall.stop_stim()
             multicall.black_corner_square()
             multicall()
