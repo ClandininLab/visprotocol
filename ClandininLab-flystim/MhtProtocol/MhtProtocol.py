@@ -13,8 +13,9 @@ from sys import platform
 from math import pi
 
 from flyrpc.launch import launch_server
+from flyrpc.transceiver import MySocketClient
 import flystim.stim_server
-import flyrpc.echo_server
+
 
 
 class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
@@ -23,7 +24,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         # # # Define your data directory # # #             
         if platform == "darwin": #OSX (laptop, for dev.)
             self.data_directory = '/Users/mhturner/documents/stashedObjects'
-            host = '127.0.0.1'
+            host = '0.0.0.0'
             port = 60629
             use_server = False
         elif platform == "win32": #Windows (rig computer)
@@ -68,7 +69,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         
         # # # Start the stim manager and set the frame tracker square to black # # #
         if use_server:
-            self.manager = launch_server(flyrpc.echo_server, host=host, port=port, auto_stop=False)
+            self.manager = MySocketClient(host=host, port=port)
         else:
             w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
             screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
