@@ -13,7 +13,9 @@ setup(
         'numpy',
         'flystim',
         'nidaqmx',
-        'h5py'],
+        'h5py',
+        'scipy',
+        'flyrpc'],
     include_package_data=True,
     zip_safe=False,
 )

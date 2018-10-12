@@ -28,7 +28,10 @@ class SparseNoise():
                             'update_rate': protocolObject.protocol_parameters['update_rate'],
                             'distribution_data': distribution_data}
         
-        convenience_parameters = {}
+        convenience_parameters = {'rand_min':protocolObject.protocol_parameters['rand_min'],
+                                  'rand_max':protocolObject.protocol_parameters['rand_max'],
+                                  'sparseness':protocolObject.protocol_parameters['sparseness'],
+                                  'distribution_name':'SparseBinary'}
 
         return epoch_parameters, convenience_parameters
         
