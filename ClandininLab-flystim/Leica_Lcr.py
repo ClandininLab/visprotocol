@@ -18,7 +18,8 @@ def main():
     # Define screen(s) for the rig
     w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
 
-    leica_lcr = Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=3.75e-2, square_loc='lr')
+    leica_lcr = Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2),
+server_number=1, id=1, fullscreen=True, vsync=None, square_side=3.75e-2, square_loc='lr')
     screens = [leica_lcr]
     port = 60629
     host = ''

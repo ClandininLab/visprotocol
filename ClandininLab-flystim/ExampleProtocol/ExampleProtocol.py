@@ -45,7 +45,9 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         self.indicatorChoices = ['GCaMP6f']
         
         # # # Start the stim manager and set the frame tracker square to black # # #
-        self.manager = launch_server(flystim.stim_server, setup_name='macbook', auto_stop=True)
+        host = '0.0.0.0'
+        port = 60629
+        self.manager = MySocketClient(host=host, port=port)
         
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
