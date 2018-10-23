@@ -7,11 +7,14 @@ Created on Mon Jul 16 15:58:53 2018
 """
 
 import ClandininLabProtocol
-from flystim.launch import StimClient, StimManager
 from flystim.screen import Screen
 import numpy as np
 from sys import platform
 from math import pi
+
+from flyrpc.launch import launch_server
+from flyrpc.transceiver import MySocketClient
+import flystim.stim_server
 
 class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
@@ -19,11 +22,13 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         # # # Define your data directory # # #             
         if platform == "darwin": #OSX (laptop, for dev.)
             self.data_directory = '/Users/mhturner/documents/stashedObjects'
-            addr = ('127.0.0.1', 60629)
+            host = '0.0.0.0'
+            port = 60629
             use_server = False
         elif platform == "win32": #Windows (rig computer)
             self.data_directory = 'E:/Max/FlystimData/'
-            addr = ('192.168.1.232', 60629)
+            host = '192.168.1.232'
+            port = 60629
             use_server = True
 
         # # # Parameters for the screen # # # 
@@ -50,11 +55,12 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         
         # # # Start the stim manager and set the frame tracker square to black # # #
         if use_server:
-            self.manager = StimClient(addr = addr) # use a server on rig computer
+            self.manager = MySocketClient(host=host, port=port)
         else:
             w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
             screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
-            self.manager = StimManager(screens)
+            # TODO: pass screen into launch_server
+            self.manager = launch_server(flystim.stim_server, setup_name='macbook', auto_stop=True)
         
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
