@@ -43,6 +43,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'DriftingSquareGrating',
                                'ExpandingMovingSquare',
                                'FlickeringPatch',
+                               'LoomingPatch',
                                'MovingRectangle',
                                'MovingSquareMapping',
                                'SequentialOrRandomMotion',
