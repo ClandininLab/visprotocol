@@ -18,7 +18,7 @@ class LoomingPatch():
         min_size = angular_size[0]
         size_adjust = min_size - start_size
         angular_size = angular_size - size_adjust
-        # Cap the curve at max_size and have it just hang there
+        # Cap the curve at end_size and have it just hang there
         max_size_ind = np.where(angular_size > end_size)[0][0]
         angular_size[max_size_ind:] = end_size
         
@@ -51,6 +51,8 @@ class LoomingPatch():
                                   'color':protocolObject.protocol_parameters['color'],
                                   'time_steps':time_steps,
                                   'angular_size':angular_size,
+                                  'start_size':start_size,
+                                  'end_size':end_size,
                                   'randomized_order':randomized_order}
 
         return epoch_parameters, convenience_parameters
