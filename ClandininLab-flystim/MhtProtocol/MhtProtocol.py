@@ -12,9 +12,8 @@ import numpy as np
 from sys import platform
 from math import pi
 
-from flyrpc.launch import launch_server
+from flystim.stim_server import launch_stim_server
 from flyrpc.transceiver import MySocketClient
-import flystim.stim_server
 
 
 
@@ -75,7 +74,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
             w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
             screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
             # TODO: pass screen into launch_server
-            self.manager = launch_server(flystim.stim_server, setup_name='macbook', auto_stop=True)
+            self.manager = launch_stim_server(screens)
         
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
