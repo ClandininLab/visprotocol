@@ -46,6 +46,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'MovingRectangle',
                                'MovingSquareMapping',
                                'SequentialOrRandomMotion',
+                               'SineTrajectoryPatch',
                                'SparseBinaryNoise',
                                'SpeedTuningSquare',
                                'StationaryMapping',
