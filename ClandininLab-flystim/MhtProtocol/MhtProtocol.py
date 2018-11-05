@@ -83,7 +83,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
     # Convenience functions shared across protocols...
     def selectCurrentParameterFromList(self, parameter_string):
         
-        if self.num_epochs_completed == 0: #new run: initialize location sequences
+        if self.num_epochs_completed == 0: #new run: initialize sequences
             parameter_sequence = self.protocol_parameters[parameter_string]
             if type(parameter_sequence) is not list:
                 parameter_sequence = [parameter_sequence] #somebody probably entered a float instead of a list in the GUI
@@ -96,3 +96,18 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
         current_parameter = self.persistent_parameters['parameter_sequence'][draw_ind]
         return current_parameter
+
+    def selectParameterPairFromLists(self, list_1, list_2):
+        
+        if self.num_epochs_completed == 0: #new run
+            parameter_sequence = np.array(np.meshgrid(list_1, list_2)).T.reshape(len(list_1) * len(list_2),2)
+            self.persistent_parameters = {'parameter_sequence':parameter_sequence}
+        
+        draw_ind = np.mod(self.num_epochs_completed,len(self.persistent_parameters['parameter_sequence']))
+        if draw_ind == 0 and self.protocol_parameters['randomize_order']:
+            rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
+            self.persistent_parameters['parameter_sequence'] = self.persistent_parameters['parameter_sequence'][rand_inds]
+            
+        parameter_1, parameter_2 = self.persistent_parameters['parameter_sequence'][draw_ind]
+
+        return parameter_1, parameter_2
