@@ -14,7 +14,7 @@ class SineTrajectoryPatch():
         
         stim_time = protocolObject.run_parameters['stim_time']
         
-        time_steps = np.linspace(0,stim_time,100) #time steps of trajectory
+        time_steps = np.linspace(0,stim_time,500) #time steps of trajectory
         distance_along_movement_axis = amplitude * np.sin(time_steps * 2 * np.pi * current_temporal_frequency)
 
         x_steps = centerX + np.cos(np.radians(movement_axis)) * distance_along_movement_axis
@@ -68,7 +68,7 @@ class SineTrajectoryPatch():
         return protocol_parameters
     
     def getRunParameterDefaults():
-        run_parameters = {'protocol_ID':'MovingRectangle',
+        run_parameters = {'protocol_ID':'SineTrajectoryPatch',
               'num_epochs':40,
               'pre_time':0.5,
               'stim_time':2.0,
