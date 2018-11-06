@@ -4,8 +4,6 @@ from flystim.trajectory import Trajectory
 class LoomingPatch():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
-        
-#        current_rv_ratio = protocolObject.selectCurrentParameterFromList('rv_ratio') / 1e3 #msec -> sec
 
         stim_time = protocolObject.run_parameters['stim_time']
         start_size = protocolObject.protocol_parameters['start_size']
@@ -37,7 +35,7 @@ class LoomingPatch():
             
         elif current_trajectory_code == 1:
             current_trajectory_type = 'contracting'
-            angular_size = np.flip(angular_size) # reverse in time
+            angular_size = np.flip(angular_size, axis = 0) # reverse in time
             
         elif current_trajectory_code == 2:
             current_trajectory_type = 'randomized'
