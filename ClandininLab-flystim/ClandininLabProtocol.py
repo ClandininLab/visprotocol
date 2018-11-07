@@ -19,7 +19,6 @@ from PyQt5.QtWidgets import QApplication
 import h5py
 import os
 import nidaqmx
-from sys import platform
 
 #TODO: clean up var names etc
 class ClandininLabProtocol():
@@ -33,6 +32,7 @@ class ClandininLabProtocol():
         self.num_epochs_completed = 0
         
         self.series_count = 1
+        self.send_ttl = False #override this with user protocol if you want to trigger a nidaq TTL
 
         # Experiment file should be initialized by the user
         self.experiment_file = None
@@ -88,7 +88,7 @@ class ClandininLabProtocol():
                     convenienceParametersGroup.attrs[key] = convenience_parameters[key]
                 self.experiment_file.close()
 
-            if platform == "win32":
+            if self.send_ttl:
                 # Send a TTL pulse through the NI-USB to trigger acquisition
                 with nidaqmx.Task() as task:
                     task.co_channels.add_co_pulse_chan_time("Dev5/ctr0",

@@ -9,7 +9,7 @@ Created on Thu Jun 21 10:20:02 2018
 import ClandininLabProtocol
 from flystim.screen import Screen
 import numpy as np
-from sys import platform
+import socket
 from math import pi
 
 from flystim.stim_server import launch_stim_server
@@ -21,16 +21,18 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
     def __init__(self):
         super().__init__()
         # # # Define your data directory # # #             
-        if platform == "darwin": #OSX (laptop, for dev.)
+        if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
             self.data_directory = '/Users/mhturner/documents/stashedObjects'
             host = '0.0.0.0'
             port = 60629
             use_server = False
-        elif platform == "win32": #Windows (rig computer)
+            self.send_ttl = False
+        else:
             self.data_directory = 'E:/Max/FlystimData/'
             host = '192.168.1.232'
             port = 60629
             use_server = True
+            self.send_ttl = True
 
     
         # # # Other metadata defaults. These can be changed in the gui as well # # #
