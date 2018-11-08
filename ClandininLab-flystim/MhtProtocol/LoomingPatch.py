@@ -12,8 +12,10 @@ class LoomingPatch():
         rv_ratio = protocolObject.protocol_parameters['rv_ratio'] #msec
         trajectory_code = [0, 1, 2] #0 = expanding, 1 = reversed (shrinking), 2 = randomized
 
-
-        current_rv_ratio, current_trajectory_code = protocolObject.selectParameterPairFromLists(rv_ratio, trajectory_code)
+        current_rv_ratio, current_trajectory_code = protocolObject.selectParametersFromLists((rv_ratio, trajectory_code),
+                                                                                             all_combinations = True, 
+                                                                                             randomize_order = protocolObject.protocol_parameters['randomize_order'])
+        
         current_rv_ratio = current_rv_ratio / 1e3 #msec -> sec
     
         time_steps = np.linspace(0,stim_time,100) #time steps of trajectory

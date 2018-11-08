@@ -2,7 +2,8 @@ class DriftingSquareGrating():
     def getEpochParameters(protocolObject):
         stimulus_ID  = 'RotatingBars'
         
-        currentAngle = protocolObject.selectCurrentParameterFromList('angle')
+        currentAngle = protocolObject.selectParametersFromLists(protocolObject.protocol_parameters['angle'],
+                                                                randomize_order = protocolObject.protocol_parameters['randomize_order'])
         
         epoch_parameters = {'name':stimulus_ID,
                             'period':protocolObject.protocol_parameters['period'],

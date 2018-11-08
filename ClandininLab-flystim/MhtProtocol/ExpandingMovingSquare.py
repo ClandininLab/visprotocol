@@ -5,7 +5,8 @@ class ExpandingMovingSquare():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
         
-        currentWidth = protocolObject.selectCurrentParameterFromList('width')
+        currentWidth = protocolObject.selectParametersFromLists(protocolObject.protocol_parameters['width'],
+                                                                randomize_order = protocolObject.protocol_parameters['randomize_order'])
         
         centerX = protocolObject.protocol_parameters['center'][0]
         centerY = protocolObject.protocol_parameters['center'][1]

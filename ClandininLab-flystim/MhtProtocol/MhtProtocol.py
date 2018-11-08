@@ -49,7 +49,6 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                'MovingSquareMapping',
                                'SequentialOrRandomMotion',
                                'SineTrajectoryPatch',
-                               'SparseBinaryNoise',
                                'SpeedTuningSquare',
                                'StationaryMapping',
                                'SparseNoise']
@@ -67,7 +66,6 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                  'ASAP4c',
                                  '10_90_GCaMP6f',
                                  'SF-iGluSnFR.A184V']
- 
         
         
         # # # Start the stim manager and set the frame tracker square to black # # #
@@ -76,7 +74,6 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
         else:
             w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
             screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
-            # TODO: pass screen into launch_server
             self.manager = launch_stim_server(screens)
         
         self.manager.black_corner_square()
@@ -84,33 +81,46 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
 
 
     # Convenience functions shared across protocols...
-    def selectCurrentParameterFromList(self, parameter_string):
+    def selectParametersFromLists(self, parameter_list, all_combinations = True, randomize_order = False):
+        """
+        inputs
+        parameter_list can be:
+            -list/array of parameters
+            -single value (int, float etc)
+            -tuple of lists, where each list contains values for a single parameter
+                    in this case, all_combinations = True will return all possible combinations of parameters, taking 
+                    one from each parameter list. If all_combinations = False, keeps params associated across lists
+        randomize_order will randomize sequence or sequences at the beginning of each new sequence
+        """
         
-        if self.num_epochs_completed == 0: #new run: initialize sequences
-            parameter_sequence = self.protocol_parameters[parameter_string]
-            if type(parameter_sequence) is not list:
-                parameter_sequence = [parameter_sequence] #somebody probably entered a float instead of a list in the GUI
-            self.persistent_parameters = {'parameter_sequence':parameter_sequence}
+        # parameter_list is a tuple of lists or a single list
+        if type(parameter_list) is list: #single protocol parameter list, choose one from this list
+            parameter_sequence = parameter_list
+            
+        elif type(parameter_list) is tuple: #multiple lists of protocol parameters
+            if all_combinations:
+                # parameter_sequence is num_combinations by num params
+                parameter_sequence = np.array(np.meshgrid(*parameter_list)).T.reshape(np.prod(list(len(x) for x in parameter_list)),len(parameter_list))
+            else:
+                #keep params in lists associated with one another
+                #requires param lists of equal length
+                parameter_sequence = np.vstack(parameter_list).T 
+
+        else: #user probably entered a single value (int or float), convert to list
+            parameter_sequence = [parameter_list] 
+
+
+        if self.num_epochs_completed == 0: #new run: initialize persistent sequences
+                self.persistent_parameters = {'parameter_sequence':parameter_sequence}
                 
         draw_ind = np.mod(self.num_epochs_completed,len(self.persistent_parameters['parameter_sequence']))
-        if draw_ind == 0 and self.protocol_parameters['randomize_order']:
+        if draw_ind == 0 and randomize_order: #randomize sequence
             rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
-            self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds])
-            
-        current_parameter = self.persistent_parameters['parameter_sequence'][draw_ind]
-        return current_parameter
-
-    def selectParameterPairFromLists(self, list_1, list_2):
+            if len(np.shape(self.persistent_parameters['parameter_sequence'])) == 1:
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds])
+            else:
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds,:])
         
-        if self.num_epochs_completed == 0: #new run
-            parameter_sequence = np.array(np.meshgrid(list_1, list_2)).T.reshape(len(list_1) * len(list_2),2)
-            self.persistent_parameters = {'parameter_sequence':parameter_sequence}
-        
-        draw_ind = np.mod(self.num_epochs_completed,len(self.persistent_parameters['parameter_sequence']))
-        if draw_ind == 0 and self.protocol_parameters['randomize_order']:
-            rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
-            self.persistent_parameters['parameter_sequence'] = self.persistent_parameters['parameter_sequence'][rand_inds]
-            
-        parameter_1, parameter_2 = self.persistent_parameters['parameter_sequence'][draw_ind]
+        current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
 
-        return parameter_1, parameter_2
+        return current_parameters

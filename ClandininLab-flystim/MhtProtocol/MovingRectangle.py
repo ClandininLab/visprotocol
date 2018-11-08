@@ -5,7 +5,8 @@ class MovingRectangle():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
             
-        currentAngle = protocolObject.selectCurrentParameterFromList('angle')
+        currentAngle = protocolObject.selectParametersFromLists(protocolObject.protocol_parameters['angle'],
+                                                                randomize_order = protocolObject.protocol_parameters['randomize_order'])
         
         centerX = protocolObject.protocol_parameters['center'][0]
         centerY = protocolObject.protocol_parameters['center'][1]

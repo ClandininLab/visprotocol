@@ -6,7 +6,8 @@ class FlickeringPatch():
         stimulus_ID = 'MovingPatch'
         stim_time = protocolObject.run_parameters['stim_time']
         
-        current_temporal_frequency = protocolObject.selectCurrentParameterFromList('temporal_frequency')
+        current_temporal_frequency = protocolObject.selectParametersFromLists(protocolObject.protocol_parameters['temporal_frequency'],
+                                                                randomize_order = protocolObject.protocol_parameters['randomize_order'])
 
         trajectory_sample_rate = 100 # Hz
         nPoints = trajectory_sample_rate * stim_time

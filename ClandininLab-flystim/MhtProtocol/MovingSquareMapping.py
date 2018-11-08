@@ -4,26 +4,41 @@ from flystim.trajectory import RectangleTrajectory
 class MovingSquareMapping():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
-        if protocolObject.num_epochs_completed == 0: #new run: initialize location sequences
-            location_sequence = np.concatenate((protocolObject.protocol_parameters['azimuth_locations'] ,
-                                               protocolObject.protocol_parameters['elevation_locations']))
-            movement_axis_sequence = np.concatenate((np.ones(len(protocolObject.protocol_parameters['azimuth_locations'])) ,
+        location_list = np.concatenate((protocolObject.protocol_parameters['azimuth_locations'] ,
+                                        protocolObject.protocol_parameters['elevation_locations']))
+        movement_axis_list = np.concatenate((np.ones(len(protocolObject.protocol_parameters['azimuth_locations'])) ,
                                                2*np.ones(len(protocolObject.protocol_parameters['elevation_locations']))))
-            protocolObject.persistent_parameters = {'movement_axis_sequence':movement_axis_sequence,
-                          'location_sequence':location_sequence}
-                
-        draw_ind = np.mod(protocolObject.num_epochs_completed,len(protocolObject.persistent_parameters['location_sequence']))
-        if draw_ind == 0 and protocolObject.protocol_parameters['randomize_order']:
-            rand_inds = np.random.permutation(len(protocolObject.persistent_parameters['location_sequence']))
-            protocolObject.persistent_parameters['movement_axis_sequence'] = list(np.array(protocolObject.persistent_parameters['movement_axis_sequence'])[rand_inds])
-            protocolObject.persistent_parameters['location_sequence'] = list(np.array(protocolObject.persistent_parameters['location_sequence'])[rand_inds])
-            
-        # select current locations from sequence
-        if protocolObject.persistent_parameters['movement_axis_sequence'][draw_ind] == 1:
-            current_search_axis = 'azimuth' #current location is an azimuth, movement along elevation
-        elif protocolObject.persistent_parameters['movement_axis_sequence'][draw_ind] == 2:
-            current_search_axis = 'elevation' #current location is an elevation, movement along azimuth
-        current_location = protocolObject.persistent_parameters['location_sequence'][draw_ind]
+        
+        
+        current_search_axis_code, current_location = protocolObject.selectParametersFromLists((movement_axis_list, location_list),
+                                                                                              all_combinations = False,
+                                                                                              randomize_order = protocolObject.protocol_parameters['randomize_order'])
+        
+        if current_search_axis_code == 1:
+            current_search_axis = 'azimuth'
+        elif current_search_axis_code == 2:
+            current_search_axis = 'elevation'
+#        
+#        if protocolObject.num_epochs_completed == 0: #new run: initialize location sequences
+#            location_sequence = np.concatenate((protocolObject.protocol_parameters['azimuth_locations'] ,
+#                                               protocolObject.protocol_parameters['elevation_locations']))
+#            movement_axis_sequence = np.concatenate((np.ones(len(protocolObject.protocol_parameters['azimuth_locations'])) ,
+#                                               2*np.ones(len(protocolObject.protocol_parameters['elevation_locations']))))
+#            protocolObject.persistent_parameters = {'movement_axis_sequence':movement_axis_sequence,
+#                          'location_sequence':location_sequence}
+#                
+#        draw_ind = np.mod(protocolObject.num_epochs_completed,len(protocolObject.persistent_parameters['location_sequence']))
+#        if draw_ind == 0 and protocolObject.protocol_parameters['randomize_order']:
+#            rand_inds = np.random.permutation(len(protocolObject.persistent_parameters['location_sequence']))
+#            protocolObject.persistent_parameters['movement_axis_sequence'] = list(np.array(protocolObject.persistent_parameters['movement_axis_sequence'])[rand_inds])
+#            protocolObject.persistent_parameters['location_sequence'] = list(np.array(protocolObject.persistent_parameters['location_sequence'])[rand_inds])
+#            
+#        # select current locations from sequence
+#        if protocolObject.persistent_parameters['movement_axis_sequence'][draw_ind] == 1:
+#            current_search_axis = 'azimuth' #current location is an azimuth, movement along elevation
+#        elif protocolObject.persistent_parameters['movement_axis_sequence'][draw_ind] == 2:
+#            current_search_axis = 'elevation' #current location is an elevation, movement along azimuth
+#        current_location = protocolObject.persistent_parameters['location_sequence'][draw_ind]
 
         #where does the square begin? Should be just off screen...
         startingAzimuth = 20.0; startingElevation = 40.0;

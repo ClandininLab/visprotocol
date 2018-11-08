@@ -19,8 +19,6 @@ class SparseNoise():
                                            'rand_max':protocolObject.protocol_parameters['rand_max'],
                                            'sparseness':protocolObject.protocol_parameters['sparseness']}}
         
-        
-        
         epoch_parameters = {'name': stimulus_ID,
                             'theta_period': protocolObject.protocol_parameters['checker_width'],
                             'phi_period': protocolObject.protocol_parameters['checker_width'],

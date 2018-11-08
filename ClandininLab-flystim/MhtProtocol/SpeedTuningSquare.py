@@ -5,7 +5,8 @@ class SpeedTuningSquare():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
             
-        currentSpeed = protocolObject.selectCurrentParameterFromList('speed')
+        currentSpeed = protocolObject.selectParametersFromLists(protocolObject.protocol_parameters['speed'],
+                                                                randomize_order = protocolObject.protocol_parameters['randomize_order'])
         
         centerX = protocolObject.protocol_parameters['center'][0]
         centerY = protocolObject.protocol_parameters['center'][1]

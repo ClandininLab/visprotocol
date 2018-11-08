@@ -5,7 +5,8 @@ class SineTrajectoryPatch():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
         
-        current_temporal_frequency = protocolObject.selectCurrentParameterFromList('temporal_frequency')
+        current_temporal_frequency = protocolObject.selectParametersFromLists(protocolObject.protocol_parameters['temporal_frequency'],
+                                                                randomize_order = protocolObject.protocol_parameters['randomize_order'])
 
         centerX = protocolObject.protocol_parameters['center'][0]
         centerY = protocolObject.protocol_parameters['center'][1]
@@ -14,7 +15,7 @@ class SineTrajectoryPatch():
         
         stim_time = protocolObject.run_parameters['stim_time']
         
-        time_steps = np.linspace(0,stim_time,500) #time steps of trajectory
+        time_steps = np.arange(0,stim_time,0.005) #time steps of trajectory
         distance_along_movement_axis = amplitude * np.sin(time_steps * 2 * np.pi * current_temporal_frequency)
 
         x_steps = centerX + np.cos(np.radians(movement_axis)) * distance_along_movement_axis
