@@ -18,7 +18,7 @@ class LoomingPatch():
         
         current_rv_ratio = current_rv_ratio / 1e3 #msec -> sec
     
-        time_steps = np.linspace(0,stim_time,100) #time steps of trajectory
+        time_steps = np.arange(0,stim_time-0.001,0.001) #time steps of trajectory
         # calculate angular size at each time step for this rv ratio
         angular_size = 2 * np.rad2deg(np.arctan(current_rv_ratio * (1 /(stim_time - time_steps))))
         

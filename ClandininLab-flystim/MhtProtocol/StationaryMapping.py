@@ -4,14 +4,22 @@ from flystim.trajectory import Trajectory
 class StationaryMapping():
     def getEpochParameters(protocolObject):
         stimulus_ID = 'MovingPatch'
+        az_loc = protocolObject.protocol_parameters['azimuth_locations']
+        el_loc = protocolObject.protocol_parameters['elevation_locations']
+        
+        if type(az_loc) is not list:
+            az_loc = [az_loc]
+        if type(el_loc) is not list:
+            el_loc = [el_loc]
+        
 
         stim_time = protocolObject.run_parameters['stim_time'] #sec
         flash_duration = protocolObject.protocol_parameters['flash_duration'] #sec
         
         time_steps = np.arange(0,stim_time,flash_duration)
         no_steps = len(time_steps)
-        x_steps = np.random.choice(protocolObject.protocol_parameters['azimuth_locations'], size = no_steps, replace=True)
-        y_steps = np.random.choice(protocolObject.protocol_parameters['elevation_locations'], size = no_steps, replace=True)
+        x_steps = np.random.choice(az_loc, size = no_steps, replace=True)
+        y_steps = np.random.choice(el_loc, size = no_steps, replace=True)
  
         
         # time-modulated trajectories
@@ -31,8 +39,8 @@ class StationaryMapping():
         convenience_parameters = {'square_width':protocolObject.protocol_parameters['square_width'],
                                   'angle':0,
                                   'color':protocolObject.protocol_parameters['color'],
-                                  'elevation_locations':protocolObject.protocol_parameters['elevation_locations'],
-                                  'azimuth_locations':protocolObject.protocol_parameters['azimuth_locations'],
+                                  'elevation_locations':el_loc,
+                                  'azimuth_locations':az_loc,
                                   'flash_duration':protocolObject.protocol_parameters['flash_duration'],
                                   'x_steps':x_steps,
                                   'y_steps':y_steps,
