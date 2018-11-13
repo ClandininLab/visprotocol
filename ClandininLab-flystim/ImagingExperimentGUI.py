@@ -26,27 +26,14 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
         
-        # Link to a protocol object
-        items = ('MhtProtocol','ExampleProtocol', '')
-        item, ok = QInputDialog.getItem(self, "select user protocol", 
-         "Available protocols", items, 0, False)
+        # Link to a protocol child
+        import ClandininLabProtocol #import protocol parent
+        protocol_child_names = ClandininLabProtocol.getAvailableProtocolChildren()
+        protocol_child_name, ok = QInputDialog.getItem(self, "select user protocol", 
+         "Available protocols", protocol_child_names, 0, False)
         
-        if item == 'MhtProtocol':
-            from MhtProtocol.MhtProtocol import BaseProtocol as protocolObject
-            import MhtProtocol as protocol_parent
-            self.protocolObject = protocolObject()
-            self.protocol_parent = protocol_parent
-        elif item == 'ExampleProtocol':
-            from ExampleProtocol.ExampleProtocol import BaseProtocol as protocolObject
-            import ExampleProtocol as protocol_parent
-            self.protocolObject = protocolObject()
-            self.protocol_parent = protocol_parent
-        elif item == '':
-            from ExampleProtocol.ExampleProtocol import BaseProtocol as protocolObject
-            import ExampleProtocol as protocol_parent
-            self.protocolObject = protocolObject()
-            self.protocol_parent = protocol_parent
-            
+        self.protocolObject, self.protocol_parent = ClandininLabProtocol.initializeChildProtocol(protocol_child_name)
+
         self.initUI()
 
     def initUI(self):  

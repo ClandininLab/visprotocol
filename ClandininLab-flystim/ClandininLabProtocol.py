@@ -158,3 +158,24 @@ class ClandininLabProtocol():
         
     def reOpenExperimentFile(self):
         self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
+    
+def initializeChildProtocol(protocol_name):
+    if protocol_name == 'MhtProtocol':
+        from MhtProtocol.MhtProtocol import BaseProtocol as protocolObject
+        import MhtProtocol as protocol_parent
+
+    elif protocol_name == 'ExampleProtocol':
+        from ExampleProtocol.ExampleProtocol import BaseProtocol as protocolObject
+        import ExampleProtocol as protocol_parent
+        
+    elif protocol_name == '':
+        from ExampleProtocol.ExampleProtocol import BaseProtocol as protocolObject
+        import ExampleProtocol as protocol_parent
+
+    return (protocolObject(), protocol_parent)
+    
+def getAvailableProtocolChildren():
+    protocol_names = ('MhtProtocol','ExampleProtocol', '')
+    return protocol_names
+            
+        

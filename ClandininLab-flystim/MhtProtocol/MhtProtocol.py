@@ -66,7 +66,7 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                                  'ASAP4c',
                                  '10_90_GCaMP6f',
                                  'SF-iGluSnFR.A184V']
-        
+
         
         # # # Start the stim manager and set the frame tracker square to black # # #
         if use_server:
