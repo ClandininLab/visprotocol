@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-    name='ClandininLab-flystim',
-    version='0.0.1',
-    description='Clandinin-lab protocol and metadata handler for flystim experiments',
-    url='https://github.com/ClandininLab/ClandininLab-flystim',
+    name='vis-protocol',
+    version='0.1.0',
+    description='Visual stimulation protocol and metadata handler for flystim experiments',
+    url='https://github.com/ClandininLab/vis-protocol',
     author='Max Turner',
     author_email='mhturner@stanford.edu',
-    packages=['ClandininLab-flystim'],
+    packages=['vis-protocol'],
     install_requires=[
         'PyQT5',
         'numpy',
