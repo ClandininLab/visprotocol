@@ -99,6 +99,16 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
             
         elif type(parameter_list) is tuple: #multiple lists of protocol parameters
             if all_combinations:
+                parameter_list_new = []
+                
+                # check for non-list elements of the tuple (int or float user entry)
+                for param in list(parameter_list):
+                    if type(param) is not list:
+                        parameter_list_new.append([param])
+                    else:
+                        parameter_list_new.append(param)
+                parameter_list = tuple(parameter_list_new)
+                
                 # parameter_sequence is num_combinations by num params
                 parameter_sequence = np.array(np.meshgrid(*parameter_list)).T.reshape(np.prod(list(len(x) for x in parameter_list)),len(parameter_list))
             else:
