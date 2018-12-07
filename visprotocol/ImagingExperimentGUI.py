@@ -14,6 +14,11 @@ import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
 
+from visprotocol import client
+from visprotocol import protocol
+from visprotocol import data
+from visprotocol import control
+
 # TODO: handle params that are meant to be strings
 # TODO: save/load parameter sets
 
@@ -25,14 +30,21 @@ class ImagingExperimentGUI(QWidget):
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
-        
-        # Link to a protocol child
-        import ClandininLabProtocol #import protocol parent
-        protocol_child_names = ClandininLabProtocol.getAvailableProtocolChildren()
-        protocol_child_name, ok = QInputDialog.getItem(self, "select user protocol", 
-         "Available protocols", protocol_child_names, 0, False)
-        
-        self.protocolObject, self.protocol_parent = ClandininLabProtocol.initializeChildProtocol(protocol_child_name)
+
+        user_names = ['mht']
+        user_name, ok = QInputDialog.getItem(self, "select user", 
+                                             "Available users", user_names, 0, False)
+
+        # get a client
+        self.client = getattr(client, user_name + '_client').Client()
+        # get a data object
+        self.data = getattr(data, user_name + '_data').Data()
+        # get a protocol, just start with the base class until user selects one
+        self.protocol_object = getattr(protocol, user_name + '_protocol').BaseProtocol()
+        # get available protocol classes
+        self.available_protocols = getattr(protocol, user_name + '_protocol').BaseProtocol.__subclasses__()
+        # get an epoch run control object
+        self.epoch_run = control.EpochRun()
 
         self.initUI()
 
@@ -58,8 +70,8 @@ class ImagingExperimentGUI(QWidget):
         # Protocol ID drop-down:
         comboBox = QComboBox(self)
         comboBox.addItem("(select a protocol to run)")
-        for protID in self.protocolObject.protocolIDList:
-            comboBox.addItem(protID)
+        for sub_class in self.available_protocols:
+            comboBox.addItem(sub_class.__name__)
         protocol_label = QLabel('Protocol:')
         comboBox.activated[str].connect(self.onSelectedProtocolID)
         self.grid1.addWidget(protocol_label, 1, 0)
@@ -154,35 +166,35 @@ class ImagingExperimentGUI(QWidget):
         newLabel = QLabel('Prep:')
         self.fly_prep_input = QComboBox()
         self.fly_prep_input.addItem("")
-        for prepID in self.protocolObject.prepChoices:
+        for prepID in self.data.prepChoices:
             self.fly_prep_input.addItem(prepID)
         self.grid2.addRow(newLabel, self.fly_prep_input)
         # Driver1:
         newLabel = QLabel('Driver_1:')
         self.fly_driver_1 = QComboBox()
         self.fly_driver_1.addItem("")
-        for prepID in self.protocolObject.driverChoices:
+        for prepID in self.data.driverChoices:
             self.fly_driver_1.addItem(prepID)
         self.grid2.addRow(newLabel, self.fly_driver_1)
         # Indicator1:
         newLabel = QLabel('Indicator_1:')
         self.fly_indicator_1 = QComboBox()
         self.fly_indicator_1.addItem("")
-        for prepID in self.protocolObject.indicatorChoices:
+        for prepID in self.data.indicatorChoices:
             self.fly_indicator_1.addItem(prepID)
         self.grid2.addRow(newLabel, self.fly_indicator_1)
         # Driver2:
         newLabel = QLabel('Driver_2:')
         self.fly_driver_2 = QComboBox()
         self.fly_driver_2.addItem("")
-        for prepID in self.protocolObject.driverChoices:
+        for prepID in self.data.driverChoices:
             self.fly_driver_2.addItem(prepID)
         self.grid2.addRow(newLabel, self.fly_driver_2)
         # Indicator2:
         newLabel = QLabel('Indicator_2:')
         self.fly_indicator_2 = QComboBox()
         self.fly_indicator_2.addItem("")
-        for prepID in self.protocolObject.indicatorChoices:
+        for prepID in self.data.indicatorChoices:
             self.fly_indicator_2.addItem(prepID)
         self.grid2.addRow(newLabel, self.fly_indicator_2)
         # Fly genotype:
@@ -200,21 +212,13 @@ class ImagingExperimentGUI(QWidget):
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
             return
-            
         # Clear old params list from grid
         self.resetLayout()
         
-        # Get default protocol parameters for this protocol ID
-        self.protocolObject.protocol_ID_object = getattr(getattr(self.protocol_parent,text),text)
-        self.protocolObject.protocol_parameters = self.protocolObject.protocol_ID_object.getParameterDefaults()
-        
-        # Get default run parameters, if they're defined for this protocol
-        if hasattr(self.protocolObject.protocol_ID_object,'getRunParameterDefaults'):
-            self.protocolObject.run_parameters = self.protocolObject.protocol_ID_object.getRunParameterDefaults()
-        else:
-            self.protocolObject.getDefaultRunParameters()
-            self.protocolObject.run_parameters['protocol_ID'] = text
-        
+        # initialize the selected protocol object
+        prot_names = [x.__name__ for x in self.available_protocols]
+        self.protocol_object = self.available_protocols[prot_names.index(text)]()
+
         #update display lists of run & protocol parameters
         self.updateProtocolParametersInput()
         self.updateRunParamtersInput()
@@ -223,7 +227,7 @@ class ImagingExperimentGUI(QWidget):
     def onPressedButton(self):
         sender = self.sender()
         if sender.text() == 'Record':
-            if self.protocolObject.experiment_file is None:
+            if self.data.experiment_file is None:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
                 msg.setText("You have not initialized a data file yet")
@@ -242,14 +246,14 @@ class ImagingExperimentGUI(QWidget):
             self.sendRun(save_metadata_flag = False)         
 
         elif sender.text() == 'Stop':
-            self.protocolObject.stop = True
+            self.epoch_run.stopRun()
             
         elif sender.text() == 'Enter note':
             self.noteText = self.notesEdit.toPlainText()
-            if self.protocolObject.experiment_file is None:
+            if self.data.experiment_file is None:
                 self.notesEdit.setTextColor(QtGui.QColor("Red"))
             else: 
-                self.protocolObject.addNoteToExperimentFile(self.noteText) # save note to expt file
+                self.data.addNoteToExperimentFile(self.noteText) # save note to expt file
                 self.notesEdit.clear() # clear notes box
             
         elif sender.text() == 'Initialize experiment':
@@ -260,26 +264,26 @@ class ImagingExperimentGUI(QWidget):
             dialog.setFixedSize(300,200)
             dialog.exec_()
             
-            self.protocolObject.experiment_file_name = dialog.ui.le_FileName.text()
-            self.protocolObject.data_directory = dialog.ui.le_DataDirectory.text()
-            self.protocolObject.experimenter = dialog.ui.le_Experimenter.text()
-            self.protocolObject.rig = dialog.ui.le_Rig.text()
+            self.data.experiment_file_name = dialog.ui.le_FileName.text()
+            self.data.data_directory = dialog.ui.le_DataDirectory.text()
+            self.data.experimenter = dialog.ui.le_Experimenter.text()
+            self.data.rig = dialog.ui.le_Rig.text()
             
         elif sender.text() == 'Load experiment':
             filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
-            self.protocolObject.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
-            self.protocolObject.data_directory = os.path.split(filePath)[0]
+            self.data.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
+            self.data.data_directory = os.path.split(filePath)[0]
             
-            if self.protocolObject.experiment_file_name is not '':
-                self.protocolObject.reOpenExperimentFile()
-                self.currentExperimentLabel.setText(self.protocolObject.experiment_file_name)
+            if self.data.experiment_file_name is not '':
+                self.data.reOpenExperimentFile()
+                self.currentExperimentLabel.setText(self.data.experiment_file_name)
                 # update series count to reflect already-collected series
-                largest_prior_value = max(list(map(int,list(self.protocolObject.experiment_file['/epoch_runs'].keys()))), default = 0)
-                self.protocolObject.experiment_file.close()
+                largest_prior_value = max(list(map(int,list(self.data.experiment_file['/epoch_runs'].keys()))), default = 0)
+                self.data.experiment_file.close()
                 self.series_counter_input.setValue(largest_prior_value + 1)
 
     def resetLayout(self):
-        for ii in range(len(self.protocolObject.protocol_parameters.items())):
+        for ii in range(len(self.protocol_object.protocol_parameters.items())):
             item = self.grid1.itemAtPosition(self.run_params_ct+5+ii,0)
             if item != None:
                 item.widget().deleteLater()
@@ -292,7 +296,7 @@ class ImagingExperimentGUI(QWidget):
         # update display window to show parameters for this protocol
         self.protocol_parameter_input = {}; # clear old input params dict
         ct = 0
-        for key, value in self.protocolObject.protocol_parameters.items():
+        for key, value in self.protocol_object.protocol_parameters.items():
             ct += 1
             newLabel = QLabel(key + ':')
             self.grid1.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
@@ -313,7 +317,7 @@ class ImagingExperimentGUI(QWidget):
     def updateRunParamtersInput(self):
         self.run_params_ct = 0
         # Run parameters list
-        for key, value in self.protocolObject.run_parameters.items():
+        for key, value in self.protocol_object.run_parameters.items():
             if key not in ['protocol_ID', 'run_start_time']:
                 self.run_params_ct += 1
                 newLabel = QLabel(key + ':')
@@ -331,74 +335,75 @@ class ImagingExperimentGUI(QWidget):
                 self.grid1.addWidget(self.run_parameter_input[key], 1 + self.run_params_ct, 1, 1, 1)
 
     def onEnteredSeriesCount(self):
-        self.protocolObject.series_count = self.series_counter_input.value()
-        if self.protocolObject.experiment_file is not None:
-            self.protocolObject.reOpenExperimentFile()
-            existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
-            self.protocolObject.experiment_file.close()
-            if any(str(self.protocolObject.series_count) in x for x in existing_groups):
+        self.data.series_count = self.series_counter_input.value()
+        if self.data.experiment_file is not None:
+            self.data.reOpenExperimentFile()
+            existing_groups = list(self.data.experiment_file['/epoch_runs'].keys())
+            self.data.experiment_file.close()
+            if any(str(self.data.series_count) in x for x in existing_groups):
                 self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
             
     def sendRun(self, save_metadata_flag = True):
-        if self.protocolObject.run_parameters['protocol_ID'] == '':
+        #check to make sure a protocol has been selected
+        if self.protocol_object.run_parameters['protocol_ID'] == '':
                 self.status_label.setText('Select a protocol')
-                return
+                return #no protocol exists, don't send anything
             
+        #check to make sure the series count does not already exist
         if save_metadata_flag:
-            self.protocolObject.series_count = self.series_counter_input.value()
-            self.protocolObject.reOpenExperimentFile()
-            existing_groups = list(self.protocolObject.experiment_file['/epoch_runs'].keys())
-            self.protocolObject.experiment_file.close()
-            if any(str(self.protocolObject.series_count) in x for x in existing_groups):
+            self.data.series_count = self.series_counter_input.value()
+            self.data.reOpenExperimentFile()
+            existing_groups = list(self.data.experiment_file['/epoch_runs'].keys())
+            self.data.experiment_file.close()
+            if any(str(self.data.series_count) in x for x in existing_groups):
                 self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
-                return #group already exists
+                return #group already exists, don't send anything
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
+            
         
         # Populate parameters from filled fields
         for key, value in self.run_parameter_input.items():
-            self.protocolObject.run_parameters[key] = float(self.run_parameter_input[key].text())
+            self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
             
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key],QCheckBox): #QCheckBox
-                self.protocolObject.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
-            elif isinstance(self.protocolObject.protocol_parameters[key],str):
-                self.protocolObject.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
+                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
+            elif isinstance(self.protocol_object.protocol_parameters[key],str):
+                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else: #QLineEdit
                 new_param_entry = self.protocol_parameter_input[key].text()
                 
                 if new_param_entry[0] == '[': #User trying to enter a list of values
                     to_a_list = []
                     for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
-                    self.protocolObject.protocol_parameters[key] = to_a_list
+                    self.protocol_object.protocol_parameters[key] = to_a_list
                 else: 
-                    self.protocolObject.protocol_parameters[key] = float(new_param_entry)
-                    
-        # Populate fly metadata from fly data fields
-        self.protocolObject.fly_metadata = {'fly:fly_id':self.fly_id_input.text(),
-                                            'fly:sex':self.fly_sex_input.currentText(),
-                                            'fly:age':self.fly_age_input.value(), 
-                                            'fly:prep':self.fly_prep_input.currentText(),
-                                            'fly:driver_1':self.fly_driver_1.currentText(),
-                                            'fly:indicator_1':self.fly_indicator_1.currentText(), 
-                                            'fly:driver_2':self.fly_driver_2.currentText(),
-                                            'fly:indicator_2':self.fly_indicator_2.currentText(),
-                                            'fly:genotype':self.fly_genotype_input.text()}
-
-
-        # Send run and protocol parameters to protocol object
-        self.protocolObject.start(self.protocolObject.run_parameters, 
-                                  self.protocolObject.protocol_parameters, 
-                                  self.protocolObject.fly_metadata, 
-                                  save_metadata_flag = save_metadata_flag)
+                    self.protocol_object.protocol_parameters[key] = float(new_param_entry)
         
+        # Populate fly metadata from fly data fields
+        self.data.fly_metadata = {'fly:fly_id':self.fly_id_input.text(),
+                                  'fly:sex':self.fly_sex_input.currentText(),
+                                  'fly:age':self.fly_age_input.value(), 
+                                  'fly:prep':self.fly_prep_input.currentText(),
+                                  'fly:driver_1':self.fly_driver_1.currentText(),
+                                  'fly:indicator_1':self.fly_indicator_1.currentText(), 
+                                  'fly:driver_2':self.fly_driver_2.currentText(),
+                                  'fly:indicator_2':self.fly_indicator_2.currentText(),
+                                  'fly:genotype':self.fly_genotype_input.text()}
+        
+        
+        self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag = save_metadata_flag)       
+
         self.status_label.setText('Ready')
+        
         if save_metadata_flag:
             # Advance the series_count:
-            self.series_counter_input.setValue(self.protocolObject.series_count + 1)
-            self.protocolObject.series_count = self.series_counter_input.value()
+            self.data.advanceSeriesCount()
+            self.series_counter_input.setValue(self.data.series_count)
+            
         QApplication.processEvents()
         
 class InitializeExperimentGUI(QWidget):
@@ -416,15 +421,15 @@ class InitializeExperimentGUI(QWidget):
       
       button_SelectDirectory = QPushButton("Select Directory...", self)
       button_SelectDirectory.clicked.connect(self.onPressedDirectoryButton) 
-      self.le_DataDirectory = QLineEdit(self.experimentGuiObject.protocolObject.data_directory)
+      self.le_DataDirectory = QLineEdit(self.experimentGuiObject.data.data_directory)
       layout.addRow(button_SelectDirectory, self.le_DataDirectory)
       
       label_Experimenter = QLabel('Experimenter:')
-      self.le_Experimenter = QLineEdit(self.experimentGuiObject.protocolObject.experimenter)
+      self.le_Experimenter = QLineEdit(self.experimentGuiObject.data.experimenter)
       layout.addRow(label_Experimenter, self.le_Experimenter)
       
       label_Rig = QLabel('Rig:')
-      self.le_Rig = QLineEdit(self.experimentGuiObject.protocolObject.rig)
+      self.le_Rig = QLineEdit(self.experimentGuiObject.data.rig)
       layout.addRow(label_Rig,self.le_Rig)
       
       self.label_status = QLabel('Enter experiment info')
@@ -437,20 +442,20 @@ class InitializeExperimentGUI(QWidget):
       self.setLayout(layout)
 
    def onPressedEnterButton(self):
-       self.experimentGuiObject.protocolObject.experiment_file_name = self.le_FileName.text()
-       self.experimentGuiObject.protocolObject.data_directory = self.le_DataDirectory.text()
-       self.experimentGuiObject.protocolObject.experimenter = self.le_Experimenter.text()
-       self.experimentGuiObject.protocolObject.rig = self.le_Rig.text()
+       self.experimentGuiObject.data.experiment_file_name = self.le_FileName.text()
+       self.experimentGuiObject.data.data_directory = self.le_DataDirectory.text()
+       self.experimentGuiObject.data.experimenter = self.le_Experimenter.text()
+       self.experimentGuiObject.data.rig = self.le_Rig.text()
 
-       if os.path.isfile(os.path.join(self.experimentGuiObject.protocolObject.data_directory,
-                                      self.experimentGuiObject.protocolObject.experiment_file_name) + '.hdf5'):
+       if os.path.isfile(os.path.join(self.experimentGuiObject.data.data_directory,
+                                      self.experimentGuiObject.data.experiment_file_name) + '.hdf5'):
            self.label_status.setText('Experiment file already exists!')
-       elif not os.path.isdir(self.experimentGuiObject.protocolObject.data_directory):
+       elif not os.path.isdir(self.experimentGuiObject.data.data_directory):
            self.label_status.setText('Data directory does not exist!')
        else: 
            self.label_status.setText('Data entered')
-           self.experimentGuiObject.currentExperimentLabel.setText(self.experimentGuiObject.protocolObject.experiment_file_name)
-           self.experimentGuiObject.protocolObject.initializeExperimentFile()
+           self.experimentGuiObject.currentExperimentLabel.setText(self.experimentGuiObject.data.experiment_file_name)
+           self.experimentGuiObject.data.initializeExperimentFile()
            self.experimentGuiObject.series_counter_input.setValue(1)
            self.close()
            self.parent.close()

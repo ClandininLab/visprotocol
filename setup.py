@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-    name='vis-protocol',
-    version='0.1.0',
+    name='visprotocol',
+    version='0.1.1',
     description='Visual stimulation protocol and metadata handler for flystim experiments',
-    url='https://github.com/ClandininLab/vis-protocol',
+    url='https://github.com/ClandininLab/visprotocol',
     author='Max Turner',
     author_email='mhturner@stanford.edu',
-    packages=['vis-protocol'],
+    packages=['visprotocol'],
     install_requires=[
         'PyQT5',
         'numpy',

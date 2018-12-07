@@ -1,85 +1,48 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 21 10:20:02 2018
-
-@author: mhturner
+Protocol parent class. Override any methods in here in the user protocol subclass
 """
-
-import ClandininLabProtocol
-from flystim.screen import Screen
 import numpy as np
-import socket
-from math import pi
+from time import sleep
 
-from flystim.stim_server import launch_stim_server
-from flyrpc.transceiver import MySocketClient
-
-
-
-class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
+class BaseProtocol():
     def __init__(self):
-        super().__init__()
-        # # # Define your data directory # # #             
-        if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
-            self.data_directory = '/Users/mhturner/documents/stashedObjects'
-            host = '0.0.0.0'
-            port = 60629
-            use_server = False
-            self.send_ttl = False
-        else:
-            self.data_directory = 'E:/Max/FlystimData/'
-            host = '192.168.1.232'
-            port = 60629
-            use_server = True
-            self.send_ttl = True
-
-    
-        # # # Other metadata defaults. These can be changed in the gui as well # # #
-        self.experimenter = 'MHT'
-        self.rig = 'Bruker'
-
-        # # #  List of your protocol IDs # # # 
-        self.protocolIDList = ['CheckerboardWhiteNoise',
-                               'DriftingSquareGrating',
-                               'ExpandingMovingSquare',
-                               'FlickeringPatch',
-                               'LoomingPatch',
-                               'MovingRectangle',
-                               'MovingSquareMapping',
-                               'SequentialOrRandomMotion',
-                               'SineTrajectoryPatch',
-                               'SpeedTuningSquare',
-                               'StationaryMapping',
-                               'SparseNoise']
+        self.getRunParameterDefaults()
+        self.protocol_parameters = {}
+        self.num_epochs_completed = 0
+        self.send_ttl = False
+   
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'',
+              'num_epochs':5,
+              'pre_time':0.5,
+              'stim_time':5.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
         
-        # # #  Lists of fly metadata # # # 
-        self.prepChoices = ['Left optic lobe',
-                            'Right optic lobe',
-                            'Whole brain']
-        self.driverChoices = ['L2 (21Dhh)','LC11 (R22H02; R20G06)','LC17 (R21D03; R65C12)',
-                              'LC18 (R82D11; R92B11)', 'LC26 (VT007747; R85H06)', 
-                              'LC9 (VT032961; VT040569)','LC20 (R17A04, R35B06)']
-        self.indicatorChoices = ['GCaMP6f',
-                                 'GCaMP6m',
-                                 'ASAP2f',
-                                 'ASAP4c',
-                                 '10_90_GCaMP6f',
-                                 'SF-iGluSnFR.A184V']
-
+    def advanceEpochCounter(self):
+        self.num_epochs_completed += 1
         
-        # # # Start the stim manager and set the frame tracker square to black # # #
-        if use_server:
-            self.manager = MySocketClient(host=host, port=port)
-        else:
-            w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
-            screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
-            self.manager = launch_stim_server(screens)
         
-        self.manager.black_corner_square()
-        self.manager.set_idle_background(0)
-
-
+    def loadStimuli(self, multicall):
+        passedParameters = self.epoch_parameters.copy()
+        multicall.load_stim(**passedParameters)
+        
+    def startStimuli(self, multicall):
+        sleep(self.run_parameters['pre_time'])
+        #stim time
+        multicall.start_stim()
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.run_parameters['stim_time'])
+        
+        #tail time
+        multicall.stop_stim()
+        multicall.black_corner_square()
+        multicall()
+        sleep(self.run_parameters['tail_time'])     
+        
     # Convenience functions shared across protocols...
     def selectParametersFromLists(self, parameter_list, all_combinations = True, randomize_order = False):
         """
@@ -115,11 +78,11 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                 #keep params in lists associated with one another
                 #requires param lists of equal length
                 parameter_sequence = np.vstack(parameter_list).T 
-
+    
         else: #user probably entered a single value (int or float), convert to list
             parameter_sequence = [parameter_list] 
-
-
+    
+    
         if self.num_epochs_completed == 0: #new run: initialize persistent sequences
                 self.persistent_parameters = {'parameter_sequence':parameter_sequence}
                 
@@ -132,5 +95,5 @@ class BaseProtocol(ClandininLabProtocol.ClandininLabProtocol):
                 self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds,:])
         
         current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
-
+    
         return current_parameters
