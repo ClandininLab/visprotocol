@@ -11,6 +11,7 @@ class EpochRun():
         
     def stopRun(self):
         self.stop = True
+        QApplication.processEvents()
         
     def startRun(self, protocol_object, data, client, save_metadata_flag = True):
         self.stop = False

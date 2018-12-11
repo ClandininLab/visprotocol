@@ -9,6 +9,7 @@ import numpy as np
 from visprotocol.protocol import clandinin_protocol
 import socket
 from flystim.trajectory import RectangleTrajectory, Trajectory
+from datetime import datetime
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
@@ -18,6 +19,40 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
             self.send_ttl = False
         else:
             self.send_ttl = True
+            
+            
+    def getMovingPatchParameters(self, center = None, angle = None, speed = None, width = None, height = None, color = None, background = None):
+        centerX = center[0]
+        centerY = center[1]
+        stim_time = self.run_parameters['stim_time']
+        distance_to_travel = speed * stim_time
+        
+        startX = (0,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+        endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+        startY = (0,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+        endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+    
+        trajectory = RectangleTrajectory(x=[startX, endX],
+                                              y=[startY, endY],
+                                              angle=angle,
+                                              h = height,
+                                              w = width,
+                                              color = color).to_dict()   
+        
+        patch_parameters = {'name':'MovingPatch',
+                                'background':background,
+                                'trajectory':trajectory}
+        return patch_parameters
+
+    def getRotatingGratingParameters(self, angle = None, rate = None, period = None, color = None, background = None):
+        grate_parameters = {'name':'RotatingBars',
+                            'period':period,
+                            'duty_cycle':0.5,
+                            'rate':rate,
+                            'color':color,
+                            'background':background,
+                            'angle':angle}
+        return grate_parameters
             
 
 # %%
@@ -757,3 +792,190 @@ class StationaryMapping(BaseProtocol):
               'tail_time':2.0,
               'idle_color':0.5}
 
+# %%
+class CenterSurroundDriftingSquareGrating(BaseProtocol):
+    def __init__(self):
+        super().__init__()
+        
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+        
+    def getEpochParameters(self):
+        stimulus_ID  = 'RotatingBars'
+        
+        current_surround_rate, current_center_rate = self.selectParametersFromLists((self.protocol_parameters['rate_surround'], self.protocol_parameters['rate_center']),
+                                                                                             all_combinations = True, 
+                                                                                             randomize_order = self.protocol_parameters['randomize_order'])
+        
+
+        self.epoch_parameters = ({'name':stimulus_ID,
+                            'period':self.protocol_parameters['period_surround'],
+                            'duty_cycle':0.5,
+                            'rate':current_surround_rate,
+                            'color':self.protocol_parameters['color'],
+                            'background':self.protocol_parameters['background'],
+                            'angle':self.protocol_parameters['angle']},
+                            {'name':stimulus_ID,
+                            'period':self.protocol_parameters['period_center'],
+                            'duty_cycle':0.5,
+                            'rate':current_center_rate,
+                            'color':self.protocol_parameters['color'],
+                            'background':self.protocol_parameters['background'],
+                            'angle':self.protocol_parameters['angle']})
+        
+        self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
+                                'center_location':self.protocol_parameters['center_location']}
+        self.convenience_parameters = {**self.protocol_parameters.copy(),
+                                       **{'current_surround_rate':current_surround_rate,'current_center_rate':current_center_rate}}
+        
+    def loadStimuli(self, multicall):
+        surround_parameters = self.epoch_parameters[0].copy()
+        center_parameters = self.epoch_parameters[1].copy()
+        
+        box_min_x = self.meta_parameters['center_location'][0] - self.meta_parameters['center_size']/2
+        box_max_x = self.meta_parameters['center_location'][0] + self.meta_parameters['center_size']/2
+        
+        box_min_y = self.meta_parameters['center_location'][1] - self.meta_parameters['center_size']/2
+        box_max_y = self.meta_parameters['center_location'][1] + self.meta_parameters['center_size']/2
+        
+        multicall.load_stim(**surround_parameters)
+        multicall.load_stim(**center_parameters, 
+                            box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
+                            hold=True)
+
+    def saveEpochMetaData(self, data):
+        # update epoch metadata for this epoch
+        data.reOpenExperimentFile()
+        epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+        newEpoch = data.experiment_file['/epoch_runs/' + str(data.series_count)].create_group('epoch_'+str(self.num_epochs_completed))
+        newEpoch.attrs['epoch_time'] = epoch_time
+        
+        epochParametersGroup = newEpoch.create_group('epoch_parameters')
+        for ind, stim_params in enumerate(self.epoch_parameters):
+            if ind == 0:
+                prefix = 'surround_'
+            elif ind == 1:
+                prefix = 'center_'
+                    
+            for key in stim_params: #save out epoch parameters
+                newValue = stim_params[key]
+                if type(newValue) is dict:
+                    newValue = str(newValue)
+                epochParametersGroup.attrs[prefix + key] = newValue
+          
+        convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
+        for key in self.convenience_parameters: #save out convenience parameters
+            convenienceParametersGroup.attrs[key] = self.convenience_parameters[key]
+        data.experiment_file.close()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period_center':20.0,
+                       'rate_center':[10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
+                       'period_surround':20.0,
+                       'rate_surround':[10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
+                       'center_size':20.0,
+                       'center_location': [55.0, 120],
+                       'color':1.0,
+                       'background':0.0,
+                       'angle':0.0,
+                       'randomize_order':True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'CenterSurroundDriftingSquareGrating',
+              'num_epochs':40,
+              'pre_time':0.5,
+              'stim_time':4.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
+        
+# %%
+class MovingPatchOnDriftingGrating(BaseProtocol):
+    def __init__(self):
+        super().__init__()
+        
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+        
+    def getEpochParameters(self):
+        
+        current_patch_speed, current_grate_rate = self.selectParametersFromLists((self.protocol_parameters['patch_speed'], self.protocol_parameters['grate_rate']),
+                                                                                             all_combinations = True, 
+                                                                                             randomize_order = self.protocol_parameters['randomize_order'])
+        
+        patch_parameters = self.getMovingPatchParameters(center = self.protocol_parameters['center_location'],
+                                                angle = self.protocol_parameters['angle'],
+                                                speed = current_patch_speed,
+                                                width = self.protocol_parameters['patch_size'],
+                                                height = self.protocol_parameters['patch_size'],
+                                                color = self.protocol_parameters['patch_color'],
+                                                background = None)
+        
+        grate_parameters = self.getRotatingGratingParameters(angle = self.protocol_parameters['angle'],
+                                                    rate = current_grate_rate,
+                                                    period = self.protocol_parameters['grate_period'],
+                                                    color = self.protocol_parameters['grate_color'],
+                                                    background = self.protocol_parameters['grate_background'])
+        
+        self.epoch_parameters = (grate_parameters, patch_parameters)
+        self.convenience_parameters = {**self.protocol_parameters.copy(),
+                                       **{'current_patch_speed':current_patch_speed,'current_grate_rate':current_grate_rate}}
+        
+    def loadStimuli(self, multicall):
+        grate_parameters = self.epoch_parameters[0].copy()
+        patch_parameters = self.epoch_parameters[1].copy()
+
+        multicall.load_stim(**grate_parameters)
+        multicall.load_stim(**patch_parameters, vary='intensity', hold=True)
+
+    def saveEpochMetaData(self, data):
+        # update epoch metadata for this epoch
+        data.reOpenExperimentFile()
+        epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+        newEpoch = data.experiment_file['/epoch_runs/' + str(data.series_count)].create_group('epoch_'+str(self.num_epochs_completed))
+        newEpoch.attrs['epoch_time'] = epoch_time
+        
+        epochParametersGroup = newEpoch.create_group('epoch_parameters')
+        
+        for ind, stim_params in enumerate(self.epoch_parameters):
+            if ind == 1:
+                prefix = 'patch_'
+            elif ind == 0:
+                prefix = 'grate_'
+            else:
+                prefix = ''
+  
+            for key in stim_params: #save out epoch parameters
+                newValue = stim_params[key]
+                if type(newValue) is dict:
+                    newValue = str(newValue)
+                elif newValue is None:
+                    newValue = 'None'
+                epochParametersGroup.attrs[prefix + key] = newValue
+          
+        convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
+        for key in self.convenience_parameters: #save out convenience parameters
+            convenienceParametersGroup.attrs[key] = self.convenience_parameters[key]
+        data.experiment_file.close()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center_location': [55.0, 120],
+                                    'patch_size':20.0,
+                                    'patch_color':0.0,
+                       'patch_speed':[10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
+                       'grate_period':20.0,
+                       'grate_rate':[10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
+                       'grate_color':0.75,
+                       'grate_background':0.25,
+                       'angle':0.0,
+                       'randomize_order':True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'MovingPatchOnDriftingGrating',
+              'num_epochs':40,
+              'pre_time':0.5,
+              'stim_time':4.0,
+              'tail_time':0.5,
+              'idle_color':0.5}
+        
+        
+# %%
