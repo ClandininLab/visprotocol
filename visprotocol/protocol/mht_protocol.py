@@ -249,6 +249,10 @@ class FlickeringPatch(BaseProtocol):
                        'temporal_frequency': [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
                        'randomize_order':True}
 
+    def getRunParameterDefaults(self):
+        super().getRunParameterDefaults()
+        self.run_parameters['protocol_ID'] = 'FlickeringPatch'
+
 # %%
 class LoomingPatch(BaseProtocol):
     def __init__(self):
