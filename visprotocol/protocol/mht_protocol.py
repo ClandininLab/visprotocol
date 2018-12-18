@@ -163,7 +163,7 @@ class DriftingSquareGrating(BaseProtocol):
                        'color':1.0,
                        'background':0.0,
                        'angle':[0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
-                       'center':[55.0, 120.0],
+                       'center':[130.0, 120.0],
                        'center_size':120.0,
                        'randomize_order':True}
 
@@ -195,7 +195,7 @@ class ExpandingMovingSquare(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'width':[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
                        'color':0.0,
-                       'center': [55.0, 120.0],
+                       'center': [130.0, 120.0],
                        'speed':60.0,
                        'angle': 0.0,
                        'randomize_order':True}
@@ -246,7 +246,7 @@ class FlickeringPatch(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':5.0,
                        'width':5.0,
-                       'center': [55.0, 120.0],
+                       'center': [130.0, 120.0],
                        'temporal_frequency': [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
                        'randomize_order':True}
 
@@ -329,7 +329,7 @@ class LoomingPatch(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'color':0.0,
-                       'center': [55.0, 120],
+                       'center': [130.0, 120.0],
                        'start_size': 2.5,
                        'end_size': 80.0,
                        'rv_ratio':[5.0, 10.0, 20.0, 40.0, 80.0],
@@ -364,7 +364,7 @@ class MovingRectangle(BaseProtocol):
         self.protocol_parameters = {'width':5.0,
                        'height':5.0,
                        'color':0.0,
-                       'center': [55.0, 120],
+                       'center': [130.0, 120.0],
                        'speed':60.0,
                        'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                        'randomize_order':True}
@@ -443,7 +443,7 @@ class MovingSquareMapping(BaseProtocol):
         self.protocol_parameters = {'square_width':5.0,
                        'color':0.0,
                        'elevation_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0], # 100...140
-                       'azimuth_locations': [30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0], #30...80
+                       'azimuth_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0, 145.0, 150.0], #100...150
                        'speed':60.0,
                        'randomize_order':True}
 
@@ -500,7 +500,7 @@ class SequentialOrRandomMotion(BaseProtocol):
         self.protocol_parameters = {'square_width':5.0,
                        'color':0.0,
                        'elevation': 120.0,
-                       'azimuth_boundaries': [50.0, 70.0],
+                       'azimuth_boundaries': [120.0, 150.0],
                        'no_steps': 8}
 
     def getRunParameterDefaults(self):
@@ -566,7 +566,7 @@ class SineTrajectoryPatch(BaseProtocol):
         self.protocol_parameters = {'width':5.0,
                        'height':5.0,
                        'color':0.0,
-                       'center': [55.0, 120],
+                       'center': [130.0, 120.0],
                        'amplitude': 20, #deg, half of total travel distance
                        'temporal_frequency': [1, 2, 4, 6, 8], #Hz
                        'movement_axis': 0,
@@ -647,7 +647,7 @@ class SpeedTuningSquare(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'width': 5.0,
                        'color':0.0,
-                       'center': [55.0, 120.0],
+                       'center': [130.0, 120.0],
                        'speed':[30.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0, 200.0],
                        'angle': 0.0,
                        'randomize_order':True}
@@ -711,7 +711,7 @@ class StationaryMapping(BaseProtocol):
         self.protocol_parameters = {'square_width':5.0,
                        'color':0.0,
                        'elevation_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0], # 100...140
-                       'azimuth_locations': [30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0], #30...80
+                       'azimuth_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0, 145.0, 150.0], #100...150
                        'flash_duration':0.25}
 
     def getRunParameterDefaults(self):
@@ -799,7 +799,7 @@ class CenterSurroundDriftingSquareGrating(BaseProtocol):
                        'period_surround':20.0,
                        'rate_surround':[10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
                        'center_size':20.0,
-                       'center': [55.0, 120],
+                       'center': [130.0, 120.0],
                        'color':1.0,
                        'background':0.0,
                        'angle':0.0,
@@ -884,7 +884,7 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
         data.experiment_file.close()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'center': [55.0, 120],
+        self.protocol_parameters = {'center': [130.0, 120.0],
                                     'patch_size':20.0,
                                     'patch_color':0.0,
                        'patch_speed':[10.0, 20.0, 30.0, 40.0, 50.0, 60.0],
@@ -966,7 +966,7 @@ class VelocitySwitchGrating(BaseProtocol):
         sleep(self.run_parameters['tail_time'])     
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'center':[55.0, 120.0],
+        self.protocol_parameters = {'center':[130.0, 120.0],
                                     'center_size':20.0,
                                     'start_rate':[20.0, 40.0, 60.0, 80.0],
                                     'switch_rate':[-80.0, -60.0, -40.0, -20.0, 20.0, 40.0, 60.0, 80.0],

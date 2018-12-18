@@ -22,7 +22,7 @@ class Client():
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
             w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
-            screens = [Screen(width=w, height=h, rotation=-pi/4, offset=(5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None)]
+            screens = [Screen(width=w, height=h, rotation=pi+pi/4, offset=(-5.0e-2, 6.1e-2, -6.1e-2), fullscreen=False, vsync=None, square_loc='lr')]
             self.manager = launch_stim_server(screens)
         
         self.manager.black_corner_square()
