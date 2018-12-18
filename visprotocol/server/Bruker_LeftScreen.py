@@ -16,9 +16,9 @@ def main():
         print('No lightcrafters detected! Try sudo')   
      
     # Define screen(s) for the rig
-    w = 15.75e-2; h = 12.6e-2; # meters of image at projection plane
+    w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
 
-    bruker_left_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-5.0e-2, 6.1e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=3e-2, square_loc='lr')
+    bruker_left_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=3e-2, square_loc='lr')
     screens = [bruker_left_screen]
     port = 60629
     host = ''
