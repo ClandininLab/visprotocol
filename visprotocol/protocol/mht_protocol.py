@@ -10,6 +10,7 @@ from visprotocol.protocol import clandinin_protocol
 import socket
 from flystim.trajectory import RectangleTrajectory, Trajectory
 from datetime import datetime
+from time import sleep
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
@@ -904,3 +905,81 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
         
         
 # %%
+class VelocitySwitchGrating(BaseProtocol):
+    def __init__(self):
+        super().__init__()
+        
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+        
+    def getEpochParameters(self):
+        current_start_rate, current_switch_rate = self.selectParametersFromLists((self.protocol_parameters['start_rate'], self.protocol_parameters['switch_rate']),
+                                                                                             all_combinations = True, 
+                                                                                             randomize_order = self.protocol_parameters['randomize_order'])
+
+        self.epoch_parameters = self.getRotatingGratingParameters(angle = self.protocol_parameters['angle'],
+                                                    rate = current_start_rate,
+                                                    period = self.protocol_parameters['grate_period'],
+                                                    color = self.protocol_parameters['grate_color'],
+                                                    background = self.protocol_parameters['grate_background'])
+        
+        self.convenience_parameters = self.protocol_parameters.copy()
+        self.convenience_parameters['current_start_rate'] = current_start_rate
+        self.convenience_parameters['current_switch_rate'] = current_switch_rate
+        self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
+                                'center':self.protocol_parameters['center'],
+                                'switch_rate':current_switch_rate}
+        
+    def loadStimuli(self, multicall):
+        passed_parameters = self.epoch_parameters.copy()
+        box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
+        box_max_x = self.meta_parameters['center'][0] + self.meta_parameters['center_size']/2
+        
+        box_min_y = self.meta_parameters['center'][1] - self.meta_parameters['center_size']/2
+        box_max_y = self.meta_parameters['center'][1] + self.meta_parameters['center_size']/2
+
+        multicall.load_stim(name='MovingPatch', background = self.run_parameters['idle_color'], trajectory=RectangleTrajectory(w = 0, h = 0).to_dict())
+
+        multicall.load_stim(**passed_parameters, 
+                            box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
+                            hold=True)
+
+
+
+    def startStimuli(self, multicall):
+        sleep(self.run_parameters['pre_time'])
+        #stim time
+        multicall.start_stim()
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.run_parameters['stim_time'] / 2)
+        
+        multicall.update_stim(rate=self.meta_parameters['switch_rate'])
+        multicall()
+        
+        sleep(self.run_parameters['stim_time'] / 2)
+        
+        #tail time
+        multicall.stop_stim()
+        multicall.black_corner_square()
+        multicall()
+        sleep(self.run_parameters['tail_time'])     
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center':[55.0, 120.0],
+                                    'center_size':20.0,
+                                    'start_rate':[20.0, 40.0, 60.0, 80.0],
+                                    'switch_rate':[-80.0, -60.0, -40.0, -20.0, 20.0, 40.0, 60.0, 80.0],
+                                    'grate_period':10.0,
+                                    'grate_color':1.0,
+                                    'grate_background':0,
+                                    'angle':0.0,
+                                    'randomize_order':True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'VelocitySwitchGrating',
+              'num_epochs':40,
+              'pre_time':1,
+              'stim_time':4.0,
+              'tail_time':1,
+              'idle_color':0.5}
