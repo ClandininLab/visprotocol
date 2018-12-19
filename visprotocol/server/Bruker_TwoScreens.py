@@ -15,8 +15,8 @@ def main():
     # TODO: check perspective correction measurements
     w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
 
-    bruker_right_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.4e-2, 3.0e-2, -6.1e-2), id=2, fullscreen=True, vsync=None, square_side=3e-2, square_loc='ll')
-    bruker_left_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=3e-2, square_loc='lr')
+    bruker_right_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.4e-2, 3.0e-2, -6.1e-2), id=2, fullscreen=True, vsync=None, square_side=5e-2, square_loc='ll')
+    bruker_left_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), id=1, fullscreen=True, vsync=None, square_side=5e-2, square_loc='lr')
 
     bruker_right_screen.draw()
     bruker_left_screen.draw()
