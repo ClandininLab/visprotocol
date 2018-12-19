@@ -17,9 +17,9 @@ class BaseProtocol():
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'',
               'num_epochs':5,
-              'pre_time':0.5,
-              'stim_time':5.0,
-              'tail_time':0.5,
+              'pre_time':1.0,
+              'stim_time':4.0,
+              'tail_time':1.0,
               'idle_color':0.5}
         
     def advanceEpochCounter(self):
