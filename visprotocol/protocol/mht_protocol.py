@@ -408,7 +408,7 @@ class MovingSquareMapping(BaseProtocol):
             current_search_axis = 'elevation'
 
         #where does the square begin? Should be just off screen...
-        startingAzimuth = 20.0; startingElevation = 40.0;
+        startingAzimuth = 60.0; startingElevation = 40.0;
         speed = self.protocol_parameters['speed']
         stim_time = self.run_parameters['stim_time']
         
