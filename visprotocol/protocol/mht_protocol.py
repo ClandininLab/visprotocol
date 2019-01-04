@@ -142,7 +142,64 @@ class CheckerboardWhiteNoise(BaseProtocol):
               'stim_time':30.0,
               'tail_time':1.0,
               'idle_color':0.5}
+ 
+# %%
+class ContrastReversingGrating(BaseProtocol):
+    def __init__(self):
+        super().__init__()
         
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):        
+        current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'],
+                                                                randomize_order = self.protocol_parameters['randomize_order'])
+        
+        self.epoch_parameters =  {'name':'ContrastReversingGrating',
+                                  'spatial_period':self.protocol_parameters['spatial_period'],
+                                  'temporal_frequency':current_temporal_frequency,
+                                  'contrast_scale':self.protocol_parameters['contrast_scale'],
+                                  'mean':self.protocol_parameters['mean'],
+                                  'angle':self.protocol_parameters['angle']}
+
+        self.convenience_parameters = self.protocol_parameters.copy()
+        self.convenience_parameters['current_temporal_frequency'] = current_temporal_frequency
+        
+        self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
+                                'center':self.protocol_parameters['center']}
+    def loadStimuli(self, multicall):
+        passed_parameters = self.epoch_parameters.copy()
+        box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
+        box_max_x = self.meta_parameters['center'][0] + self.meta_parameters['center_size']/2
+        
+        box_min_y = self.meta_parameters['center'][1] - self.meta_parameters['center_size']/2
+        box_max_y = self.meta_parameters['center'][1] + self.meta_parameters['center_size']/2
+
+        multicall.load_stim(name='MovingPatch', background = self.run_parameters['idle_color'], trajectory=RectangleTrajectory(w = 0, h = 0).to_dict())
+
+        multicall.load_stim(**passed_parameters, 
+                            box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
+                            hold=True)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'spatial_period':20.0,
+                       'contrast_scale':1.0,
+                       'mean':0.5,
+                       'temporal_frequency':[0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
+                       'center':[130.0, 120.0],
+                       'center_size':40.0,
+                       'angle':0.0,
+                       'randomize_order':True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'ContrastReversingGrating',
+              'num_epochs':40,
+              'pre_time':1.0,
+              'stim_time':4.0,
+              'tail_time':1.0,
+              'idle_color':0.5}
+        
+       
 # %%
 class DriftingSquareGrating(BaseProtocol):
     def __init__(self):
@@ -189,6 +246,80 @@ class DriftingSquareGrating(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'DriftingSquareGrating',
               'num_epochs':40,
+              'pre_time':1.0,
+              'stim_time':4.0,
+              'tail_time':1.0,
+              'idle_color':0.5}
+# %%    
+class DriftingVsStationaryGrating(BaseProtocol):
+    def __init__(self):
+        super().__init__()
+        
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stationary_code = [0, 1] #0 = stationary, 1 = drifting
+
+        current_temporal_frequency, current_stationary_code = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], stationary_code),
+                                                                                             all_combinations = True, 
+                                                                                             randomize_order = self.protocol_parameters['randomize_order'])
+        
+        if current_stationary_code == 0: #stationary, contrast reversing grating
+            self.epoch_parameters =  {'name':'ContrastReversingGrating',
+                                      'temporal_waveform':'square',
+                                      'spatial_period':self.protocol_parameters['spatial_period'],
+                                      'temporal_frequency':current_temporal_frequency,
+                                      'contrast_scale':self.protocol_parameters['contrast_scale'],
+                                      'mean':self.protocol_parameters['mean'],
+                                      'angle':self.protocol_parameters['angle']}
+
+        elif current_stationary_code == 1: #drifting grating
+            background = self.protocol_parameters['mean'] - self.protocol_parameters['contrast_scale'] * self.protocol_parameters['mean']
+            color = self.protocol_parameters['mean'] + self.protocol_parameters['contrast_scale'] * self.protocol_parameters['mean']
+            
+            rate = current_temporal_frequency * self.protocol_parameters['spatial_period']
+            self.epoch_parameters = {'name':'RotatingBars',
+                                     'period':self.protocol_parameters['spatial_period'],
+                                     'duty_cycle':0.5,
+                                     'rate':rate,
+                                     'color':color,
+                                     'background':background,
+                                     'angle':self.protocol_parameters['angle']}
+
+        self.convenience_parameters = self.protocol_parameters.copy()
+        self.convenience_parameters['current_temporal_frequency'] = current_temporal_frequency
+        self.convenience_parameters['current_stationary_code'] = current_stationary_code
+        
+        self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
+                                'center':self.protocol_parameters['center']}
+    def loadStimuli(self, multicall):
+        passed_parameters = self.epoch_parameters.copy()
+        box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
+        box_max_x = self.meta_parameters['center'][0] + self.meta_parameters['center_size']/2
+        
+        box_min_y = self.meta_parameters['center'][1] - self.meta_parameters['center_size']/2
+        box_max_y = self.meta_parameters['center'][1] + self.meta_parameters['center_size']/2
+
+        multicall.load_stim(name='MovingPatch', background = self.run_parameters['idle_color'], trajectory=RectangleTrajectory(w = 0, h = 0).to_dict())
+
+        multicall.load_stim(**passed_parameters, 
+                            box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
+                            hold=True)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'spatial_period':10.0,
+                       'contrast_scale':1.0,
+                       'mean':0.5,
+                       'temporal_frequency':[0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
+                       'center':[130.0, 120.0],
+                       'center_size':30.0,
+                       'angle':0.0,
+                       'randomize_order':True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'DriftingVsStationaryGrating',
+              'num_epochs':60,
               'pre_time':1.0,
               'stim_time':4.0,
               'tail_time':1.0,
@@ -263,15 +394,20 @@ class FlickeringPatch(BaseProtocol):
         self.convenience_parameters['current_temporal_frequency'] =  current_temporal_frequency
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height':5.0,
-                       'width':5.0,
+        self.protocol_parameters = {'height':10.0,
+                       'width':10.0,
                        'center': [130.0, 120.0],
-                       'temporal_frequency': [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+                       'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
                        'randomize_order':True}
 
+
     def getRunParameterDefaults(self):
-        super().getRunParameterDefaults()
-        self.run_parameters['protocol_ID'] = 'FlickeringPatch'
+        self.run_parameters = {'protocol_ID':'FlickeringPatch',
+              'num_epochs':30,
+              'pre_time':1.0,
+              'stim_time':4.0,
+              'tail_time':1.0,
+              'idle_color':0.5}
 
 # %%
 class LoomingPatch(BaseProtocol):
