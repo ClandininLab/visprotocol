@@ -18,9 +18,12 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         super().__init__() #call the parent class init method first
         if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
             self.send_ttl = False
+            self.parameter_preset_directory = '/Users/mhturner/documents/github/visprotocol/resources/mht/parameter_presets/'
         else:
             self.send_ttl = True
+            self.parameter_preset_directory = '/Users/User/documents/github/visprotocol/resources/mht/parameter_presets/'
             
+        
             
     def getMovingPatchParameters(self, center = None, angle = None, speed = None, width = None, height = None, color = None, background = None, distance_to_travel = None):
         if center is None: center = self.protocol_parameters['center']
@@ -198,7 +201,6 @@ class ContrastReversingGrating(BaseProtocol):
               'stim_time':4.0,
               'tail_time':1.0,
               'idle_color':0.5}
-        
        
 # %%
 class DriftingSquareGrating(BaseProtocol):

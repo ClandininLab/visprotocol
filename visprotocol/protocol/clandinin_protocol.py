@@ -7,12 +7,17 @@ import numpy as np
 from time import sleep
 from datetime import datetime
 
+import os.path
+from fiver.utilities import squirrel
+
 class BaseProtocol():
     def __init__(self):
-        self.getRunParameterDefaults()
-        self.protocol_parameters = {}
         self.num_epochs_completed = 0
+        self.parameter_preset_directory = os.path.curdir
         self.send_ttl = False
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+        self.loadParameterPresets()
    
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'',
@@ -21,6 +26,32 @@ class BaseProtocol():
               'stim_time':4.0,
               'tail_time':1.0,
               'idle_color':0.5}
+        
+    def getParameterDefaults(self):
+        self.protocol_parameters = {}
+        
+    def loadParameterPresets(self):
+        fname = os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID']) + '.pkl'
+        if os.path.isfile(fname):
+            self.parameter_presets = squirrel.get(self.run_parameters['protocol_ID'], data_directory = self.parameter_preset_directory)
+        else:
+            self.parameter_presets = {}
+        
+    def updateParameterPresets(self, name):
+        self.loadParameterPresets()
+        new_preset = {'run_parameters': self.run_parameters,
+                      'protocol_parameters': self.protocol_parameters}
+        self.parameter_presets[name] = new_preset
+        squirrel.stash(self.parameter_presets, self.run_parameters['protocol_ID'], data_directory = self.parameter_preset_directory)
+        
+    def selectProtocolPreset(self, name):
+        if name in self.parameter_presets:
+            self.run_parameters = self.parameter_presets[name]['run_parameters']
+            self.protocol_parameters = self.parameter_presets[name]['protocol_parameters']
+        else:
+            self.getRunParameterDefaults()
+            self.getParameterDefaults()
+            
         
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1

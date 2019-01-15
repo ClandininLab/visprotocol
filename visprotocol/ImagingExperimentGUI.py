@@ -20,7 +20,6 @@ from visprotocol import data
 from visprotocol import control
 
 # TODO: handle params that are meant to be strings
-# TODO: save/load parameter sets
 
 class ImagingExperimentGUI(QWidget):
     
@@ -77,51 +76,60 @@ class ImagingExperimentGUI(QWidget):
         self.grid1.addWidget(protocol_label, 1, 0)
         self.grid1.addWidget(comboBox, 1, 1, 1, 1)
         
+        # Parameter preset drop-down:
+        parameter_preset_label = QLabel('Parameter_preset:')
+        self.grid1.addWidget(parameter_preset_label, 2, 0)
+        self.updateParameterPresetSelector()
+        
+        # Save parameter preset button:
+        savePresetButton = QPushButton("Save preset", self)
+        savePresetButton.clicked.connect(self.onPressedButton) 
+        self.grid1.addWidget(savePresetButton, 2, 2)
+
         # Run paramters input:
         self.updateRunParamtersInput()
 
         # View button:
         viewButton = QPushButton("View", self)
         viewButton.clicked.connect(self.onPressedButton) 
-        self.grid1.addWidget(viewButton, self.run_params_ct+3, 0)
+        self.grid1.addWidget(viewButton, self.run_params_ct+4, 0)
         
         # Record button:
         recordButton = QPushButton("Record", self)
         recordButton.clicked.connect(self.onPressedButton) 
-        self.grid1.addWidget(recordButton, self.run_params_ct+3, 1)
+        self.grid1.addWidget(recordButton, self.run_params_ct+4, 1)
         
         # Stop button:
         stopButton = QPushButton("Stop", self)
         stopButton.clicked.connect(self.onPressedButton) 
-        self.grid1.addWidget(stopButton, self.run_params_ct+3, 2)
+        self.grid1.addWidget(stopButton, self.run_params_ct+4, 2)
         
         # Enter note button:
         noteButton = QPushButton("Enter note", self)
         noteButton.clicked.connect(self.onPressedButton) 
-        self.grid1.addWidget(noteButton, self.run_params_ct+4, 0)
+        self.grid1.addWidget(noteButton, self.run_params_ct+5, 0)
 
         # Notes field:
         self.notesEdit = QTextEdit()
-        self.grid1.addWidget(self.notesEdit, self.run_params_ct+4, 1, 1, 2)
-        
-        
+        self.grid1.addWidget(self.notesEdit, self.run_params_ct+5, 1, 1, 2)
+
         # Status window:
         newLabel = QLabel('Status:')
-        self.grid1.addWidget(newLabel, 2, 2)
+        self.grid1.addWidget(newLabel, 4, 2)
         self.status_label = QLabel()
         self.status_label.setFrameShadow(QFrame.Shadow(1))
-        self.grid1.addWidget(self.status_label, 3, 2)
+        self.grid1.addWidget(self.status_label, 5, 2)
         self.status_label.setText('')
 
         # Current imaging series counter
-        newLabel = QLabel('series counter:')
-        self.grid1.addWidget(newLabel, self.run_params_ct , 2)
+        newLabel = QLabel('Series counter:')
+        self.grid1.addWidget(newLabel, self.run_params_ct+1 , 2)
         self.series_counter_input = QSpinBox()
         self.series_counter_input.setMinimum(1)
         self.series_counter_input.setMaximum(1000)
         self.series_counter_input.setValue(1)
         self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
-        self.grid1.addWidget(self.series_counter_input, self.run_params_ct+1, 2)
+        self.grid1.addWidget(self.series_counter_input, self.run_params_ct+2, 2)
         
         
         # # # TAB 2: Data file and fly metadata information
@@ -220,6 +228,8 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_object = self.available_protocols[prot_names.index(text)]()
 
         #update display lists of run & protocol parameters
+        self.protocol_object.loadParameterPresets()
+        self.updateParameterPresetSelector()
         self.updateProtocolParametersInput()
         self.updateRunParamtersInput()
         self.show()
@@ -255,6 +265,16 @@ class ImagingExperimentGUI(QWidget):
             else: 
                 self.data.addNoteToExperimentFile(self.noteText) # save note to expt file
                 self.notesEdit.clear() # clear notes box
+                
+        elif sender.text() == 'Save preset':
+            self.updateParametersFromFillableFields() #get the state of the param input from GUI
+            start_name = self.parameter_preset_comboBox.currentText()
+            if start_name == 'Default':
+                start_name = ''
+            
+            text, _ = QInputDialog.getText(self, "Save preset","Preset Name:", QLineEdit.Normal, start_name)
+            
+            self.protocol_object.updateParameterPresets(text)
             
         elif sender.text() == 'Initialize experiment':
             dialog = QDialog()
@@ -284,10 +304,10 @@ class ImagingExperimentGUI(QWidget):
 
     def resetLayout(self):
         for ii in range(len(self.protocol_object.protocol_parameters.items())):
-            item = self.grid1.itemAtPosition(self.run_params_ct+5+ii,0)
+            item = self.grid1.itemAtPosition(self.run_params_ct+6+ii,0)
             if item != None:
                 item.widget().deleteLater()
-            item = self.grid1.itemAtPosition(self.run_params_ct+5+ii,1)
+            item = self.grid1.itemAtPosition(self.run_params_ct+6+ii,1)
             if item != None:
                 item.widget().deleteLater()
         self.show()
@@ -299,7 +319,7 @@ class ImagingExperimentGUI(QWidget):
         for key, value in self.protocol_object.protocol_parameters.items():
             ct += 1
             newLabel = QLabel(key + ':')
-            self.grid1.addWidget(newLabel, self.run_params_ct + 4 + ct , 0)
+            self.grid1.addWidget(newLabel, self.run_params_ct + 5 + ct , 0)
             
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
@@ -312,7 +332,22 @@ class ImagingExperimentGUI(QWidget):
                     self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
                     
                 self.protocol_parameter_input[key].setText(str(value)) #set to default value
-            self.grid1.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 4 + ct, 1, 1, 2)
+            self.grid1.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 5 + ct, 1, 1, 2)
+        
+    def updateParameterPresetSelector(self):
+        self.parameter_preset_comboBox = QComboBox(self)
+        self.parameter_preset_comboBox.addItem("Default")
+        for name in self.protocol_object.parameter_presets.keys():
+            self.parameter_preset_comboBox.addItem(name)
+        self.parameter_preset_comboBox.activated[str].connect(self.onSelectedParameterPreset)
+        self.grid1.addWidget(self.parameter_preset_comboBox, 2, 1, 1, 1)
+        
+    def onSelectedParameterPreset(self, text):
+        self.protocol_object.selectProtocolPreset(text)
+        self.resetLayout()
+        self.updateProtocolParametersInput()
+        self.updateRunParamtersInput()
+        self.show()
         
     def updateRunParamtersInput(self):
         self.run_params_ct = 0
@@ -320,8 +355,14 @@ class ImagingExperimentGUI(QWidget):
         for key, value in self.protocol_object.run_parameters.items():
             if key not in ['protocol_ID', 'run_start_time']:
                 self.run_params_ct += 1
+                # delete existing labels:
+                item = self.grid1.itemAtPosition(2 + self.run_params_ct,0)
+                if item != None:
+                    item.widget().deleteLater()
+                
+                #write new labels:
                 newLabel = QLabel(key + ':')
-                self.grid1.addWidget(newLabel, 1 + self.run_params_ct , 0)
+                self.grid1.addWidget(newLabel, 2 + self.run_params_ct , 0)
                 
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
@@ -332,7 +373,7 @@ class ImagingExperimentGUI(QWidget):
                     validator.setBottom(0)
                 self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
-                self.grid1.addWidget(self.run_parameter_input[key], 1 + self.run_params_ct, 1, 1, 1)
+                self.grid1.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
 
     def onEnteredSeriesCount(self):
         self.data.series_count = self.series_counter_input.value()
@@ -365,24 +406,25 @@ class ImagingExperimentGUI(QWidget):
             
         
         # Populate parameters from filled fields
-        for key, value in self.run_parameter_input.items():
-            self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
-            
-        for key, value in self.protocol_parameter_input.items():
-            if isinstance(self.protocol_parameter_input[key],QCheckBox): #QCheckBox
-                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
-            elif isinstance(self.protocol_object.protocol_parameters[key],str):
-                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
-            else: #QLineEdit
-                new_param_entry = self.protocol_parameter_input[key].text()
-                
-                if new_param_entry[0] == '[': #User trying to enter a list of values
-                    to_a_list = []
-                    for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
-                    self.protocol_object.protocol_parameters[key] = to_a_list
-                else: 
-                    self.protocol_object.protocol_parameters[key] = float(new_param_entry)
-        
+        self.updateParametersFromFillableFields()
+#        for key, value in self.run_parameter_input.items():
+#            self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
+#            
+#        for key, value in self.protocol_parameter_input.items():
+#            if isinstance(self.protocol_parameter_input[key],QCheckBox): #QCheckBox
+#                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
+#            elif isinstance(self.protocol_object.protocol_parameters[key],str):
+#                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
+#            else: #QLineEdit
+#                new_param_entry = self.protocol_parameter_input[key].text()
+#                
+#                if new_param_entry[0] == '[': #User trying to enter a list of values
+#                    to_a_list = []
+#                    for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
+#                    self.protocol_object.protocol_parameters[key] = to_a_list
+#                else: 
+#                    self.protocol_object.protocol_parameters[key] = float(new_param_entry)
+#        
         # Populate fly metadata from fly data fields
         self.data.fly_metadata = {'fly:fly_id':self.fly_id_input.text(),
                                   'fly:sex':self.fly_sex_input.currentText(),
@@ -405,6 +447,26 @@ class ImagingExperimentGUI(QWidget):
             self.series_counter_input.setValue(self.data.series_count)
             
         QApplication.processEvents()
+        
+        
+    def updateParametersFromFillableFields(self):
+        for key, value in self.run_parameter_input.items():
+            self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
+                
+        for key, value in self.protocol_parameter_input.items():
+            if isinstance(self.protocol_parameter_input[key],QCheckBox): #QCheckBox
+                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
+            elif isinstance(self.protocol_object.protocol_parameters[key],str):
+                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
+            else: #QLineEdit
+                new_param_entry = self.protocol_parameter_input[key].text()
+                
+                if new_param_entry[0] == '[': #User trying to enter a list of values
+                    to_a_list = []
+                    for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
+                    self.protocol_object.protocol_parameters[key] = to_a_list
+                else: 
+                    self.protocol_object.protocol_parameters[key] = float(new_param_entry)
         
 class InitializeExperimentGUI(QWidget):
    def setupUI(self, experimentGuiObject, parent = None):
