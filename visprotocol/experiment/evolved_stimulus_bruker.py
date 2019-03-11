@@ -29,14 +29,14 @@ def main():
                                  'num_phi': 8,
                                  't_dim': 1,
                                  'background': 0.5,
-                                 'center_theta': 90,
-                                 'center_phi': 90}
-    protocol.send_ttl = False
-    series_number = 1
+                                 'center_theta': 120,
+                                 'center_phi': 120}
+    protocol.send_ttl = True
+    series_number = 9
     
     #GA evolver parameters:
-    num_generations = 50
-    num_individuals = 40
+    num_generations = 5
+    num_individuals = 10
     mutation_rate = 0.005
     num_persistent_parents = 10
     
@@ -61,15 +61,15 @@ def main():
                                                  response_type = 'Bruker_bot')
     
     date_name = datetime.now().isoformat()[:-16].replace('-','')
-    evolver.data_directory = os.path.join('E:/Max/FlystimData', date_name)
-    evolver.series_name = 'TSeries-' + date_name + '-' + ('00' + str(series_number))[-3:]
-    evolver.pre_time = protocol.run_parameters['pre_time']
+    evolver.ResponseGenerator.data_directory = os.path.join('E:/Max/FlystimData', date_name)
+    evolver.ResponseGenerator.series_name = 'TSeries-' + date_name + '-' + ('00' + str(series_number))[-3:]
+    evolver.ResponseGenerator.pre_time = protocol.run_parameters['pre_time']
     
     client.manager.set_idle_background(protocol.run_parameters['idle_color'])
 
     for gen in range(num_generations):
         
-        evolver.cycle_number = gen+1
+        evolver.ResponseGenerator.cycle_number = gen+1
         if gen == 0:
             evolver.initializePopulation()
         print('----------GEN ' + str(gen) + '/' + str(num_generations) + '---------------')
