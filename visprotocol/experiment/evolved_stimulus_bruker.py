@@ -32,7 +32,7 @@ def main():
                                  'center_theta': 120,
                                  'center_phi': 120}
     protocol.send_ttl = True
-    series_number = 9
+    series_number = 8
     
     #GA evolver parameters:
     num_generations = 5
