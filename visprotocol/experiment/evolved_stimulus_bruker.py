@@ -10,6 +10,8 @@ from stimvolver import stimulus_evolution
 import visprotocol.client
 import visprotocol.data
 import visprotocol.protocol
+from fiver.utilities import squirrel
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -32,13 +34,12 @@ def main():
                                  'center_theta': 120,
                                  'center_phi': 120}
     protocol.send_ttl = True
-    series_number = 8
-    
+    series_number = 1
     #GA evolver parameters:
-    num_generations = 5
-    num_individuals = 10
+    num_generations = 20
+    num_individuals = 20
     mutation_rate = 0.005
-    num_persistent_parents = 10
+    num_persistent_parents = 5
     
     
     client = visprotocol.client.mht_client.Client()
@@ -46,7 +47,7 @@ def main():
     
 
     data = visprotocol.data.mht_data.Data()
-    data.experiment_file_name = 'test'
+    data.experiment_file_name = 'test_1'
     data.initializeExperimentFile()
 
     stim_size = (protocol.epoch_parameters['num_phi'],
@@ -109,8 +110,11 @@ def main():
         
         #evolve next generation of stimuli
         evolver.evolve(1)
+        squirrel.stash(evolver, data.experiment_file_name, data_directory =  data.data_directory)
 
     evolver.plotResults()
+    plt.show()
+    
 
 if __name__ == '__main__':
     main()
