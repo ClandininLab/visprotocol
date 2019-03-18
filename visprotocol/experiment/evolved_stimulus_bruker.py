@@ -63,7 +63,7 @@ def main():
     date_name = datetime.now().isoformat()[:-16].replace('-','')
     evolver.ResponseGenerator.data_directory = os.path.join('E:/Max/FlystimData', date_name)
     evolver.ResponseGenerator.series_name = 'TSeries-' + date_name + '-' + ('00' + str(series_number))[-3:]
-    evolver.ResponseGenerator.pre_time = protocol.run_parameters['pre_time']
+    evolver.ResponseGenerator.pre_time = protocol.run_parameters['pre_time'] * 1e3 #sec -> msec
     
     client.manager.set_idle_background(protocol.run_parameters['idle_color'])
 
