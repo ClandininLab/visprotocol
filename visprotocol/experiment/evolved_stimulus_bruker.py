@@ -27,18 +27,18 @@ def main():
                                  'encoding_scheme':'ternary_dense',
                                  'update_rate': 5,
                                  'stixel_size': 5,
-                                 'num_theta': 4,
-                                 'num_phi': 4,
+                                 'num_theta': 6,
+                                 'num_phi': 6,
                                  't_dim': 5,
                                  'background': 0.5,
-                                 'center_theta': 100,
+                                 'center_theta': 120,
                                  'center_phi': 120}
     protocol.send_ttl = True
-    series_number = 5
+    series_number = 6
     #GA evolver parameters:
     num_generations = 20
     num_individuals = 20
-    mutation_rate = 0.02
+    mutation_rate = 0.01
     num_persistent_parents = 5
     
     
@@ -47,7 +47,7 @@ def main():
     
 
     data = visprotocol.data.mht_data.Data()
-    data.experiment_file_name = 'test_5'
+    data.experiment_file_name = 'test_6'
     data.initializeExperimentFile()
 
     stim_size = (protocol.epoch_parameters['num_phi'],
