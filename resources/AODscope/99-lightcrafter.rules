@@ -1,0 +1,2 @@
+#Enable user access to all lightcrafters. Put this in /etc/udev/rules.d/
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0451", ATTRS{idProduct}=="6401", MODE:="0666"
