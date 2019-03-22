@@ -12,7 +12,11 @@ class Client():
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
                                    'use_server': False}
-        else:
+        elif socket.gethostname() == 'user-Inspiron-5680': #AODscope
+            self.server_options = {'host': '0.0.0.0',
+                                   'port': 60629,
+                                   'use_server': True}
+        else: #Bruker computer
             self.server_options = {'host': '192.168.1.232',
                                    'port': 60629,
                                    'use_server': True}
