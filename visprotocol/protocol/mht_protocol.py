@@ -19,7 +19,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
             self.send_ttl = False
             self.parameter_preset_directory = '/Users/mhturner/documents/github/visprotocol/resources/mht/parameter_presets/'
-        elif socket.gethostname() == 'user-Inspiron-5680': #TODO network karthala PC for triggering
+        elif socket.gethostname() == 'DESKTOP-4Q3O7LU': #AODscope Karthala
             self.send_ttl = False
             self.parameter_preset_directory = '~/GitHub/visprotocol/resources/mht/parameter_presets/'
         else:

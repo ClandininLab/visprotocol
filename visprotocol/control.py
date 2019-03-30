@@ -39,7 +39,7 @@ class EpochRun():
             if protocol_object.send_ttl:
                 # Send a TTL pulse through the NI-USB to trigger acquisition
                 with nidaqmx.Task() as task:
-                    task.co_channels.add_co_pulse_chan_time("Dev5/ctr0",
+                    task.co_channels.add_co_pulse_chan_time(client.NI_USB_name,
                                                             low_time=0.002,
                                                             high_time=0.001)
                     task.start()
