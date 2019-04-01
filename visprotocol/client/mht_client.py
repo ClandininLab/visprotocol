@@ -14,15 +14,15 @@ class Client():
                                    'use_server': False}
             self.NI_USB_name = ''
         elif socket.gethostname() == 'DESKTOP-4Q3O7LU': #AODscope
-            self.server_options = {'host': '10.39.30.67', #TODO: this changes?
+            self.server_options = {'host': '10.39.24.127', #TODO: change this to new static IP
                                    'port': 60629,
                                    'use_server': True}
-            self.NI_USB_name = 'Dev1/ctr0' #TODO: figure out how to specify TTL output on NI USB-6001
+            self.NI_USB_name = 'NI USB-6001'
         else: #Bruker computer
             self.server_options = {'host': '192.168.1.232',
                                    'port': 60629,
                                    'use_server': True}
-            self.NI_USB_name = 'Dev5/ctr0'
+            self.NI_USB_name = 'NI USB-6210'
 
     # # # Start the stim manager and set the frame tracker square to black # # #
         if self.server_options['use_server']:
