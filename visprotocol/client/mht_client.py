@@ -14,7 +14,7 @@ class Client():
                                    'use_server': False}
             self.NI_USB_name = ''
         elif socket.gethostname() == 'DESKTOP-4Q3O7LU': #AODscope
-            self.server_options = {'host': '10.39.24.127', #TODO: change this to new static IP
+            self.server_options = {'host': '171.65.17.126',
                                    'port': 60629,
                                    'use_server': True}
             self.NI_USB_name = 'NI USB-6001'
