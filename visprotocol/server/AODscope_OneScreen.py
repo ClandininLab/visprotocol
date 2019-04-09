@@ -11,7 +11,7 @@ def main():
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
          dlpc350_object.pattern_mode(fps=115.06)
-    
+         #dlpc350_object.pattern_mode(fps=60.0)    
     if len(dlpc350_objects) == 0:
         print('No lightcrafters detected! Try sudo')   
      
@@ -22,7 +22,7 @@ def main():
  
     aux_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), server_number=1, id=0, fullscreen=False, vsync=None, square_side=0)
 
-    screens = [AODscope_left_screen, aux_screen]
+    screens = [AODscope_left_screen]
     port = 60629
     host = ''
 
