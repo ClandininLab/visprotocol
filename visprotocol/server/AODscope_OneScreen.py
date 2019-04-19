@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from flystim.screen import Screen
+from flystim.draw import draw_screens
 from flystim.stim_server import StimServer
 from flystim.dlpc350 import make_dlpc350_objects
 from math import pi
@@ -16,17 +17,25 @@ def main():
         print('No lightcrafters detected! Try sudo')   
      
     # Define screen(s) for the rig
-    w = 14.0e-2; h = 9.0e-2; # meters of image at projection plane
+    w = 15.0e-2; h = 10.0e-2; # meters of image at projection plane
 
-    AODscope_left_screen = Screen(width=w, height=h, rotation=pi, offset=(2.5e-2, 4.5e-2, -5.5e-2), server_number=1, id=1, fullscreen=True, vsync=None, square_side=2.5e-2, square_loc='ll')
- 
-    aux_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), server_number=1, id=0, fullscreen=False, vsync=None, square_side=0)
+    pts = [
+            ((1.0, 1.0), (6.5, 5.0, 1.0)),
+            ((-1.0, 1.0), (-7.5, 5.0, 1.0)),
+            ((-1.0, -1.0), (-7.5, 0.0, -7.5)),
+            ((1.0, -1.0), (6.5, 0, -7.5))
+        ]
+    tri_list = Screen.quad_to_tri_list(*pts)
+
+    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=None, square_side=2.5e-2, square_loc='ll')
+
+    #AODscope_left_screen = Screen(width=w, height=h, rotation=pi, offset=(2.5e-2, 4.5e-2, -5.5e-2), server_number=1, id=1, fullscreen=True, vsync=None, square_side=2.5e-2, square_loc='ll')
 
     screens = [AODscope_left_screen]
     port = 60629
     host = ''
 
-    AODscope_left_screen.draw()
+    draw_screens(AODscope_left_screen)
     plt.show()
     
     manager =  StimServer(screens=screens, host=host, port=port, auto_stop=False)
