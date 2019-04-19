@@ -15,7 +15,7 @@ class Data():
         self.fly_metadata = {}  # populated in GUI or user protocol
 
         # # # Data directory # # #             
-        self.data_directory = '/Users/mhturner/documents/stashedObjects'
+        self.data_directory = os.getcwd()
 
         # # # Other metadata defaults # # #
         self.experimenter = '(name)'
