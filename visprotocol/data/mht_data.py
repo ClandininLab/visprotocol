@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+User-specific data class. Can be used to define data directories and metadata options
+Can also override parent class methods to deal with data files
+"""
 import socket
 from visprotocol.data import clandinin_data
 

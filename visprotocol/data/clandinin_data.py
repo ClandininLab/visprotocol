@@ -49,6 +49,40 @@ class Data():
         self.experiment_file.create_group('notes')
         self.experiment_file.close()
         
+    def saveEpochRunMetaData(self, protocol_object):
+        # create a new epoch run group in the data file
+        run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+        self.reOpenExperimentFile()
+        epochRuns = self.experiment_file['/epoch_runs']
+        newEpochRun = epochRuns.create_group(str(self.series_count))
+        newEpochRun.attrs['run_start_time'] = run_start_time
+        for key in protocol_object.run_parameters: #save out run parameters as an attribute of this epoch run
+            newEpochRun.attrs[key] = protocol_object.run_parameters[key]
+
+        for key in self.fly_metadata: #save out fly metadata as an attribute of this epoch run
+            newEpochRun.attrs[key] = self.fly_metadata[key]
+            
+        self.experiment_file.close()
+        
+    def saveEpochMetaData(self,protocol_object):
+        # update epoch metadata for this epoch
+        self.reOpenExperimentFile()
+        epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+        newEpoch = self.experiment_file['/epoch_runs/' + str(self.series_count)].create_group('epoch_'+str(protocol_object.num_epochs_completed))
+        newEpoch.attrs['epoch_time'] = epoch_time
+        
+        epochParametersGroup = newEpoch.create_group('epoch_parameters')
+        for key in protocol_object.epoch_parameters: #save out epoch parameters
+            newValue = protocol_object.epoch_parameters[key]
+            if type(newValue) is dict: #TODO: Find a way to split this into subgroups. Hacky work around. 
+                newValue = str(newValue)
+            epochParametersGroup.attrs[key] = newValue
+      
+        convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
+        for key in protocol_object.convenience_parameters: #save out convenience parameters
+            convenienceParametersGroup.attrs[key] = protocol_object.convenience_parameters[key]
+        self.experiment_file.close()
+
     def addNoteToExperimentFile(self, noteText):
         noteTime = datetime.now().strftime('%H:%M:%S.%f')[:-4]
         self.reOpenExperimentFile()
