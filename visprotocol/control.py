@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+EpochRun object controls presentation of a sequence of epochs ("epoch run")
+"""
 
 from PyQt5.QtWidgets import QApplication
 import nidaqmx
@@ -14,11 +17,17 @@ class EpochRun():
         QApplication.processEvents()
         
     def startRun(self, protocol_object, data, client, save_metadata_flag = True):
+        """
+        Required inputs: protocol_object, data, client are 3 major classes of visprotocol
+            protocol_object defines the protocol and associated parameters to be used
+            data handles the metadata file
+            client sends commands to flystim to control the stimulus
+        """
         self.stop = False
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
         
         if save_metadata_flag:
-            protocol_object.saveEpochRunMetaData(data)
+            data.saveEpochRunMetaData(protocol_object)
         else:
             print('Warning - you are not saving your metadata!')
     
@@ -34,7 +43,7 @@ class EpochRun():
             protocol_object.getEpochParameters()
 
             if save_metadata_flag:
-               protocol_object.saveEpochMetaData(data)
+               data.saveEpochMetaData(protocol_object)
 
             if protocol_object.send_ttl:
                 # Send a TTL pulse through the NI-USB to trigger acquisition

@@ -5,10 +5,9 @@ Protocol parent class. Override any methods in here in the user protocol subclas
 """
 import numpy as np
 from time import sleep
-from datetime import datetime
 
 import os.path
-from fiver.utilities import squirrel
+from visprotocol.utilities import squirrel
 
 class BaseProtocol():
     def __init__(self):
@@ -52,10 +51,8 @@ class BaseProtocol():
             self.getRunParameterDefaults()
             self.getParameterDefaults()
             
-        
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
-        
         
     def loadStimuli(self, multicall):
         passedParameters = self.epoch_parameters.copy()
@@ -73,43 +70,7 @@ class BaseProtocol():
         multicall.stop_stim()
         multicall.black_corner_square()
         multicall()
-        sleep(self.run_parameters['tail_time'])     
-        
-        
-    def saveEpochRunMetaData(self, data):
-        # create a new epoch run group in the data file
-        run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-        data.reOpenExperimentFile()
-        epochRuns = data.experiment_file['/epoch_runs']
-        newEpochRun = epochRuns.create_group(str(data.series_count))
-        newEpochRun.attrs['run_start_time'] = run_start_time
-        for key in self.run_parameters: #save out run parameters as an attribute of this epoch run
-            newEpochRun.attrs[key] = self.run_parameters[key]
-
-        for key in data.fly_metadata: #save out fly metadata as an attribute of this epoch run
-            newEpochRun.attrs[key] = data.fly_metadata[key]
-            
-        data.experiment_file.close()
-        
-    def saveEpochMetaData(self,data):
-        # update epoch metadata for this epoch
-        data.reOpenExperimentFile()
-        epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-        newEpoch = data.experiment_file['/epoch_runs/' + str(data.series_count)].create_group('epoch_'+str(self.num_epochs_completed))
-        newEpoch.attrs['epoch_time'] = epoch_time
-        
-        epochParametersGroup = newEpoch.create_group('epoch_parameters')
-        for key in self.epoch_parameters: #save out epoch parameters
-            newValue = self.epoch_parameters[key]
-            if type(newValue) is dict: #TODO: Find a way to split this into subgroups. Hacky work around. 
-                newValue = str(newValue)
-            epochParametersGroup.attrs[key] = newValue
-      
-        convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
-        for key in self.convenience_parameters: #save out convenience parameters
-            convenienceParametersGroup.attrs[key] = self.convenience_parameters[key]
-        data.experiment_file.close()
-        
+        sleep(self.run_parameters['tail_time'])
         
     # Convenience functions shared across protocols...
     def selectParametersFromLists(self, parameter_list, all_combinations = True, randomize_order = False):

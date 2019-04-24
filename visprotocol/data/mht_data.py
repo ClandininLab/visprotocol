@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+User-specific data class. Can be used to define data directories and metadata options
+Can also override parent class methods to deal with data files
+"""
 import socket
 from visprotocol.data import clandinin_data
 
@@ -10,13 +14,17 @@ class Data(clandinin_data.Data):
         # # # Data directory # # #             
         if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
             self.data_directory = '/Users/mhturner/documents/stashedObjects'
-        else:
+            self.rig = '(None)'
+        elif socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
+            self.data_directory = 'D:/Max/FlystimData'
+            self.rig = 'AODscope'
+        else: #Bruker
             self.data_directory = 'E:/Max/FlystimData/'
+            self.rig = 'Bruker'
     
         # # # Other metadata defaults. These can be changed in the gui as well # # #
         self.experimenter = 'MHT'
-        self.rig = 'Bruker'
-    
+
         # # #  Lists of fly metadata # # # 
         self.prepChoices = ['Left optic lobe',
                             'Right optic lobe',
