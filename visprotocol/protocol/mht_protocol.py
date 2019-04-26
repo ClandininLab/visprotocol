@@ -6,24 +6,22 @@ Created on Thu Jun 21 10:20:02 2018
 @author: mhturner
 """
 import numpy as np
-from visprotocol.protocol import clandinin_protocol
-import socket
-from flystim.trajectory import RectangleTrajectory, Trajectory
+import os
+import inspect
 from datetime import datetime
 from time import sleep
+
+import visprotocol
+from visprotocol.protocol import clandinin_protocol
+from flystim.trajectory import RectangleTrajectory, Trajectory
+
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self):
         super().__init__() #call the parent class init method first
-        if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
-            self.parameter_preset_directory = '/Users/mhturner/documents/github/visprotocol/resources/mht/parameter_presets/'
-        elif socket.gethostname() == 'DESKTOP-4Q3O7LU': #AODscope Karthala
-            self.parameter_preset_directory = '/Users/AODscope/Documents/GitHub/visprotocol/resources/mht/parameter_presets/'
-        else:
-            self.parameter_preset_directory = '/Users/User/documents/github/visprotocol/resources/mht/parameter_presets/'
-            
-        
+        user_name = 'mht'
+        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
             
     def getMovingPatchParameters(self, center = None, angle = None, speed = None, width = None, height = None, color = None, background = None, distance_to_travel = None):
         if center is None: center = self.protocol_parameters['center']

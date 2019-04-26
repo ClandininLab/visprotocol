@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
+import inspect
+
+import visprotocol
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import RectangleTrajectory
 
@@ -7,7 +11,8 @@ from flystim.trajectory import RectangleTrajectory
 class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self):
         super().__init__() #call the parent class init method first
-        self.parameter_preset_directory = '/Users/AODscope/Documents/GitHub/visprotocol/resources/mmp/parameter_presets/'
+        user_name = 'mmp'
+        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
         
 # %%
 class UniformFlash(BaseProtocol):
