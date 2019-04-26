@@ -5,28 +5,43 @@ Data parent class. Override any methods in here in the user data subclass
 """
 import h5py
 import os
+import inspect
+import yaml
+import socket
 from datetime import datetime
 
+import visprotocol
+
 class Data():
-    def __init__(self):
+    def __init__(self, user_name):
         self.experiment_file = None
         self.experiment_file_name = None
         self.series_count = 1
         self.fly_metadata = {}  # populated in GUI or user protocol
-
-        # # # Data directory # # #             
-        self.data_directory = os.getcwd()
+        
+        #load user config file based on user name
+        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', user_name + '_config.yaml')
+        with open(path_to_config_file, 'r') as ymlfile:
+            cfg = yaml.load(ymlfile)
 
         # # # Other metadata defaults # # #
-        self.experimenter = '(name)'
-        self.rig = '(rig)'
+        self.experimenter = cfg['experimenter']
     
         # # #  Lists of fly metadata # # # 
-        self.prepChoices = ['Left optic lobe',
-                            'Right optic lobe',
-                            'Whole brain']
-        self.driverChoices = ['L2 (21Dhh)']
-        self.indicatorChoices = ['GCaMP6f']
+        self.prepChoices = cfg['prep_choices']
+        self.driverChoices = cfg['driver_choices']
+        self.indicatorChoices = cfg['indicator_choices']
+           
+        #load rig-specific metadata things
+        if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
+            self.data_directory = 'D:/Max/FlystimData'
+            self.rig = 'AODscope'
+        elif socket.gethostname() == 'BRUKER_user':  # TODO find bruker name
+            self.data_directory = 'E:/Max/FlystimData/'
+            self.rig = 'Bruker'
+        else:
+            self.data_directory = os.getcwd()
+            self.rig = '(rig)'
 
     def initializeExperimentFile(self):
         # Create HDF5 file

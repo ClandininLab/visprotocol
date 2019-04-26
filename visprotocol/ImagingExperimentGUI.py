@@ -14,10 +14,10 @@ import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
 
-from visprotocol import client
+from visprotocol.clandinin_client import Client
+from visprotocol.clandinin_data import Data
+from visprotocol.control import EpochRun
 from visprotocol import protocol
-from visprotocol import data
-from visprotocol import control
 
 # TODO: handle params that are meant to be strings
 
@@ -30,20 +30,20 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
 
-        user_names = ['mht']
+        user_names = ['mht', 'mmp']
         user_name, ok = QInputDialog.getItem(self, "select user", 
                                              "Available users", user_names, 0, False)
 
-        # get a client
-        self.client = getattr(client, user_name + '_client').Client()
-        # get a data object
-        self.data = getattr(data, user_name + '_data').Data()
+        # start a client
+        self.client = Client()
+        # start a data object
+        self.data = Data(user_name)
         # get a protocol, just start with the base class until user selects one
         self.protocol_object = getattr(protocol, user_name + '_protocol').BaseProtocol()
         # get available protocol classes
         self.available_protocols = getattr(protocol, user_name + '_protocol').BaseProtocol.__subclasses__()
         # get an epoch run control object
-        self.epoch_run = control.EpochRun()
+        self.epoch_run = EpochRun()
 
         self.initUI()
 

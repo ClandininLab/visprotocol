@@ -17,13 +17,10 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self):
         super().__init__() #call the parent class init method first
         if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
-            self.send_ttl = False
             self.parameter_preset_directory = '/Users/mhturner/documents/github/visprotocol/resources/mht/parameter_presets/'
         elif socket.gethostname() == 'DESKTOP-4Q3O7LU': #AODscope Karthala
-            self.send_ttl = True
             self.parameter_preset_directory = '/Users/AODscope/Documents/GitHub/visprotocol/resources/mht/parameter_presets/'
         else:
-            self.send_ttl = True
             self.parameter_preset_directory = '/Users/User/documents/github/visprotocol/resources/mht/parameter_presets/'
             
         
