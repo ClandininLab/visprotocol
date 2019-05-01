@@ -15,8 +15,8 @@ class Client():
                                    'use_server': True}
             self.NI_USB_name = 'NI USB-6001'
             self.send_ttl = True
-        elif socket.gethostname() == 'BRUKER_user':  # TODO find bruker name
-            self.server_options = {'host': '192.168.1.232',
+        elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
+            self.server_options = {'host': '171.65.17.246',
                                    'port': 60629,
                                    'use_server': True}
             self.NI_USB_name = 'NI USB-6210'

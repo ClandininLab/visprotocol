@@ -36,7 +36,7 @@ class Data():
         if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
             self.data_directory = 'D:/Max/FlystimData'
             self.rig = 'AODscope'
-        elif socket.gethostname() == 'BRUKER_user':  # TODO find bruker name
+        elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
             self.data_directory = 'E:/Max/FlystimData/'
             self.rig = 'Bruker'
         else:
