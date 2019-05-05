@@ -5,6 +5,7 @@ Data parent class. Override any methods in here in the user data subclass
 """
 import h5py
 import os
+import shutil
 import inspect
 import yaml
 import socket
@@ -77,6 +78,12 @@ class Data():
         for key in self.fly_metadata: #save out fly metadata as an attribute of this epoch run
             newEpochRun.attrs[key] = self.fly_metadata[key]
             
+        # save poi metadata
+        poi_parent_group = newEpochRun.require_group("pois") #opens group if it exists or creates it if it doesn't
+        for current_tag in self.poi_metadata:
+            current_poi_group = poi_parent_group.require_group(current_tag)
+            current_poi_group.create_dataset("poi_numbers", data = self.poi_metadata[current_tag])
+            
         self.experiment_file.close()
         
     def saveEpochMetaData(self,protocol_object):
@@ -105,6 +112,18 @@ class Data():
         notes.attrs[noteTime] = noteText
         self.experiment_file.close()
         
+    def attachPoiData(self, poi_directory):
+        #make a copy of the original h5 file and modify that
+        file_base = os.path.join(self.data_directory, self.experiment_file_name)
+        backup_path = file_base + '_backup' + '.hdf5'
+        ct = 0
+        while os.path.isfile(backup_path):
+            ct+=1
+            backup_path = file_base + '_backup' + str(ct) + '.hdf5'
+        shutil.copyfile(file_base + '.hdf5', backup_path)
+        
+        #TODO attach poi data according to poi names/ranges (if provided)
+    
     def reOpenExperimentFile(self):
         self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
         
