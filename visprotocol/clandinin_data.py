@@ -10,6 +10,8 @@ import inspect
 import yaml
 import socket
 from datetime import datetime
+from nptdms import TdmsFile
+import numpy as np
 
 import visprotocol
 
@@ -113,20 +115,66 @@ class Data():
         self.experiment_file.close()
         
     def attachPoiData(self, poi_directory):
-        #make a copy of the original h5 file and modify that
-        file_base = os.path.join(self.data_directory, self.experiment_file_name)
-        backup_path = file_base + '_backup' + '.hdf5'
-        ct = 0
-        while os.path.isfile(backup_path):
-            ct+=1
-            backup_path = file_base + '_backup' + str(ct) + '.hdf5'
-        shutil.copyfile(file_base + '.hdf5', backup_path)
-        
-        #TODO attach poi data according to poi names/ranges (if provided)
-    
+        if self.experiment_file is not None:
+            #make a backup copy first
+            file_base = os.path.join(self.data_directory, self.experiment_file_name)
+            backup_path = file_base + '_backup' + '.hdf5'
+            ct = 0
+            while os.path.isfile(backup_path):
+                ct+=1
+                backup_path = file_base + '_backup' + str(ct) + '.hdf5'
+            shutil.copyfile(file_base + '.hdf5', backup_path)
+            
+            #Attach poi data according to poi names/ranges (if provided)
+            self.reOpenExperimentFile()
+            for er in list(self.experiment_file.get('epoch_runs').keys()):
+                current_run = self.experiment_file.get('epoch_runs')[er]
+                poi_parent_group = current_run.require_group('pois')
+                poi_series_number = int(er)
+                time_points, poi_data_matrix = self.getPoiData(poi_directory, poi_series_number, pmt = 1)
+                if time_points is None:
+                    print('No POI data found for Series ' + str(er))
+                    continue
+                
+                if poi_parent_group.get('poi_data_matrix'): #poi dataset exists already. Delete and overwrite
+                    del poi_parent_group['poi_data_matrix']
+                if poi_parent_group.get('time_points'):
+                    del poi_parent_group['time_points']
+                
+                poi_parent_group.create_dataset("time_points", data = time_points)
+                poi_parent_group.create_dataset("poi_data_matrix", data = poi_data_matrix)
+                
+                print('Series ' + str(er) + ': added POI data')
+            
+            self.experiment_file.close()
+        else:
+            print('No experiment file assigned yet')
+
+
     def reOpenExperimentFile(self):
         self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
         
     def advanceSeriesCount(self):
         self.series_count += 1
+        
+    def getPoiData(self, poi_directory, poi_series_number, pmt = 1):
+        poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
+        full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '_pmt' + str(pmt) + '.tdms')
+        
+        try:
+            tdms_file = TdmsFile(full_file_path)
+            
+            time_points = tdms_file.channel_data('PMT'+str(pmt),'POI time') #msec
+            poi_data_matrix = np.ndarray(shape = (len(tdms_file.group_channels('PMT'+str(pmt))[1:]), len(time_points)))
+            poi_data_matrix[:] = np.nan
+            
+            for poi_ind in range(len(tdms_file.group_channels('PMT'+str(pmt))[1:])): #first object is time points. Subsequent for POIs
+                poi_data_matrix[poi_ind,:] = tdms_file.channel_data('PMT'+str(pmt),'POI ' + str(poi_ind) + ' ')
+
+        except:
+            time_points = None
+            poi_data_matrix = None
+            print('No tdms file found at: ' + full_file_path)
+            
+        return time_points, poi_data_matrix
         
