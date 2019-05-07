@@ -8,21 +8,25 @@ from math import pi
 
 class Client():
     def __init__(self):
-        if socket.gethostname() == "MHT-laptop": # (laptop, for dev.)
-            self.server_options = {'host': '0.0.0.0',
-                                   'port': 60629,
-                                   'use_server': False}
-            self.NI_USB_name = ''
-        elif socket.gethostname() == 'DESKTOP-4Q3O7LU': #AODscope
+      # # # load rig-specific server/client options # # # 
+        if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
             self.server_options = {'host': '171.65.17.126',
                                    'port': 60629,
                                    'use_server': True}
             self.NI_USB_name = 'NI USB-6001'
-        else: #Bruker computer
-            self.server_options = {'host': '192.168.1.232',
+            self.send_ttl = True
+        elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
+            self.server_options = {'host': '171.65.17.246',
                                    'port': 60629,
                                    'use_server': True}
             self.NI_USB_name = 'NI USB-6210'
+            self.send_ttl = True
+        else:
+            self.server_options = {'host': '0.0.0.0',
+                                   'port': 60629,
+                                   'use_server': False}
+            self.NI_USB_name = ''
+            self.send_ttl = False
 
     # # # Start the stim manager and set the frame tracker square to black # # #
         if self.server_options['use_server']:

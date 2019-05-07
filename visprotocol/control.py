@@ -45,7 +45,7 @@ class EpochRun():
             if save_metadata_flag:
                data.saveEpochMetaData(protocol_object)
 
-            if protocol_object.send_ttl:
+            if client.send_ttl:
                 # Send a TTL pulse through the NI-USB to trigger acquisition
                 with nidaqmx.Task() as task:
                     if client.NI_USB_name == 'NI USB-6210':

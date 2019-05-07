@@ -1,0 +1,4 @@
+experimenter: MMP
+prep_choices: [Left optic lobe, Right optic lobe]
+driver_choices: [L2 (21Dhh)]
+indicator_choices: [GCaMP6f, ASAP2f]

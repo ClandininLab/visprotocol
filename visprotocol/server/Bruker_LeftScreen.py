@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from flystim.screen import Screen
+from flystim.draw import draw_screens
 from flystim.stim_server import StimServer
 from flystim.dlpc350 import make_dlpc350_objects
 from math import pi
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -26,7 +28,8 @@ def main():
     port = 60629
     host = ''
 
-    bruker_left_screen.draw()
+    draw_screens(bruker_left_screen)
+    plt.show()
     
     manager =  StimServer(screens=screens, host=host, port=port, auto_stop=False)
     
