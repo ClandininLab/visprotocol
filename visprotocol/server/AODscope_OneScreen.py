@@ -12,7 +12,7 @@ def main():
     # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
-         dlpc350_object.set_current(red=1, green = 0, blue = 1)
+         dlpc350_object.set_current(red=0, green = 0, blue = 1)
          dlpc350_object.pattern_mode(fps=115.06, red=True, blue=True, green=False)  
     if len(dlpc350_objects) == 0:
         print('No lightcrafters detected! Try sudo')   
@@ -21,16 +21,26 @@ def main():
     w = 15.0e-2; h = 10.0e-2; # meters of image at projection plane
 
     pts = [
-            ((1.0, 1.0), (6.5, 5.0, 1.0)),
-            ((-1.0, 1.0), (-7.5, 5.0, 1.0)),
-            ((-1.0, -1.0), (-7.5, 0.0, -7.5)),
-            ((1.0, -1.0), (6.5, 0, -7.5))
+            ((1.0, 1.0), (46.3e-3, 25.2e-3, 0e-3)),
+            ((-0.70, 1.0), (-72.4e-3, 25.2e-3, 0e-3)),
+            ((-0.70, -1.0), (-72.4e-3, 0.0e-3, -83.1e-3)),
+            ((1.0, -1.0), (46.3e-3, 0.0e-3, -83.1e-3))
         ]
+
+    # Rotate 45 deg around x axis s.t. screen goes from pole to pole of sphere. To reduce visibility of singularity aberrations at poles
+
+    pts = [
+            ((1.0, 1.0), (46.3e-3, 17.8e-3, 17.8e-3)),
+            ((-0.70, 1.0), (-72.4e-3, 17.8e-3, 17.8e-3)),
+            ((-0.70, -1.0), (-72.4e-3, 58.8e-3, -58.8e-3)),
+            ((1.0, -1.0), (46.3e-3, 58.8e-3, -58.8e-3))
+        ]
+
     tri_list = Screen.quad_to_tri_list(*pts)
 
-    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=None, square_side=2.5e-2, square_loc='ll')
+    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=None, square_side=4.0e-2, square_loc='ll')
 
-    #AODscope_left_screen = Screen(width=w, height=h, rotation=pi, offset=(2.5e-2, 4.5e-2, -5.5e-2), server_number=1, id=1, fullscreen=True, vsync=None, square_side=2.5e-2, square_loc='ll')
+    #aux_screen = Screen(tri_list=tri_list, server_number=1, id=0, fullscreen=False, vsync=True, square_side=0, square_loc='ll')
 
     screens = [AODscope_left_screen]
     port = 60629
