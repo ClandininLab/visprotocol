@@ -24,24 +24,28 @@ class UniformFlash(BaseProtocol):
     
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
-
+        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'],
+                                                                randomize_order = self.protocol_parameters['randomize_order'])
+        
         trajectory = RectangleTrajectory(x = self.protocol_parameters['center'][0],
                                               y = self.protocol_parameters['center'][1],
                                               angle = 0,
                                               h = self.protocol_parameters['height'],
                                               w = self.protocol_parameters['width'],
-                                              color = self.protocol_parameters['intensity']).to_dict()   
+                                              color = current_intensity).to_dict()   
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
                             'trajectory':trajectory}
         self.convenience_parameters = self.protocol_parameters.copy()
+        self.convenience_parameters['current_intensity'] = current_intensity
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':270.0,
                        'width':270.0,
                        'center': [90.0, 120.0],
-                       'intensity': 1.0}
+                       'intensity': [0, 0.25, 0.375, 0.625, 0.75, 1.0],
+                       'randomize_order': True}
 
 
     def getRunParameterDefaults(self):

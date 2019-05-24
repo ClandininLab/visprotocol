@@ -1,4 +1,6 @@
 experimenter: MMP
-prep_choices: [Left optic lobe, Right optic lobe]
-driver_choices: [L2 (21Dhh)]
-indicator_choices: [GCaMP6f, ASAP2f]
+prep_choices: [Left optic lobe, Right optic lobe, Whole brain]
+driver_choices: [L1 (R66A01AD;R48A08DBD), L2 (21Dhh), Mi1 (R19F01), nsyb, 
+                            Tm1 (R74G01), Tm3 (R13E12)]
+indicator_choices: [ASAP2f, ASAP4c, GCaMP6f, GCaMP6fu, GCaMP7fu, jRGECO1b,
+                            SF-iGluSnFR.A184V, SF-iGluSnFR.A184V.S72A]
