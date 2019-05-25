@@ -41,8 +41,8 @@ class UniformFlash(BaseProtocol):
         self.convenience_parameters['current_intensity'] = current_intensity
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height':270.0,
-                       'width':270.0,
+        self.protocol_parameters = {'height':180.0,
+                       'width':180.0,
                        'center': [90.0, 120.0],
                        'intensity': [0, 0.25, 0.375, 0.625, 0.75, 1.0],
                        'randomize_order': True}
