@@ -1,0 +1,16 @@
+LC20:
+  run_parameters:
+    protocol_ID: SequentialOrRandomMotion
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 0.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 20.0
+    color: 1.0
+    elevation: 130.0
+    azimuth_boundaries:
+    - 110.0
+    - 160.0
+    no_steps: 12.0

@@ -1,0 +1,145 @@
+Fast_10Square:
+  run_parameters:
+    protocol_ID: MovingSquareMapping
+    num_epochs: 55.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 10.0
+    color: 0.0
+    elevation_locations:
+    - 100.0
+    - 110.0
+    - 120.0
+    - 130.0
+    - 140.0
+    azimuth_locations:
+    - 100.0
+    - 110.0
+    - 120.0
+    - 130.0
+    - 140.0
+    - 150.0
+    speed: 80.0
+    randomize_order: true
+extended_az_dark5:
+  run_parameters:
+    protocol_ID: MovingSquareMapping
+    num_epochs: 120.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 5.0
+    color: 0.0
+    elevation_locations:
+    - 100.0
+    - 105.0
+    - 110.0
+    - 115.0
+    - 120.0
+    - 125.0
+    - 130.0
+    - 135.0
+    - 140.0
+    azimuth_locations:
+    - 90.0
+    - 95.0
+    - 100.0
+    - 105.0
+    - 110.0
+    - 115.0
+    - 120.0
+    - 125.0
+    - 130.0
+    - 135.0
+    - 140.0
+    - 145.0
+    - 150.0
+    - 155.0
+    - 160.0
+    speed: 80.0
+    randomize_order: true
+whole_glom:
+  run_parameters:
+    protocol_ID: MovingSquareMapping
+    num_epochs: 200.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 5.0
+    color: 0.0
+    elevation_locations:
+    - 100.0
+    - 105.0
+    - 110.0
+    - 115.0
+    - 120.0
+    - 125.0
+    - 130.0
+    - 135.0
+    - 140.0
+    azimuth_locations:
+    - 100.0
+    - 105.0
+    - 110.0
+    - 115.0
+    - 120.0
+    - 125.0
+    - 130.0
+    - 135.0
+    - 140.0
+    - 145.0
+    - 150.0
+    speed: 80.0
+    randomize_order: true
+AODscope_5mapping:
+  run_parameters:
+    protocol_ID: MovingSquareMapping
+    num_epochs: 150.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 5.0
+    color: 0.0
+    elevation_locations:
+    - 50.0
+    - 55.0
+    - 60.0
+    - 65.0
+    - 70.0
+    - 75.0
+    - 80.0
+    - 85.0
+    - 90.0
+    - 95.0
+    - 100.0
+    - 105.0
+    - 110.0
+    - 115.0
+    - 120.0
+    - 125.0
+    - 130.0
+    azimuth_locations:
+    - 60.0
+    - 65.0
+    - 70.0
+    - 75.0
+    - 80.0
+    - 85.0
+    - 90.0
+    - 95.0
+    - 100.0
+    - 105.0
+    - 110.0
+    - 115.0
+    - 120.0
+    speed: 80.0
+    randomize_order: true
