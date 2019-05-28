@@ -1,0 +1,4 @@
+experimenter: MC
+prep_choices: [Left optic lobe, Right optic lobe, Whole brain]
+driver_choices: [Tm3(R13E12)-Gal4, Tm3(R13E12)-LexA, nSyb-Gal4]
+indicator_choices: [TdTomato, GCaMP6f]
