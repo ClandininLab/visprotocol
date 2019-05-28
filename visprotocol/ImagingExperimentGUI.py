@@ -13,6 +13,7 @@ import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
+import glob
 
 from visprotocol.clandinin_client import Client
 from visprotocol.clandinin_data import Data
@@ -29,8 +30,13 @@ class ImagingExperimentGUI(QWidget):
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
+        
+        #looks for user names based on .yaml config files in visprotocol/config directory
+        # Filenames should be: USER_config.yaml
+        config_dir = os.path.join(os.path.abspath(os.path.join(os.path.split(__file__)[0], os.pardir)), 'config')
+        user_config_files = [os.path.split(f)[1] for f in glob.glob(os.path.join(config_dir,'*.yaml'))]
 
-        user_names = ['mht', 'mmp']
+        user_names = [f.split('_config')[0] for f in user_config_files]
         user_name, ok = QInputDialog.getItem(self, "select user", 
                                              "Available users", user_names, 0, False)
 
