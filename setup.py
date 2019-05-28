@@ -13,7 +13,9 @@ setup(
         'numpy',
         'nidaqmx',
         'h5py',
-        'scipy'],
+        'scipy',
+        'nptdms',
+        'pyYaml'],
     include_package_data=True,
     zip_safe=False,
 )
