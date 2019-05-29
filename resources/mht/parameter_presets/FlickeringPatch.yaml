@@ -10,8 +10,8 @@ quick_center:
     height: 20.0
     width: 20.0
     center:
-    - 120.0
-    - 120.0
+    - 0.0
+    - 0.0
     temporal_frequency: 2.0
     randomize_order: false
 L2_flicker_test:
@@ -26,7 +26,7 @@ L2_flicker_test:
     height: 180.0
     width: 180.0
     center:
-    - 130.0
-    - 120.0
+    - 0.0
+    - 0.0
     temporal_frequency: 0.5
     randomize_order: false

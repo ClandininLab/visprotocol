@@ -24,7 +24,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
             
     def getMovingPatchParameters(self, center = None, angle = None, speed = None, width = None, height = None, color = None, background = None, distance_to_travel = None):
-        if center is None: center = self.protocol_parameters['center']
+        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
         if width is None: width = self.protocol_parameters['width']
@@ -152,7 +152,7 @@ class ContrastReversingGrating(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
 
-    def getEpochParameters(self):        
+    def getEpochParameters(self):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
         
@@ -167,7 +167,7 @@ class ContrastReversingGrating(BaseProtocol):
         self.convenience_parameters['current_temporal_frequency'] = current_temporal_frequency
         
         self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
-                                'center':self.protocol_parameters['center']}
+                                'center':self.adjustCenter(self.protocol_parameters['center'])}
     def loadStimuli(self, multicall):
         passed_parameters = self.epoch_parameters.copy()
         box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
@@ -187,7 +187,7 @@ class ContrastReversingGrating(BaseProtocol):
                        'contrast_scale':1.0,
                        'mean':0.5,
                        'temporal_frequency':[0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
-                       'center':[130.0, 120.0],
+                       'center':[0, 0],
                        'center_size':40.0,
                        'angle':0.0,
                        'randomize_order':True}
@@ -208,7 +208,7 @@ class DriftingSquareGrating(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
 
-    def getEpochParameters(self):        
+    def getEpochParameters(self):
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
         
@@ -218,7 +218,7 @@ class DriftingSquareGrating(BaseProtocol):
         self.convenience_parameters['current_angle'] = current_angle
         
         self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
-                                'center':self.protocol_parameters['center']}
+                                'center':self.adjustCenter(self.protocol_parameters['center'])}
     def loadStimuli(self, multicall):
         passed_parameters = self.epoch_parameters.copy()
         box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
@@ -239,7 +239,7 @@ class DriftingSquareGrating(BaseProtocol):
                        'color':1.0,
                        'background':0.0,
                        'angle':[0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
-                       'center':[130.0, 120.0],
+                       'center':[0, 0],
                        'center_size':120.0,
                        'randomize_order':True}
 
@@ -292,7 +292,7 @@ class DriftingVsStationaryGrating(BaseProtocol):
         self.convenience_parameters['current_stationary_code'] = current_stationary_code
         
         self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
-                                'center':self.protocol_parameters['center']}
+                                'center':self.adjustCenter(self.protocol_parameters['center'])}
     def loadStimuli(self, multicall):
         passed_parameters = self.epoch_parameters.copy()
         box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
@@ -312,7 +312,7 @@ class DriftingVsStationaryGrating(BaseProtocol):
                        'contrast_scale':1.0,
                        'mean':0.5,
                        'temporal_frequency':[0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
-                       'center':[130.0, 120.0],
+                       'center':[0, 0],
                        'center_size':30.0,
                        'angle':0.0,
                        'randomize_order':True}
@@ -333,7 +333,7 @@ class ExpandingMovingSquare(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
     
-    def getEpochParameters(self):        
+    def getEpochParameters(self):
         current_width = self.selectParametersFromLists(self.protocol_parameters['width'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
         
@@ -345,7 +345,7 @@ class ExpandingMovingSquare(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'width':[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
                        'color':0.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'speed':80.0,
                        'angle': 0.0,
                        'randomize_order':True}
@@ -379,9 +379,12 @@ class FlickeringPatch(BaseProtocol):
         time_points = np.linspace(0, stim_time, nPoints)
         color_values = np.sin(time_points * 2 * np.pi * current_temporal_frequency)
         color_trajectory = list(zip(time_points,color_values))
+        
+        #adjust center to screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
-        trajectory = RectangleTrajectory(x = self.protocol_parameters['center'][0],
-                                              y = self.protocol_parameters['center'][1],
+        trajectory = RectangleTrajectory(x = adj_center[0],
+                                              y = adj_center[1],
                                               angle = 0,
                                               h = self.protocol_parameters['height'],
                                               w = self.protocol_parameters['width'],
@@ -396,7 +399,7 @@ class FlickeringPatch(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':10.0,
                        'width':10.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
                        'randomize_order':True}
 
@@ -419,9 +422,12 @@ class UniformFlash(BaseProtocol):
     
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
+        
+        #adjust center to screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
-        trajectory = RectangleTrajectory(x = self.protocol_parameters['center'][0],
-                                              y = self.protocol_parameters['center'][1],
+        trajectory = RectangleTrajectory(x = adj_center[0],
+                                              y = adj_center[1],
                                               angle = 0,
                                               h = self.protocol_parameters['height'],
                                               w = self.protocol_parameters['width'],
@@ -435,7 +441,7 @@ class UniformFlash(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':120.0,
                        'width':120.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'intensity': 1.0}
 
 
@@ -500,10 +506,13 @@ class LoomingPatch(BaseProtocol):
         # time-modulated trajectories
         h = Trajectory(list(zip(time_steps,angular_size)), kind = 'previous')
         w = Trajectory(list(zip(time_steps,angular_size)), kind = 'previous')
+        
+        #adjust center to screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
         # constant trajectories:
-        centerX = Trajectory(self.protocol_parameters['center'][0])
-        centerY = Trajectory(self.protocol_parameters['center'][1])
+        centerX = Trajectory(adj_center[0])
+        centerY = Trajectory(adj_center[1])
         color = Trajectory(self.protocol_parameters['color'])
         angle = Trajectory(0)
         trajectory = {'x': centerX.to_dict(), 'y': centerY.to_dict(), 'w': w.to_dict(), 'h': h.to_dict(),
@@ -523,7 +532,7 @@ class LoomingPatch(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'color':0.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'start_size': 2.5,
                        'end_size': 80.0,
                        'rv_ratio':[5.0, 10.0, 20.0, 40.0, 80.0],
@@ -545,7 +554,7 @@ class MovingRectangle(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
     
-    def getEpochParameters(self):     
+    def getEpochParameters(self):
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'],
                                                        randomize_order = self.protocol_parameters['randomize_order'])
         
@@ -558,7 +567,7 @@ class MovingRectangle(BaseProtocol):
         self.protocol_parameters = {'width':5.0,
                        'height':5.0,
                        'color':0.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'speed':80.0,
                        'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                        'randomize_order':True}
@@ -580,8 +589,9 @@ class MovingSquareMapping(BaseProtocol):
         self.getParameterDefaults()
     
     def getEpochParameters(self):
-        az_loc = self.protocol_parameters['azimuth_locations']
-        el_loc = self.protocol_parameters['elevation_locations']
+        #adjust to screen center
+        az_loc = [x + self.screen_center[0] for x in self.protocol_parameters['azimuth_locations']]
+        el_loc = [x + self.screen_center[1] for x in self.protocol_parameters['elevation_locations']]
         
         if type(az_loc) is not list:
             az_loc = [az_loc]
@@ -622,8 +632,8 @@ class MovingSquareMapping(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'square_width':5.0,
                        'color':0.0,
-                       'elevation_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0], # 100...140
-                       'azimuth_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0, 145.0, 150.0], #100...150
+                       'elevation_locations': [-20, -15, -10, -5, 0, 5, 10, 15, 20],
+                       'azimuth_locations': [-20, -15, -10, -5, 0, 5, 10, 15, 20],
                        'speed':80.0,
                        'randomize_order':True}
 
@@ -645,13 +655,17 @@ class SequentialOrRandomMotion(BaseProtocol):
     
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
+        
+        #adjust to screen center...
+        adj_az = [x + self.screen_center[0] for x in self.protocol_parameters['azimuth_boundaries']]
+        adj_el = self.screen_center[1] + self.protocol_parameters['elevation']
 
         stim_time = self.run_parameters['stim_time']
         no_steps = self.protocol_parameters['no_steps']
         
         time_steps = np.linspace(0,stim_time,no_steps)
-        x_steps = np.linspace(self.protocol_parameters['azimuth_boundaries'][0],self.protocol_parameters['azimuth_boundaries'][1],no_steps)
-        y_steps = np.linspace(self.protocol_parameters['elevation'],self.protocol_parameters['elevation'],no_steps)
+        x_steps = np.linspace(adj_az[0],adj_az[1],no_steps)
+        y_steps = np.linspace(adj_el,adj_el,no_steps)
         
         #switch back and forth between sequential and random
         randomized_order = bool(np.mod(self.num_epochs_completed,2))
@@ -679,8 +693,8 @@ class SequentialOrRandomMotion(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'square_width':5.0,
                        'color':0.0,
-                       'elevation': 120.0,
-                       'azimuth_boundaries': [120.0, 150.0],
+                       'elevation': 0.0,
+                       'azimuth_boundaries': [-15.0, 15.0],
                        'no_steps': 8}
 
     def getRunParameterDefaults(self):
@@ -699,7 +713,7 @@ class SpeedTuningSquare(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
         
-    def getEpochParameters(self):            
+    def getEpochParameters(self):      
         current_speed = self.selectParametersFromLists(self.protocol_parameters['speed'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
         
@@ -713,7 +727,7 @@ class SpeedTuningSquare(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'width': 5.0,
                        'color':0.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'speed':[20.0, 30.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0, 200.0],
                        'angle': 0.0,
                        'randomize_order':True}
@@ -757,7 +771,7 @@ class CenterSurroundDriftingSquareGrating(BaseProtocol):
         self.epoch_parameters = (surround_parameters, center_parameters)
         
         self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
-                                'center':self.protocol_parameters['center']}
+                                'center':self.adjustCenter(self.protocol_parameters['center'])}
         self.convenience_parameters = self.protocol_parameters.copy()
         self.convenience_parameters['current_surround_rate'] = current_surround_rate
         self.convenience_parameters['current_center_rate'] = current_center_rate
@@ -811,7 +825,7 @@ class CenterSurroundDriftingSquareGrating(BaseProtocol):
                                      10.0, 20.0, 40.0, 80.0, 100.0],
                        'contrast_surround': 0.5,
                        'center_size':20.0,
-                       'center': [140.0, 120.0],
+                       'center': [0, 0],
                        'angle':0.0,
                        'randomize_order':True}
 
@@ -836,7 +850,7 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
                                                                                              all_combinations = True, 
                                                                                              randomize_order = self.protocol_parameters['randomize_order'])
         
-        patch_parameters = self.getMovingPatchParameters(center = self.protocol_parameters['center'],
+        patch_parameters = self.getMovingPatchParameters(center = self.adjustCenter(self.protocol_parameters['center']),
                                                          angle = self.protocol_parameters['angle'],
                                                          speed = current_patch_speed,
                                                          width = self.protocol_parameters['patch_size'],
@@ -895,7 +909,7 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
         data.experiment_file.close()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'center': [140.0, 120.0],
+        self.protocol_parameters = {'center': [0, 0],
                                     'patch_size':10.0,
                                     'patch_color':0.0,
                        'patch_speed':[20.0, 40.0, 80.0],
@@ -938,7 +952,7 @@ class VelocitySwitchGrating(BaseProtocol):
         self.convenience_parameters['current_start_rate'] = current_start_rate
         self.convenience_parameters['current_switch_rate'] = current_switch_rate
         self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
-                                'center':self.protocol_parameters['center'],
+                                'center':self.adjustCenter(self.protocol_parameters['center']),
                                 'switch_rate':current_switch_rate}
         
     def loadStimuli(self, multicall):
@@ -977,7 +991,7 @@ class VelocitySwitchGrating(BaseProtocol):
         sleep(self.run_parameters['tail_time'])     
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'center':[140.0, 120.0],
+        self.protocol_parameters = {'center':[0, 0],
                                     'center_size':20.0,
                                     'start_rate':[20.0, 40.0, 80.0],
                                     'switch_rate':[-100.0, -80.0, -40.0, -20.0, -10.0, 0.0,
@@ -1053,8 +1067,9 @@ class StationaryMapping(BaseProtocol):
         
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
-        az_loc = self.protocol_parameters['azimuth_locations']
-        el_loc = self.protocol_parameters['elevation_locations']
+        #adjust to screen center
+        az_loc = [x + self.screen_center[0] for x in self.protocol_parameters['azimuth_locations']]
+        el_loc = [x + self.screen_center[1] for x in self.protocol_parameters['elevation_locations']]
         
         if type(az_loc) is not list:
             az_loc = [az_loc]
@@ -1093,8 +1108,8 @@ class StationaryMapping(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'square_width':5.0,
                        'color':0.0,
-                       'elevation_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0], # 100...140
-                       'azimuth_locations': [100.0, 105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0, 140.0, 145.0, 150.0], #100...150
+                       'elevation_locations': [-20, -15, -10, -5, 0, 5, 10, 15, 20],
+                       'azimuth_locations': [-20, -15, -10, -5, 0, 5, 10, 15, 20],
                        'flash_duration':0.25}
 
     def getRunParameterDefaults(self):
@@ -1119,8 +1134,9 @@ class SineTrajectoryPatch(BaseProtocol):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
 
-        centerX = self.protocol_parameters['center'][0]
-        centerY = self.protocol_parameters['center'][1]
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        centerX = adj_center[0]
+        centerY = adj_center[1]
         amplitude = self.protocol_parameters['amplitude']
         movement_axis = self.protocol_parameters['movement_axis']
         
@@ -1160,7 +1176,7 @@ class SineTrajectoryPatch(BaseProtocol):
         self.protocol_parameters = {'width':5.0,
                        'height':5.0,
                        'color':0.0,
-                       'center': [130.0, 120.0],
+                       'center': [0, 0],
                        'amplitude': 20, #deg, half of total travel distance
                        'temporal_frequency': [1, 2, 4, 6, 8], #Hz
                        'movement_axis': 0,

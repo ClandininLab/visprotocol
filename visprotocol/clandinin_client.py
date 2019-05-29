@@ -32,9 +32,9 @@ class Client():
         if self.server_options['use_server']:
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
-            w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
-            screens = [Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), fullscreen=False, vsync=None, square_loc='lr')]
-            self.manager = launch_stim_server(screens)
+#            w = 10e-2; h = 10e-2; # meters of image at projection plane
+#            screens = [Screen(width=w, height=h, rotation=0, offset=(0,w/2,-10e-2), fullscreen=False, vsync=None, square_loc='lr')]
+            self.manager = launch_stim_server(Screen(fullscreen=False, width = 3, height = 3, offset=(0,1,0)))
         
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)

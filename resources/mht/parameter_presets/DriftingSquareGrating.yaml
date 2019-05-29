@@ -17,38 +17,11 @@
     - 180.0
     - 270.0
     center:
-    - 130.0
-    - 120.0
+    - 0.0
+    - 0.0
     center_size: 20.0
     randomize_order: true
-AOD_fullfield:
-  run_parameters:
-    protocol_ID: DriftingSquareGrating
-    num_epochs: 40.0
-    pre_time: 0.5
-    stim_time: 2.0
-    tail_time: 0.5
-    idle_color: 0.5
-  protocol_parameters:
-    period: 20.0
-    rate: 20.0
-    color: 1.0
-    background: 0.0
-    angle:
-    - 0.0
-    - 45.0
-    - 90.0
-    - 135.0
-    - 180.0
-    - 225.0
-    - 270.0
-    - 315.0
-    center:
-    - 90.0
-    - 90.0
-    center_size: 180.0
-    randomize_order: true
-AOD_fullfield_4dir:
+Fullfield_4dir:
   run_parameters:
     protocol_ID: DriftingSquareGrating
     num_epochs: 40.0
@@ -67,30 +40,7 @@ AOD_fullfield_4dir:
     - 180.0
     - 270.0
     center:
-    - 90.0
-    - 90.0
-    center_size: 180.0
-    randomize_order: true
-? ''
-: run_parameters:
-    protocol_ID: DriftingSquareGrating
-    num_epochs: 40.0
-    pre_time: 0.5
-    stim_time: 2.0
-    tail_time: 0.5
-    idle_color: 0.5
-  protocol_parameters:
-    period: 20.0
-    rate: 20.0
-    color: 1.0
-    background: 0.0
-    angle:
     - 0.0
-    - 90.0
-    - 180.0
-    - 270.0
-    center:
-    - 90.0
-    - 90.0
+    - 0.0
     center_size: 180.0
     randomize_order: true

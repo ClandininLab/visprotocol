@@ -11,6 +11,6 @@ LC20:
     color: 1.0
     elevation: 130.0
     azimuth_boundaries:
-    - 110.0
-    - 160.0
+    - -25
+    - 25
     no_steps: 12.0
