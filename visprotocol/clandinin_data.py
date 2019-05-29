@@ -12,6 +12,8 @@ import socket
 from datetime import datetime
 from nptdms import TdmsFile
 import numpy as np
+import configparser
+import skimage.io as io
 
 import visprotocol
 
@@ -117,7 +119,15 @@ class Data():
         notes = self.experiment_file['/notes']
         notes.attrs[noteTime] = noteText
         self.experiment_file.close()
+
+
+    def reOpenExperimentFile(self):
+        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
         
+    def advanceSeriesCount(self):
+        self.series_count += 1
+
+# # # # # # # Tools for random access scan data # # # # # # # # # # # # # # # # # # # # # # #             
     def attachPoiData(self, poi_directory):
         if self.experiment_file is not None:
             #make a backup copy first
@@ -135,7 +145,8 @@ class Data():
                 current_run = self.experiment_file.get('epoch_runs')[er]
                 poi_parent_group = current_run.require_group('pois')
                 poi_series_number = int(er)
-                time_points, poi_data_matrix = self.getPoiData(poi_directory, poi_series_number, pmt = 1)
+                time_points, poi_data_matrix = getPoiData(poi_directory, poi_series_number, pmt = 1)
+                photodiode_time, photodiode_input = getPhotodiodeSignal(poi_directory, poi_series_number)
                 if time_points is None:
                     print('No POI data found for Series ' + str(er))
                     continue
@@ -147,6 +158,22 @@ class Data():
                 
                 poi_parent_group.create_dataset("time_points", data = time_points)
                 poi_parent_group.create_dataset("poi_data_matrix", data = poi_data_matrix)
+                poi_parent_group.create_dataset("photodiode_time", data = photodiode_time)
+                poi_parent_group.create_dataset("photodiode_input", data = photodiode_input)
+                
+                # attach random access scan configuration settings as attributes
+                config_dict = getRandomAccessConfigSettings(poi_directory, poi_series_number)
+                for outer_k in config_dict.keys():
+                    for inner_k in config_dict[outer_k].keys():
+                        poi_parent_group.attrs[outer_k + '/' + inner_k] = config_dict[outer_k][inner_k]
+                        
+                # attach poi map jpeg and Snap Image
+                snap_name = config_dict['Image']['name'].replace('"','')
+                snap_image = getSnapImage(poi_directory, snap_name)
+                
+                roi_map = getRoiMapImage(poi_directory, poi_series_number)
+                poi_parent_group.create_dataset("roi_map", data = roi_map)
+                poi_parent_group.create_dataset("snap_image", data = snap_image)
                 
                 print('Series ' + str(er) + ': added POI data')
             
@@ -154,31 +181,63 @@ class Data():
         else:
             print('No experiment file assigned yet')
 
+    
+def getPoiData(poi_directory, poi_series_number, pmt = 1):
+    poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
+    full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '_pmt' + str(pmt) + '.tdms')
+    
+    try:
+        tdms_file = TdmsFile(full_file_path)
+        
+        time_points = tdms_file.channel_data('PMT'+str(pmt),'POI time') #msec
+        poi_data_matrix = np.ndarray(shape = (len(tdms_file.group_channels('PMT'+str(pmt))[1:]), len(time_points)))
+        poi_data_matrix[:] = np.nan
+        
+        for poi_ind in range(len(tdms_file.group_channels('PMT'+str(pmt))[1:])): #first object is time points. Subsequent for POIs
+            poi_data_matrix[poi_ind,:] = tdms_file.channel_data('PMT'+str(pmt),'POI ' + str(poi_ind) + ' ')
 
-    def reOpenExperimentFile(self):
-        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
+    except:
+        time_points = None
+        poi_data_matrix = None
+        print('No tdms file found at: ' + full_file_path)
         
-    def advanceSeriesCount(self):
-        self.series_count += 1
-        
-    def getPoiData(self, poi_directory, poi_series_number, pmt = 1):
-        poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
-        full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '_pmt' + str(pmt) + '.tdms')
-        
-        try:
-            tdms_file = TdmsFile(full_file_path)
-            
-            time_points = tdms_file.channel_data('PMT'+str(pmt),'POI time') #msec
-            poi_data_matrix = np.ndarray(shape = (len(tdms_file.group_channels('PMT'+str(pmt))[1:]), len(time_points)))
-            poi_data_matrix[:] = np.nan
-            
-            for poi_ind in range(len(tdms_file.group_channels('PMT'+str(pmt))[1:])): #first object is time points. Subsequent for POIs
-                poi_data_matrix[poi_ind,:] = tdms_file.channel_data('PMT'+str(pmt),'POI ' + str(poi_ind) + ' ')
+    return time_points, poi_data_matrix
 
-        except:
-            time_points = None
-            poi_data_matrix = None
-            print('No tdms file found at: ' + full_file_path)
-            
-        return time_points, poi_data_matrix
+def getPhotodiodeSignal(poi_directory, poi_series_number):
+    poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
+    full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '-AnalogIN.tdms')
+    
+    try:
+        tdms_file = TdmsFile(full_file_path)
+        time_points = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').time_track()
+        analog_input = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').data
+
+    except:
+        time_points = None
+        analog_input = None
+        print('No analog_input file found at: ' + full_file_path)
         
+    return time_points, analog_input
+
+def getRandomAccessConfigSettings(poi_directory, poi_series_number):
+    poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
+    full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '.ini')
+    
+    config = configparser.ConfigParser()
+    config.read(full_file_path)
+    
+    config_dict = config._sections
+    
+    return config_dict
+
+def getSnapImage(poi_directory, snap_name, pmt = 1):
+    full_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + '-snap-' + 'pmt'+str(pmt) + '.tif')
+    snap_image = io.imread(full_file_path)
+    return snap_image
+    
+def getRoiMapImage(poi_directory, poi_series_number, pmt = 1):
+    poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
+    full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '_pmt' + str(pmt) + '.jpeg')
+    
+    roi_image = io.imread(full_file_path)
+    return roi_image
