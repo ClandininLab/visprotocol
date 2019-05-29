@@ -5,11 +5,15 @@ driver_choices: [L2 (21Dhh), LC11 (R22H02; R20G06), LC17 (R21D03; R65C12),
                               LC9 (VT032961; VT040569), 'LC20 (R17A04, R35B06)', nSyb-Gal4]
 indicator_choices: [GCaMP7f, TdTomato, GCaMP6f, GCaMP6m, ASAP2f, ASAP4c, 10_90_GCaMP6f, 10_90_GCaMP7f, 10_90_ASAP2f, 10_90_ASAP4c, 10_90_ASAP4c_F413G, SF-iGluSnFR.A184V]
 
+poi_names: [Axon, Dendrite, Soma]
 
 rig_config:
   AODscope_OneScreen:
-    data_directory: 'D:/Max/FlystimData'
+    data_directory: D:/Max/FlystimData
     screen_center: [90,90]
+    rig: AODscope
+
   Bruker_LeftScreen:
-    data_directory: 'E:/Max/FlystimData'
+    data_directory: E:/Max/FlystimData
     screen_center: [130,120]
+    rig: Bruker

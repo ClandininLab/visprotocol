@@ -28,12 +28,15 @@ class Data():
             cfg = yaml.safe_load(ymlfile)
 
         # # # Other metadata defaults # # #
-        self.experimenter = cfg['experimenter']
+        self.experimenter = cfg.get('experimenter', '')
     
         # # #  Lists of fly metadata # # # 
-        self.prepChoices = cfg['prep_choices']
-        self.driverChoices = cfg['driver_choices']
-        self.indicatorChoices = cfg['indicator_choices']
+        self.prepChoices = cfg.get('prep_choices', [])
+        self.driverChoices = cfg.get('driver_choices', [])
+        self.indicatorChoices = cfg.get('indicator_choices', [])
+        
+        # # #  Poi name options # # # 
+        self.poiNames = cfg.get('poi_names', [])
            
         #load rig-specific metadata things
         if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
@@ -65,6 +68,7 @@ class Data():
         # Create a top-level group for epoch runs and user-entered notes
         self.experiment_file.create_group('epoch_runs')
         self.experiment_file.create_group('notes')
+        self.experiment_file.create_group('client') # TODO: figure out what to save here...
         self.experiment_file.close()
         
     def saveEpochRunMetaData(self, protocol_object):
