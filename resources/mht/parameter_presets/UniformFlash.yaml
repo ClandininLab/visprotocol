@@ -10,36 +10,6 @@ small_increments:
     height: 20.0
     width: 20.0
     center:
-    - 130.0
-    - 120.0
-    intensity: 1.0
-AOD_fullfield:
-  run_parameters:
-    protocol_ID: UniformFlash
-    num_epochs: 20.0
-    pre_time: 1.0
-    stim_time: 1.0
-    tail_time: 1.0
-    idle_color: 0.5
-  protocol_parameters:
-    height: 180.0
-    width: 180.0
-    center:
-    - 90.0
-    - 120.0
-    intensity: 1.0
-? ''
-: run_parameters:
-    protocol_ID: UniformFlash
-    num_epochs: 20.0
-    pre_time: 1.0
-    stim_time: 2.0
-    tail_time: 1.0
-    idle_color: 0.5
-  protocol_parameters:
-    height: 180.0
-    width: 180.0
-    center:
-    - 90.0
-    - 120.0
+    - 0
+    - 0
     intensity: 1.0

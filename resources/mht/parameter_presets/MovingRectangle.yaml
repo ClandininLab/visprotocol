@@ -11,8 +11,8 @@ small_4dir:
     height: 5.0
     color: 0.0
     center:
-    - 130.0
-    - 120.0
+    - 0.0
+    - 0.0
     speed: 80.0
     angle:
     - 0.0
@@ -33,8 +33,8 @@ tall_4dir:
     height: 80.0
     color: 0.0
     center:
-    - 130.0
-    - 120.0
+    - 0.0
+    - 0.0
     speed: 80.0
     angle:
     - 0.0
@@ -55,8 +55,8 @@ fast_front_back:
     height: 10.0
     color: 0.0
     center:
-    - 130.0
-    - 120.0
+    - 0.0
+    - 0.0
     speed: 80.0
     angle:
     - 0.0
@@ -75,54 +75,10 @@ fast_up_down:
     height: 10.0
     color: 0.0
     center:
-    - 130.0
-    - 120.0
+    - 0.0
+    - 0.0
     speed: 80.0
     angle:
     - 90.0
     - 270.0
     randomize_order: false
-? ''
-: run_parameters:
-    protocol_ID: MovingRectangle
-    num_epochs: 40.0
-    pre_time: 0.5
-    stim_time: 2.0
-    tail_time: 1.0
-    idle_color: 0.5
-  protocol_parameters:
-    width: 5.0
-    height: 80.0
-    color: 0.0
-    center:
-    - 130.0
-    - 120.0
-    speed: 80.0
-    angle:
-    - 0.0
-    - 90.0
-    - 180.0
-    - 270.0
-    randomize_order: true
-tall_4dir_2:
-  run_parameters:
-    protocol_ID: MovingRectangle
-    num_epochs: 40.0
-    pre_time: 0.5
-    stim_time: 2.0
-    tail_time: 1.0
-    idle_color: 0.5
-  protocol_parameters:
-    width: 5.0
-    height: 80.0
-    color: 0.0
-    center:
-    - 130.0
-    - 120.0
-    speed: 80.0
-    angle:
-    - 0.0
-    - 90.0
-    - 180.0
-    - 270.0
-    randomize_order: true

@@ -217,9 +217,15 @@ class ImagingExperimentGUI(QWidget):
         
         self.poi_tag_entries = []
         self.poi_range_entries = []
+        
         for rows in range(8):
-            new_tag = QLineEdit()
+            new_tag = QComboBox()
+            new_tag.setEditable(True)
+            new_tag.addItem('')
+            for poi_name in self.data.poiNames:
+                new_tag.addItem(poi_name)
             new_range = QLineEdit()
+
             self.poi_tag_entries.append(new_tag)
             self.poi_range_entries.append(new_range)
             self.poi_grid.addRow(new_tag, new_range)

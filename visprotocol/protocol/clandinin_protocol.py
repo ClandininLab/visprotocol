@@ -8,6 +8,7 @@ from time import sleep
 
 import os.path
 import yaml
+import socket
 
 class BaseProtocol():
     def __init__(self):
@@ -17,7 +18,19 @@ class BaseProtocol():
         self.getRunParameterDefaults()
         self.getParameterDefaults()
         self.loadParameterPresets()
-   
+        
+        # Rig-specific screen center
+        if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
+            self.screen_center = [90,90] #az, el (deg.)
+        elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
+            self.screen_center = [130,120] #az, el
+        else:
+            self.screen_center = [90,90] #az, el
+        
+    def adjustCenter(self, relative_center):
+        absolute_center = [sum(x) for x in zip(relative_center, self.screen_center)]
+        return absolute_center
+            
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'',
               'num_epochs':5,
