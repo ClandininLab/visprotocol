@@ -13,7 +13,7 @@ def main():
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
          dlpc350_object.set_current(red=0, green = 0, blue = 1)
-         dlpc350_object.pattern_mode(fps=115.06, red=True, blue=True, green=False)  
+         dlpc350_object.pattern_mode(fps=120, red=True, blue=True, green=False)  
     if len(dlpc350_objects) == 0:
         print('No lightcrafters detected! Try sudo')   
      
@@ -29,15 +29,15 @@ def main():
 
     tri_list = Screen.quad_to_tri_list(*pts)
 
-    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=None, square_side=3.0e-2, square_loc='ll')
+    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=True, square_side=3.0e-2, square_loc='ll')
 
-    #aux_screen = Screen(tri_list=tri_list, server_number=1, id=0, fullscreen=False, vsync=True, square_side=0, square_loc='ll')
+    aux_screen = Screen(tri_list=tri_list, server_number=1, id=0, fullscreen=False, vsync=True, square_side=0, square_loc='ll')
 
     screens = [AODscope_left_screen]
     port = 60629
     host = ''
 
-    draw_screens(AODscope_left_screen)
+    #draw_screens(AODscope_left_screen)
     plt.show()
     
     manager =  StimServer(screens=screens, host=host, port=port, auto_stop=False)
