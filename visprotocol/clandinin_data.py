@@ -172,7 +172,7 @@ class Data():
                 snap_image = getSnapImage(poi_directory, snap_name)
                 
                 roi_map = getRoiMapImage(poi_directory, poi_series_number)
-                poi_parent_group.create_dataset("roi_map", data = roi_map)
+                poi_parent_group.create_dataset("poi_map", data = roi_map)
                 poi_parent_group.create_dataset("snap_image", data = snap_image)
                 
                 print('Series ' + str(er) + ': added POI data')

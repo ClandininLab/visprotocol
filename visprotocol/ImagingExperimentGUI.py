@@ -471,7 +471,7 @@ class ImagingExperimentGUI(QWidget):
         # Populate poi information
         self.data.poi_metadata = {}
         for ind in range(len(self.poi_tag_entries)):
-            current_tag = self.poi_tag_entries[ind].text()
+            current_tag = self.poi_tag_entries[ind].currentText()
             current_range = self.poi_range_entries[ind].text()
             if (current_tag != '') & (current_range != ''): #both fields are filled in by user
                 ranges = (x.split("-") for x in current_range.split(","))
