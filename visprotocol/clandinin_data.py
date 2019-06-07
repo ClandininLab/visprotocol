@@ -169,11 +169,17 @@ class Data():
                         
                 # attach poi map jpeg and Snap Image
                 snap_name = config_dict['Image']['name'].replace('"','')
-                snap_image = getSnapImage(poi_directory, snap_name)
+                if 'points' in snap_name: #used snap image from previous POI scan
+                    alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
+                    alt_snap_name = snap_name = alt_dict['Image']['name'].replace('"','')
+                    snap_image = getSnapImage(poi_directory, alt_snap_name, pmt = 1)
+                else: #unique snap image for this poi scan
+                    snap_image = getSnapImage(poi_directory, snap_name, pmt = 1)
                 
                 roi_map = getRoiMapImage(poi_directory, poi_series_number)
                 poi_parent_group.create_dataset("poi_map", data = roi_map)
                 poi_parent_group.create_dataset("snap_image", data = snap_image)
+                # TODO: get the snap mask image and the tdms params to pull POI locations, then remap to snap space
                 
                 print('Series ' + str(er) + ': added POI data')
             

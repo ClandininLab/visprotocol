@@ -348,7 +348,7 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setValue(largest_prior_value + 1)
                 
         elif sender.text() == 'Attach poi data':
-            poi_directory = str(QFileDialog.getExistingDirectory(self, "Select poi parent directory"))
+            poi_directory = str(QFileDialog.getExistingDirectory(self, "Select experiment date's data directory"))
             self.data.attachPoiData(poi_directory)
 
     def resetLayout(self):
