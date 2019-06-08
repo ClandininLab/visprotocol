@@ -151,6 +151,14 @@ class ImagingExperimentGUI(QWidget):
 
         # # # TAB 2: Current FLY metadata information
         # # Fly info:
+        # Load any existing fly metadata in this file
+        newLabel = QLabel('Load existing fly')
+        self.existing_fly_input = QComboBox()
+        self.existing_fly_input.activated[int].connect(self.onSelectedExistingFly)
+        self.data_grid.addRow(newLabel, self.existing_fly_input)
+        self.updateExistingFlyInput()
+        
+
         newLabel = QLabel('Current fly info:')
         newLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.data_grid.addRow(newLabel)
@@ -334,6 +342,8 @@ class ImagingExperimentGUI(QWidget):
             self.data.experimenter = dialog.ui.le_Experimenter.text()
             self.data.rig = dialog.ui.le_Rig.text()
             
+            self.updateExistingFlyInput()
+            
         elif sender.text() == 'Load experiment':
             filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
             self.data.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
@@ -346,6 +356,7 @@ class ImagingExperimentGUI(QWidget):
                 largest_prior_value = max(list(map(int,list(self.data.experiment_file['/epoch_runs'].keys()))), default = 0)
                 self.data.experiment_file.close()
                 self.series_counter_input.setValue(largest_prior_value + 1)
+                self.updateExistingFlyInput()
                 
         elif sender.text() == 'Attach poi data':
             poi_directory = str(QFileDialog.getExistingDirectory(self, "Select experiment date's data directory"))
@@ -397,6 +408,25 @@ class ImagingExperimentGUI(QWidget):
         self.updateProtocolParametersInput()
         self.updateRunParamtersInput()
         self.show()
+        
+    def onSelectedExistingFly(self, index):
+        fly_data = self.data.getExistingFlyData()
+        self.populateFlyMetadataFields(fly_data[index])
+        
+    def updateExistingFlyInput(self):
+        self.existing_fly_input.clear()
+        for fly_data in self.data.getExistingFlyData():
+            self.existing_fly_input.addItem(fly_data['fly:fly_id'])
+        
+    def populateFlyMetadataFields(self, fly_data_dict):
+        self.fly_id_input.setText(fly_data_dict['fly:fly_id'])
+        self.fly_sex_input.setCurrentText(fly_data_dict['fly:sex'])
+        self.fly_age_input.setValue(fly_data_dict['fly:age'])
+        self.fly_driver_1.setCurrentText(fly_data_dict['fly:driver_1'])
+        self.fly_indicator_1.setCurrentText(fly_data_dict['fly:indicator_1'])
+        self.fly_driver_2.setCurrentText(fly_data_dict['fly:driver_2'])
+        self.fly_indicator_2.setCurrentText(fly_data_dict['fly:indicator_2'])
+        self.fly_genotype_input.setText(fly_data_dict['fly:genotype'])
         
     def updateRunParamtersInput(self):
         self.run_params_ct = 0
@@ -481,6 +511,9 @@ class ImagingExperimentGUI(QWidget):
         
         self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag = save_metadata_flag)       
 
+        if save_metadata_flag:
+            self.updateExistingFlyInput()
+            
         self.status_label.setText('Ready')
         
         if save_metadata_flag:

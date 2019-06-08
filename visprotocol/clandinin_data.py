@@ -122,11 +122,36 @@ class Data():
         self.experiment_file.close()
 
 
-    def reOpenExperimentFile(self):
-        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
+    def reOpenExperimentFile(self, mode = 'r+'):
+        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), mode)
         
     def advanceSeriesCount(self):
         self.series_count += 1
+        
+        
+            
+    def getExistingFlyData(self):
+        # return list of dicts for fly metadata already present in experiment file
+        fly_data_list = []
+        if self.experiment_file is not None:
+            self.reOpenExperimentFile(mode = 'r')
+            for er in self.experiment_file['/epoch_runs']:
+                new_run = self.experiment_file['/epoch_runs'][er]
+                new_dict = {}
+                for at in new_run.attrs:
+                    if 'fly' in at:
+                        new_dict[at] = new_run.attrs[at]
+                
+                if new_dict in fly_data_list:
+                    pass
+                else:
+                    fly_data_list.append(new_dict)
+            
+            fly_data_list = sorted(fly_data_list, key = lambda i: i['fly:fly_id'])
+    
+            self.experiment_file.close()
+        
+        return fly_data_list
 
 # # # # # # # Tools for random access scan data # # # # # # # # # # # # # # # # # # # # # # #             
     def attachPoiData(self, poi_directory):
