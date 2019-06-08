@@ -157,7 +157,6 @@ class ImagingExperimentGUI(QWidget):
         self.existing_fly_input.activated[int].connect(self.onSelectedExistingFly)
         self.data_grid.addRow(newLabel, self.existing_fly_input)
         self.updateExistingFlyInput()
-        
 
         newLabel = QLabel('Current fly info:')
         newLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -219,6 +218,12 @@ class ImagingExperimentGUI(QWidget):
         self.data_grid.addRow(newLabel, self.fly_genotype_input)
         
         # # # TAB 3: POI info and attachment to file
+        newLabel = QLabel('Load existing pois')
+        self.existing_poi_input = QComboBox()
+        self.existing_poi_input.activated[int].connect(self.onSelectedExistingPoi)
+        self.poi_grid.addRow(newLabel, self.existing_poi_input)
+        self.updateExistingPoiInput()
+        
         self.poi_tag_label = QLabel('POI tag')
         self.poi_range_label = QLabel('POI number(s) [e.g. "1-4" or "2,6,8"]')
         self.poi_grid.addRow(self.poi_tag_label, self.poi_range_label)
@@ -343,6 +348,7 @@ class ImagingExperimentGUI(QWidget):
             self.data.rig = dialog.ui.le_Rig.text()
             
             self.updateExistingFlyInput()
+            self.updateExistingPoiInput()
             
         elif sender.text() == 'Load experiment':
             filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
@@ -357,6 +363,7 @@ class ImagingExperimentGUI(QWidget):
                 self.data.experiment_file.close()
                 self.series_counter_input.setValue(largest_prior_value + 1)
                 self.updateExistingFlyInput()
+                self.updateExistingPoiInput()
                 
         elif sender.text() == 'Attach poi data':
             poi_directory = str(QFileDialog.getExistingDirectory(self, "Select experiment date's data directory"))
@@ -409,6 +416,28 @@ class ImagingExperimentGUI(QWidget):
         self.updateRunParamtersInput()
         self.show()
         
+    def onSelectedExistingPoi(self, index):
+        poi_data = self.data.getExistingPoiData()
+        self.populatePoiFields(poi_data[index])
+        
+    def updateExistingPoiInput(self):
+        self.existing_poi_input.clear()
+        for poi_data in self.data.getExistingPoiData():
+            self.existing_poi_input.addItem(poi_data['poi_id'])
+    
+    def populatePoiFields(self, poi_data):
+        self.resetPoiEntries()
+        for ind, rg in enumerate(poi_data['range']):
+            self.poi_range_entries[ind].setText(rg)
+        for ind, tg in enumerate(poi_data['tag']):
+            self.poi_tag_entries[ind].setCurrentText(tg)
+
+    def resetPoiEntries(self):
+        for tag in self.poi_tag_entries:
+            tag.setCurrentText('')
+        for rg in self.poi_range_entries:
+            rg.clear()
+            
     def onSelectedExistingFly(self, index):
         fly_data = self.data.getExistingFlyData()
         self.populateFlyMetadataFields(fly_data[index])
@@ -504,6 +533,8 @@ class ImagingExperimentGUI(QWidget):
             current_tag = self.poi_tag_entries[ind].currentText()
             current_range = self.poi_range_entries[ind].text()
             if (current_tag != '') & (current_range != ''): #both fields are filled in by user
+                current_range = current_range.replace(' ',',')
+                current_range = current_range.replace('[','').replace(']','')
                 ranges = (x.split("-") for x in current_range.split(","))
                 interpreted_range = [i for r in ranges for i in range(int(r[0]), int(r[-1]) + 1)]
                 self.data.poi_metadata[current_tag] = interpreted_range
@@ -513,6 +544,7 @@ class ImagingExperimentGUI(QWidget):
 
         if save_metadata_flag:
             self.updateExistingFlyInput()
+            self.updateExistingPoiInput()
             
         self.status_label.setText('Ready')
         

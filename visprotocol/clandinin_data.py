@@ -15,6 +15,7 @@ import numpy as np
 import configparser
 import skimage.io as io
 import xml.etree.ElementTree as ET
+import re
 
 import visprotocol
 
@@ -128,7 +129,38 @@ class Data():
     def advanceSeriesCount(self):
         self.series_count += 1
         
+    def getExistingPoiData(self):
+        # return list of poi sets already present in experiment file
+        poi_data_list = []
+        if self.experiment_file is not None:
+            self.reOpenExperimentFile(mode = 'r')
+            for er in self.experiment_file['/epoch_runs']:
+                new_pois = self.experiment_file['/epoch_runs'][er]['pois']
+                tg = []
+                rg = []
+                for k in new_pois:
+                    tg.append(k)
+                    new_range = str(new_pois.get(k).get('poi_numbers')[:])
+                    interpreted_range = re.sub(' +', ' ', re.sub('\[|\]','', new_range)).strip().replace(' ',',')
+                    rg.append(interpreted_range)
+                    
+                new_dict = {'tag': tg, 'range': rg}
+                
+                if new_dict in poi_data_list:
+                    pass
+                else:
+                    poi_data_list.append(new_dict)
+                
+            id_val = 0
+            for ind in range(len(poi_data_list)):
+                id_val+=1
+                poi_data_list[ind]['poi_id'] = str(id_val)
+                
+            poi_data_list = sorted(poi_data_list, key = lambda i: i['poi_id'])
+                
+            self.experiment_file.close()
         
+        return poi_data_list
             
     def getExistingFlyData(self):
         # return list of dicts for fly metadata already present in experiment file
