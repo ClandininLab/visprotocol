@@ -14,6 +14,8 @@ from nptdms import TdmsFile
 import numpy as np
 import configparser
 import skimage.io as io
+import xml.etree.ElementTree as ET
+import re
 
 import visprotocol
 
@@ -121,11 +123,67 @@ class Data():
         self.experiment_file.close()
 
 
-    def reOpenExperimentFile(self):
-        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+')
+    def reOpenExperimentFile(self, mode = 'r+'):
+        self.experiment_file = h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), mode)
         
     def advanceSeriesCount(self):
         self.series_count += 1
+        
+    def getExistingPoiData(self):
+        # return list of poi sets already present in experiment file
+        poi_data_list = []
+        if self.experiment_file is not None:
+            self.reOpenExperimentFile(mode = 'r')
+            for er in self.experiment_file['/epoch_runs']:
+                new_pois = self.experiment_file['/epoch_runs'][er]['pois']
+                tg = []
+                rg = []
+                for k in new_pois:
+                    tg.append(k)
+                    new_range = str(new_pois.get(k).get('poi_numbers')[:])
+                    interpreted_range = re.sub(' +', ' ', re.sub('\[|\]','', new_range)).strip().replace(' ',',')
+                    rg.append(interpreted_range)
+                    
+                new_dict = {'tag': tg, 'range': rg}
+                
+                if new_dict in poi_data_list:
+                    pass
+                else:
+                    poi_data_list.append(new_dict)
+                
+            id_val = 0
+            for ind in range(len(poi_data_list)):
+                id_val+=1
+                poi_data_list[ind]['poi_id'] = str(id_val)
+                
+            poi_data_list = sorted(poi_data_list, key = lambda i: i['poi_id'])
+                
+            self.experiment_file.close()
+        
+        return poi_data_list
+            
+    def getExistingFlyData(self):
+        # return list of dicts for fly metadata already present in experiment file
+        fly_data_list = []
+        if self.experiment_file is not None:
+            self.reOpenExperimentFile(mode = 'r')
+            for er in self.experiment_file['/epoch_runs']:
+                new_run = self.experiment_file['/epoch_runs'][er]
+                new_dict = {}
+                for at in new_run.attrs:
+                    if 'fly' in at:
+                        new_dict[at] = new_run.attrs[at]
+                
+                if new_dict in fly_data_list:
+                    pass
+                else:
+                    fly_data_list.append(new_dict)
+            
+            fly_data_list = sorted(fly_data_list, key = lambda i: i['fly:fly_id'])
+    
+            self.experiment_file.close()
+        
+        return fly_data_list
 
 # # # # # # # Tools for random access scan data # # # # # # # # # # # # # # # # # # # # # # #             
     def attachPoiData(self, poi_directory):
@@ -145,7 +203,7 @@ class Data():
                 current_run = self.experiment_file.get('epoch_runs')[er]
                 poi_parent_group = current_run.require_group('pois')
                 poi_series_number = int(er)
-                time_points, poi_data_matrix = getPoiData(poi_directory, poi_series_number, pmt = 1)
+                time_points, poi_data_matrix, poi_xy = getPoiData(poi_directory, poi_series_number, pmt = 1)
                 photodiode_time, photodiode_input = getPhotodiodeSignal(poi_directory, poi_series_number)
                 if time_points is None:
                     print('No POI data found for Series ' + str(er))
@@ -169,12 +227,20 @@ class Data():
                         
                 # attach poi map jpeg and Snap Image
                 snap_name = config_dict['Image']['name'].replace('"','')
-                snap_image = getSnapImage(poi_directory, snap_name)
+                if 'points' in snap_name: #used snap image from previous POI scan
+                    alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
+                    snap_name = alt_dict['Image']['name'].replace('"','')
+
+                snap_image, snap_settings = getSnapImage(poi_directory, snap_name, pmt = 1)
                 
                 roi_map = getRoiMapImage(poi_directory, poi_series_number)
-                poi_parent_group.create_dataset("roi_map", data = roi_map)
+                poi_parent_group.create_dataset("poi_map", data = roi_map)
                 poi_parent_group.create_dataset("snap_image", data = snap_image)
-                
+                # Poi xy locations are in full resolution space. Need to map to snap space
+                poi_xy_to_resolution =  poi_xy / (snap_settings['full_resolution'] / snap_settings['resolution'])
+                poi_to_snap = (poi_xy_to_resolution - snap_settings['snap_dims'][0:2]).astype(int)
+                poi_parent_group.create_dataset("poi_locations", data = poi_to_snap)
+
                 print('Series ' + str(er) + ': added POI data')
             
             self.experiment_file.close()
@@ -196,12 +262,17 @@ def getPoiData(poi_directory, poi_series_number, pmt = 1):
         for poi_ind in range(len(tdms_file.group_channels('PMT'+str(pmt))[1:])): #first object is time points. Subsequent for POIs
             poi_data_matrix[poi_ind,:] = tdms_file.channel_data('PMT'+str(pmt),'POI ' + str(poi_ind) + ' ')
 
+
+        # get poi locations:
+        poi_x = [int(v) for v in tdms_file.channel_data('parameter','parameter')[21:]]
+        poi_y = [int(v) for v in tdms_file.channel_data('parameter','value')[21:]]
+        poi_xy = np.array(list(zip(poi_x, poi_y)))
     except:
         time_points = None
         poi_data_matrix = None
         print('No tdms file found at: ' + full_file_path)
         
-    return time_points, poi_data_matrix
+    return time_points, poi_data_matrix, poi_xy
 
 def getPhotodiodeSignal(poi_directory, poi_series_number):
     poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
@@ -233,7 +304,25 @@ def getRandomAccessConfigSettings(poi_directory, poi_series_number):
 def getSnapImage(poi_directory, snap_name, pmt = 1):
     full_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + '-snap-' + 'pmt'+str(pmt) + '.tif')
     snap_image = io.imread(full_file_path)
-    return snap_image
+    
+    roi_para_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + 'para.roi')
+    roi_root = ET.parse(roi_para_file_path).getroot()
+    ArrayNode = roi_root.find('{http://www.ni.com/LVData}Cluster/{http://www.ni.com/LVData}Array')
+    snap_dims = [int(x.find('{http://www.ni.com/LVData}Val').text) for x in ArrayNode.findall('{http://www.ni.com/LVData}I32')]
+    
+    snap_para_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + 'para.xml')
+    
+    with open(snap_para_file_path) as strfile:
+        xmlString = strfile.read()
+    french_parser = ET.XMLParser(encoding="ISO-8859-1")
+    snap_parameters = ET.fromstring(xmlString, parser = french_parser)
+    
+    resolution = [int(float(x.find('{http://www.ni.com/LVData}Val').text)) for x in snap_parameters.findall(".//{http://www.ni.com/LVData}DBL") if x.find('{http://www.ni.com/LVData}Name').text == 'Resolution'][0]
+    full_resolution = [int(float(x.find('{http://www.ni.com/LVData}Val').text)) for x in snap_parameters.findall(".//{http://www.ni.com/LVData}DBL") if x.find('{http://www.ni.com/LVData}Name').text == 'Resolution full'][0]
+     
+    snap_settings = {'snap_dims':snap_dims, 'resolution': resolution, 'full_resolution': full_resolution}
+    
+    return snap_image, snap_settings
     
 def getRoiMapImage(poi_directory, poi_series_number, pmt = 1):
     poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]

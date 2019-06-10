@@ -151,6 +151,13 @@ class ImagingExperimentGUI(QWidget):
 
         # # # TAB 2: Current FLY metadata information
         # # Fly info:
+        # Load any existing fly metadata in this file
+        newLabel = QLabel('Load existing fly')
+        self.existing_fly_input = QComboBox()
+        self.existing_fly_input.activated[int].connect(self.onSelectedExistingFly)
+        self.data_grid.addRow(newLabel, self.existing_fly_input)
+        self.updateExistingFlyInput()
+
         newLabel = QLabel('Current fly info:')
         newLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.data_grid.addRow(newLabel)
@@ -211,6 +218,12 @@ class ImagingExperimentGUI(QWidget):
         self.data_grid.addRow(newLabel, self.fly_genotype_input)
         
         # # # TAB 3: POI info and attachment to file
+        newLabel = QLabel('Load existing pois')
+        self.existing_poi_input = QComboBox()
+        self.existing_poi_input.activated[int].connect(self.onSelectedExistingPoi)
+        self.poi_grid.addRow(newLabel, self.existing_poi_input)
+        self.updateExistingPoiInput()
+        
         self.poi_tag_label = QLabel('POI tag')
         self.poi_range_label = QLabel('POI number(s) [e.g. "1-4" or "2,6,8"]')
         self.poi_grid.addRow(self.poi_tag_label, self.poi_range_label)
@@ -334,6 +347,9 @@ class ImagingExperimentGUI(QWidget):
             self.data.experimenter = dialog.ui.le_Experimenter.text()
             self.data.rig = dialog.ui.le_Rig.text()
             
+            self.updateExistingFlyInput()
+            self.updateExistingPoiInput()
+            
         elif sender.text() == 'Load experiment':
             filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
             self.data.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
@@ -346,9 +362,11 @@ class ImagingExperimentGUI(QWidget):
                 largest_prior_value = max(list(map(int,list(self.data.experiment_file['/epoch_runs'].keys()))), default = 0)
                 self.data.experiment_file.close()
                 self.series_counter_input.setValue(largest_prior_value + 1)
+                self.updateExistingFlyInput()
+                self.updateExistingPoiInput()
                 
         elif sender.text() == 'Attach poi data':
-            poi_directory = str(QFileDialog.getExistingDirectory(self, "Select poi parent directory"))
+            poi_directory = str(QFileDialog.getExistingDirectory(self, "Select experiment date's data directory"))
             self.data.attachPoiData(poi_directory)
 
     def resetLayout(self):
@@ -397,6 +415,47 @@ class ImagingExperimentGUI(QWidget):
         self.updateProtocolParametersInput()
         self.updateRunParamtersInput()
         self.show()
+        
+    def onSelectedExistingPoi(self, index):
+        poi_data = self.data.getExistingPoiData()
+        self.populatePoiFields(poi_data[index])
+        
+    def updateExistingPoiInput(self):
+        self.existing_poi_input.clear()
+        for poi_data in self.data.getExistingPoiData():
+            self.existing_poi_input.addItem(poi_data['poi_id'])
+    
+    def populatePoiFields(self, poi_data):
+        self.resetPoiEntries()
+        for ind, rg in enumerate(poi_data['range']):
+            self.poi_range_entries[ind].setText(rg)
+        for ind, tg in enumerate(poi_data['tag']):
+            self.poi_tag_entries[ind].setCurrentText(tg)
+
+    def resetPoiEntries(self):
+        for tag in self.poi_tag_entries:
+            tag.setCurrentText('')
+        for rg in self.poi_range_entries:
+            rg.clear()
+            
+    def onSelectedExistingFly(self, index):
+        fly_data = self.data.getExistingFlyData()
+        self.populateFlyMetadataFields(fly_data[index])
+        
+    def updateExistingFlyInput(self):
+        self.existing_fly_input.clear()
+        for fly_data in self.data.getExistingFlyData():
+            self.existing_fly_input.addItem(fly_data['fly:fly_id'])
+        
+    def populateFlyMetadataFields(self, fly_data_dict):
+        self.fly_id_input.setText(fly_data_dict['fly:fly_id'])
+        self.fly_sex_input.setCurrentText(fly_data_dict['fly:sex'])
+        self.fly_age_input.setValue(fly_data_dict['fly:age'])
+        self.fly_driver_1.setCurrentText(fly_data_dict['fly:driver_1'])
+        self.fly_indicator_1.setCurrentText(fly_data_dict['fly:indicator_1'])
+        self.fly_driver_2.setCurrentText(fly_data_dict['fly:driver_2'])
+        self.fly_indicator_2.setCurrentText(fly_data_dict['fly:indicator_2'])
+        self.fly_genotype_input.setText(fly_data_dict['fly:genotype'])
         
     def updateRunParamtersInput(self):
         self.run_params_ct = 0
@@ -471,9 +530,11 @@ class ImagingExperimentGUI(QWidget):
         # Populate poi information
         self.data.poi_metadata = {}
         for ind in range(len(self.poi_tag_entries)):
-            current_tag = self.poi_tag_entries[ind].text()
+            current_tag = self.poi_tag_entries[ind].currentText()
             current_range = self.poi_range_entries[ind].text()
             if (current_tag != '') & (current_range != ''): #both fields are filled in by user
+                current_range = current_range.replace(' ',',')
+                current_range = current_range.replace('[','').replace(']','')
                 ranges = (x.split("-") for x in current_range.split(","))
                 interpreted_range = [i for r in ranges for i in range(int(r[0]), int(r[-1]) + 1)]
                 self.data.poi_metadata[current_tag] = interpreted_range
@@ -481,6 +542,10 @@ class ImagingExperimentGUI(QWidget):
         
         self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag = save_metadata_flag)       
 
+        if save_metadata_flag:
+            self.updateExistingFlyInput()
+            self.updateExistingPoiInput()
+            
         self.status_label.setText('Ready')
         
         if save_metadata_flag:
