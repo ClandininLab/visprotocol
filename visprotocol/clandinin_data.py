@@ -228,7 +228,7 @@ class Data():
                         
                 # attach poi map jpeg and Snap Image
                 snap_name = config_dict['Image']['name'].replace('"','')
-                if 'points' in snap_name: #used snap image from previous POI scan
+                while 'points' in snap_name: #used snap image from a previous POI scan
                     alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
                     snap_name = alt_dict['Image']['name'].replace('"','')
 
