@@ -82,3 +82,25 @@ fast_up_down:
     - 90.0
     - 270.0
     randomize_order: false
+Tm3_TallBars:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 2.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 120.0
+    color: 1.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 30.0
+    angle:
+    - 0.0
+    - 90.0
+    - 180.0
+    - 270.0
+    randomize_order: true
