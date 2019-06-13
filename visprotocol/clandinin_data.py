@@ -216,8 +216,9 @@ class Data():
                 
                 poi_parent_group.create_dataset("time_points", data = time_points)
                 poi_parent_group.create_dataset("poi_data_matrix", data = poi_data_matrix)
-                poi_parent_group.create_dataset("photodiode_time", data = photodiode_time)
-                poi_parent_group.create_dataset("photodiode_input", data = photodiode_input)
+                if photodiode_time is not None:
+                    poi_parent_group.create_dataset("photodiode_time", data = photodiode_time)
+                    poi_parent_group.create_dataset("photodiode_input", data = photodiode_input)
                 
                 # attach random access scan configuration settings as attributes
                 config_dict = getRandomAccessConfigSettings(poi_directory, poi_series_number)
@@ -227,7 +228,7 @@ class Data():
                         
                 # attach poi map jpeg and Snap Image
                 snap_name = config_dict['Image']['name'].replace('"','')
-                if 'points' in snap_name: #used snap image from previous POI scan
+                while 'points' in snap_name: #used snap image from a previous POI scan
                     alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
                     snap_name = alt_dict['Image']['name'].replace('"','')
 
