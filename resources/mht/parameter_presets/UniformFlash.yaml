@@ -28,3 +28,33 @@ AOD_fullfield:
     - 0.0
     - 0.0
     intensity: 1.0
+Tm3_FullField:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 120.0
+    width: 120.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
+Tm3_SmallField:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 20.0
+    width: 20.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
