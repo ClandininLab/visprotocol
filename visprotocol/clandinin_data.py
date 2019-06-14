@@ -230,23 +230,21 @@ class Data():
                         
                 # attach poi map jpeg and Snap Image
                 snap_name = config_dict['Image']['name'].replace('"','')
-                ct=0
-                while ('points' in snap_name) or (ct < 100): #used snap image from a previous POI scan
-                    ct+=1
+                snap_ct=0
+                while (('points' in snap_name) and (snap_ct < 100)): #used snap image from a previous POI scan
+                    snap_ct+=1
                     alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
                     temp_image = alt_dict.get('Image')
                     if temp_image is not None:
                         snap_name = temp_image['name'].replace('"','')
                     
-                snap_image, snap_settings = getSnapImage(poi_directory, snap_name, pmt = 1)
-                
+                snap_image, snap_settings, poi_locations = getSnapImage(poi_directory, snap_name, poi_xy, pmt = 1)
+
+                poi_parent_group.create_dataset("poi_locations", data=poi_locations)
                 roi_map = getRoiMapImage(poi_directory, poi_series_number)
                 poi_parent_group.create_dataset("poi_map", data = roi_map)
                 poi_parent_group.create_dataset("snap_image", data = snap_image)
-                # Poi xy locations are in full resolution space. Need to map to snap space
-                poi_xy_to_resolution =  poi_xy / (snap_settings['full_resolution'] / snap_settings['resolution'])
-                poi_to_snap = (poi_xy_to_resolution - snap_settings['snap_dims'][0:2]).astype(int)
-                poi_parent_group.create_dataset("poi_locations", data = poi_to_snap)
+
 
                 print('Series ' + str(er) + ': added POI data')
             
@@ -312,32 +310,46 @@ def getRandomAccessConfigSettings(poi_directory, poi_series_number):
     
     return config_dict
 
-def getSnapImage(poi_directory, snap_name, pmt = 1):
+def getSnapImage(poi_directory, snap_name, poi_xy, pmt = 1):
     full_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + '-snap-' + 'pmt'+str(pmt) + '.tif')
     if os.path.exists(full_file_path):
         snap_image = io.imread(full_file_path)
+
+        roi_para_file_path = os.path.join(poi_directory, 'snap', snap_name,
+                                          snap_name[9:] + '_' + snap_name[:8] + 'para.roi')
+        roi_root = ET.parse(roi_para_file_path).getroot()
+        ArrayNode = roi_root.find('{http://www.ni.com/LVData}Cluster/{http://www.ni.com/LVData}Array')
+        snap_dims = [int(x.find('{http://www.ni.com/LVData}Val').text) for x in
+                     ArrayNode.findall('{http://www.ni.com/LVData}I32')]
+
+        snap_para_file_path = os.path.join(poi_directory, 'snap', snap_name,
+                                           snap_name[9:] + '_' + snap_name[:8] + 'para.xml')
+
+        with open(snap_para_file_path) as strfile:
+            xmlString = strfile.read()
+        french_parser = ET.XMLParser(encoding="ISO-8859-1")
+        snap_parameters = ET.fromstring(xmlString, parser=french_parser)
+
+        resolution = [int(float(x.find('{http://www.ni.com/LVData}Val').text)) for x in
+                      snap_parameters.findall(".//{http://www.ni.com/LVData}DBL") if
+                      x.find('{http://www.ni.com/LVData}Name').text == 'Resolution'][0]
+        full_resolution = [int(float(x.find('{http://www.ni.com/LVData}Val').text)) for x in
+                           snap_parameters.findall(".//{http://www.ni.com/LVData}DBL") if
+                           x.find('{http://www.ni.com/LVData}Name').text == 'Resolution full'][0]
+
+        snap_settings = {'snap_dims': snap_dims, 'resolution': resolution, 'full_resolution': full_resolution}
+
+        # Poi xy locations are in full resolution space. Need to map to snap space
+        poi_xy_to_resolution = poi_xy / (snap_settings['full_resolution'] / snap_settings['resolution'])
+        poi_locations = (poi_xy_to_resolution - snap_settings['snap_dims'][0:2]).astype(int)
+
     else:
         snap_image = 0
+        snap_settings = []
+        poi_locations = []
         print('Warning no snap image found atL ' + full_file_path)
-    
-    roi_para_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + 'para.roi')
-    roi_root = ET.parse(roi_para_file_path).getroot()
-    ArrayNode = roi_root.find('{http://www.ni.com/LVData}Cluster/{http://www.ni.com/LVData}Array')
-    snap_dims = [int(x.find('{http://www.ni.com/LVData}Val').text) for x in ArrayNode.findall('{http://www.ni.com/LVData}I32')]
-    
-    snap_para_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + 'para.xml')
-    
-    with open(snap_para_file_path) as strfile:
-        xmlString = strfile.read()
-    french_parser = ET.XMLParser(encoding="ISO-8859-1")
-    snap_parameters = ET.fromstring(xmlString, parser = french_parser)
-    
-    resolution = [int(float(x.find('{http://www.ni.com/LVData}Val').text)) for x in snap_parameters.findall(".//{http://www.ni.com/LVData}DBL") if x.find('{http://www.ni.com/LVData}Name').text == 'Resolution'][0]
-    full_resolution = [int(float(x.find('{http://www.ni.com/LVData}Val').text)) for x in snap_parameters.findall(".//{http://www.ni.com/LVData}DBL") if x.find('{http://www.ni.com/LVData}Name').text == 'Resolution full'][0]
-     
-    snap_settings = {'snap_dims':snap_dims, 'resolution': resolution, 'full_resolution': full_resolution}
-    
-    return snap_image, snap_settings
+
+    return snap_image, snap_settings, poi_locations
     
 def getRoiMapImage(poi_directory, poi_series_number, pmt = 1):
     poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
