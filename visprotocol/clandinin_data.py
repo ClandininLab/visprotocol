@@ -287,8 +287,13 @@ def getPhotodiodeSignal(poi_directory, poi_series_number):
     
     if os.path.exists(full_file_path):
         tdms_file = TdmsFile(full_file_path)
-        time_points = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').time_track()
-        analog_input = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').data
+        try:
+            time_points = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').time_track()
+            analog_input = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').data
+        except:
+            time_points = None
+            analog_input = None
+            print('Analog input file has unexpected structure: ' + full_file_path)
     else:
         time_points = None
         analog_input = None
