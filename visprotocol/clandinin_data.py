@@ -219,6 +219,8 @@ class Data():
                 if photodiode_time is not None:
                     poi_parent_group.create_dataset("photodiode_time", data = photodiode_time)
                     poi_parent_group.create_dataset("photodiode_input", data = photodiode_input)
+                    
+                
                 
                 # attach random access scan configuration settings as attributes
                 config_dict = getRandomAccessConfigSettings(poi_directory, poi_series_number)
@@ -231,7 +233,7 @@ class Data():
                 while 'points' in snap_name: #used snap image from a previous POI scan
                     alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
                     snap_name = alt_dict['Image']['name'].replace('"','')
-
+                    
                 snap_image, snap_settings = getSnapImage(poi_directory, snap_name, pmt = 1)
                 
                 roi_map = getRoiMapImage(poi_directory, poi_series_number)
@@ -304,7 +306,11 @@ def getRandomAccessConfigSettings(poi_directory, poi_series_number):
 
 def getSnapImage(poi_directory, snap_name, pmt = 1):
     full_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + '-snap-' + 'pmt'+str(pmt) + '.tif')
-    snap_image = io.imread(full_file_path)
+    if os.path.exists(full_file_path):
+        snap_image = io.imread(full_file_path)
+    else:
+        snap_image = 0
+        print('Warning no snap image found atL ' + full_file_path)
     
     roi_para_file_path = os.path.join(poi_directory, 'snap', snap_name, snap_name[9:] + '_' + snap_name[:8] + 'para.roi')
     roi_root = ET.parse(roi_para_file_path).getroot()
