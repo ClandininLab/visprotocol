@@ -285,12 +285,11 @@ def getPhotodiodeSignal(poi_directory, poi_series_number):
     poi_name = 'points' + ('0000' + str(poi_series_number))[-4:]
     full_file_path = os.path.join(poi_directory, 'points', poi_name, poi_name + '-AnalogIN.tdms')
     
-    try:
+    if os.path.exists(full_file_path):
         tdms_file = TdmsFile(full_file_path)
         time_points = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').time_track()
         analog_input = tdms_file.object('external analogIN', 'AnalogGPIOBoard/ai0').data
-
-    except:
+    else:
         time_points = None
         analog_input = None
         print('No analog_input file found at: ' + full_file_path)
