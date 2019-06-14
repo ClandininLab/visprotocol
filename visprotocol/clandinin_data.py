@@ -234,7 +234,9 @@ class Data():
                 while ('points' in snap_name) or (ct < 100): #used snap image from a previous POI scan
                     ct+=1
                     alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
-                    snap_name = alt_dict['Image']['name'].replace('"','')
+                    temp_image = alt_dict.get('Image')
+                    if temp_image is not None:
+                        snap_name = temp_image['name'].replace('"','')
                     
                 snap_image, snap_settings = getSnapImage(poi_directory, snap_name, pmt = 1)
                 
