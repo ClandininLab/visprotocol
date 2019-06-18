@@ -1,0 +1,45 @@
+small_spot_mapping:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    height: 20.0
+    width: 20.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
+impulse_fullfield:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 0.02
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 120.0
+    width: 120.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
+impulse_smallfield:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 0.02
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 20.0
+    width: 20.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
