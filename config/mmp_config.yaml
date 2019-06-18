@@ -5,7 +5,7 @@ driver_choices: [Foma-1 (G105), L1 (R66A01AD;R48A08DBD), L2 (21Dhh), Mi1 (R19F01
 indicator_choices: [ASAP2f, ASAP4c, GCaMP6f, GCaMP6fu, GCaMP7fu, jRGECO1b,
                             SF-iGluSnFR.A184V, SF-iGluSnFR.A184V.S72A]
 
-poi_names: [background, M1, M2, M3, M5, M10]
+poi_names: [background, cell body, M1, M2, M3, M5, M10]
 
 rig_config:
   AODscope_OneScreen:
