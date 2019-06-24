@@ -1,0 +1,47 @@
+? ''
+: run_parameters:
+    protocol_ID: SpotSizes
+    num_epochs: 10.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    size:
+    - 5.0
+    - 10.0
+    - 20.0
+    - 30.0
+    - 40.0
+    - 50.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
+    randomize_order: true
+Tm3_11sizes:
+  run_parameters:
+    protocol_ID: SpotSizes
+    num_epochs: 55.0
+    pre_time: 0.5
+    stim_time: 0.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    size:
+    - 2.0
+    - 5.0
+    - 10.0
+    - 15.0
+    - 20.0
+    - 25.0
+    - 30.0
+    - 35.0
+    - 40.0
+    - 45.0
+    - 50.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 1.0
+    randomize_order: true
