@@ -104,12 +104,27 @@ class Data():
         newEpoch.attrs['epoch_time'] = epoch_time
         
         epochParametersGroup = newEpoch.create_group('epoch_parameters')
-        for key in protocol_object.epoch_parameters: #save out epoch parameters
-            newValue = protocol_object.epoch_parameters[key]
-            if type(newValue) is dict: #TODO: Find a way to split this into subgroups. Hacky work around. 
-                newValue = str(newValue)
-            epochParametersGroup.attrs[key] = newValue
-      
+        if type(protocol_object.epoch_parameters) is tuple: #stimulus is tuple of multiple stims layered on top of one another
+            num_stims = len(protocol_object.epoch_parameters)
+            for stim_ind in range(num_stims):
+                for key in protocol_object.epoch_parameters[stim_ind]:
+                    newValue = protocol_object.epoch_parameters[stim_ind][key]
+                    if type(newValue) is dict:
+                        newValue = str(newValue)
+                    prefix = 'stim' + str(stim_ind) + '_'
+                    if newValue is None:
+                        newValue = 'None'
+                    epochParametersGroup.attrs[prefix + key] = newValue
+
+        elif type(protocol_object.epoch_parameters) is dict:
+            for key in protocol_object.epoch_parameters: #save out epoch parameters
+                newValue = protocol_object.epoch_parameters[key]
+                if type(newValue) is dict: #TODO: Find a way to split this into subgroups. Hacky work around. 
+                    newValue = str(newValue)
+                if newValue is None:
+                    newValue = 'None'
+                epochParametersGroup.attrs[key] = newValue
+
         convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
         for key in protocol_object.convenience_parameters: #save out convenience parameters
             convenienceParametersGroup.attrs[key] = protocol_object.convenience_parameters[key]

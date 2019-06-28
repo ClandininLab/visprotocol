@@ -791,31 +791,6 @@ class CenterSurroundDriftingSquareGrating(BaseProtocol):
                             box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
                             hold=True)
 
-    def saveEpochMetaData(self, data):
-        # update epoch metadata for this epoch
-        data.reOpenExperimentFile()
-        epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-        newEpoch = data.experiment_file['/epoch_runs/' + str(data.series_count)].create_group('epoch_'+str(self.num_epochs_completed))
-        newEpoch.attrs['epoch_time'] = epoch_time
-        
-        epochParametersGroup = newEpoch.create_group('epoch_parameters')
-        for ind, stim_params in enumerate(self.epoch_parameters):
-            if ind == 0:
-                prefix = 'surround_'
-            elif ind == 1:
-                prefix = 'center_'
-                    
-            for key in stim_params: #save out epoch parameters
-                newValue = stim_params[key]
-                if type(newValue) is dict:
-                    newValue = str(newValue)
-                epochParametersGroup.attrs[prefix + key] = newValue
-          
-        convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
-        for key in self.convenience_parameters: #save out convenience parameters
-            convenienceParametersGroup.attrs[key] = self.convenience_parameters[key]
-        data.experiment_file.close()
-
     def getParameterDefaults(self):
         self.protocol_parameters = {'period_center':20.0,
                        'rate_center':[20.0, 40.0, 80.0],
@@ -865,7 +840,7 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
                                                     period = self.protocol_parameters['grate_period'],
                                                     color = grate_color,
                                                     background = grate_background)
-        
+
         self.epoch_parameters = (grate_parameters, patch_parameters)
         self.convenience_parameters = self.protocol_parameters.copy()
         self.convenience_parameters['current_patch_speed'] = current_patch_speed
@@ -877,36 +852,6 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
 
         multicall.load_stim(**grate_parameters)
         multicall.load_stim(**patch_parameters, vary='intensity', hold=True)
-
-    def saveEpochMetaData(self, data):
-        # update epoch metadata for this epoch
-        data.reOpenExperimentFile()
-        epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-        newEpoch = data.experiment_file['/epoch_runs/' + str(data.series_count)].create_group('epoch_'+str(self.num_epochs_completed))
-        newEpoch.attrs['epoch_time'] = epoch_time
-        
-        epochParametersGroup = newEpoch.create_group('epoch_parameters')
-        
-        for ind, stim_params in enumerate(self.epoch_parameters):
-            if ind == 1:
-                prefix = 'patch_'
-            elif ind == 0:
-                prefix = 'grate_'
-            else:
-                prefix = ''
-  
-            for key in stim_params: #save out epoch parameters
-                newValue = stim_params[key]
-                if type(newValue) is dict:
-                    newValue = str(newValue)
-                elif newValue is None:
-                    newValue = 'None'
-                epochParametersGroup.attrs[prefix + key] = newValue
-          
-        convenienceParametersGroup = newEpoch.create_group('convenience_parameters')
-        for key in self.convenience_parameters: #save out convenience parameters
-            convenienceParametersGroup.attrs[key] = self.convenience_parameters[key]
-        data.experiment_file.close()
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'center': [0, 0],
@@ -1005,9 +950,9 @@ class VelocitySwitchGrating(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'VelocitySwitchGrating',
               'num_epochs':165,
-              'pre_time':1,
+              'pre_time':1.0,
               'stim_time':8.0,
-              'tail_time':1,
+              'tail_time':1.0,
               'idle_color':0.5}
 
 # %%
