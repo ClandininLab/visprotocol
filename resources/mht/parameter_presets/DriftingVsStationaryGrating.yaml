@@ -1,0 +1,23 @@
+Small_10per_10diam:
+  run_parameters:
+    protocol_ID: DriftingVsStationaryGrating
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    spatial_period: 10.0
+    contrast_scale: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    - 4.0
+    - 8.0
+    - 16.0
+    center:
+    - -40.0
+    - 0.0
+    center_size: 10.0
+    angle: 0.0
+    randomize_order: true
