@@ -16,6 +16,50 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
         
 # %%
+class UniformFlashInterleaved(BaseProtocol):
+    def __init__(self):
+        super().__init__()
+        
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+    
+    def getEpochParameters(self):
+        stimulus_ID = 'MovingPatch'
+        
+        #adjust center to screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        trajectory = RectangleTrajectory(x = adj_center[0],
+                                              y = adj_center[1],
+                                              angle = 0,
+                                              h = self.protocol_parameters['height'],
+                                              w = self.protocol_parameters['width'],
+                                              color = self.protocol_parameters['intensity']).to_dict()   
+
+        self.epoch_parameters = {'name':stimulus_ID,
+                            'background':self.run_parameters['idle_color'],
+                            'trajectory':trajectory}
+        self.convenience_parameters = self.protocol_parameters.copy()
+
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height':[20.0, 120.0],
+                       'width': [20.0, 120.0],
+                       'center': [0, 0],
+                       'intensity': [0, 1.0],
+                       'randomize_order': True}
+
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'UniformFlash',
+              'num_epochs':10,
+              'pre_time':1.0,
+              'stim_time':0.5,
+              'tail_time':1.0,
+              'idle_color':0.5}
+
+
+# %%
 class UniformFlash(BaseProtocol):
     def __init__(self):
         super().__init__()

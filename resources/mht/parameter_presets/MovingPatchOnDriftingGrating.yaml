@@ -1,0 +1,34 @@
+LC18:
+  run_parameters:
+    protocol_ID: MovingPatchOnDriftingGrating
+    num_epochs: 165.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    patch_size: 5.0
+    patch_color: 0.0
+    patch_speed:
+    - 40.0
+    - 80.0
+    - 120.0
+    grate_period: 10.0
+    grate_rate:
+    - -100.0
+    - -80.0
+    - -40.0
+    - -20.0
+    - -10.0
+    - 0.0
+    - 10.0
+    - 20.0
+    - 40.0
+    - 80.0
+    - 100.0
+    grate_contrast: 0.5
+    angle: 0.0
+    randomize_order: true
