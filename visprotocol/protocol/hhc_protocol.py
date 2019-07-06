@@ -14,44 +14,54 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         super().__init__() #call the parent class init method first
         user_name = 'hhc'
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
-        
+
+
 # %%
-class UniformFlashInterleaved(BaseProtocol):
+class UniformSquareFlash(BaseProtocol):
     def __init__(self):
         super().__init__()
-        
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
-        
+        current_width, current_angle, current_intensity = self.selectParametersFromLists(
+                                                                (self.protocol_parameters['width'],
+                                                                    self.protocol_parameters['angle'],
+                                                                    self.protocol_parameters['intensity']),
+                                                                all_combinations = True,
+                                                                randomize_order = self.protocol_parameters['randomize_order'])
+
         #adjust center to screen center
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
         trajectory = RectangleTrajectory(x = adj_center[0],
                                               y = adj_center[1],
-                                              angle = 0,
-                                              h = self.protocol_parameters['height'],
-                                              w = self.protocol_parameters['width'],
-                                              color = self.protocol_parameters['intensity']).to_dict()   
+                                              angle = current_angle,
+                                              h = current_width,
+                                              w = current_width,
+                                              color = current_intensity).to_dict()
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
                             'trajectory':trajectory}
         self.convenience_parameters = self.protocol_parameters.copy()
+        self.convenience_parameters['current_width'] = current_width
+        self.convenience_parameters['current_angle'] = current_angle
+        self.convenience_parameters['current_intensity'] = current_intensity
 
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height':[20.0, 120.0],
-                       'width': [20.0, 120.0],
-                       'center': [0, 0],
+        self.protocol_parameters = {'center': [0, 0],
+                       'width':[20.0, 120.0],
+                       'angle': [0],
                        'intensity': [0, 1.0],
                        'randomize_order': True}
 
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'UniformFlash',
+        self.run_parameters = {'protocol_ID':'UniformSquareFlash',
               'num_epochs':10,
               'pre_time':1.0,
               'stim_time':0.5,
@@ -60,16 +70,16 @@ class UniformFlashInterleaved(BaseProtocol):
 
 
 # %%
-class UniformFlash(BaseProtocol):
+class UniformFlashOld(BaseProtocol):
     def __init__(self):
         super().__init__()
-        
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
-        
+
         #adjust center to screen center
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
@@ -78,7 +88,7 @@ class UniformFlash(BaseProtocol):
                                               angle = 0,
                                               h = self.protocol_parameters['height'],
                                               w = self.protocol_parameters['width'],
-                                              color = self.protocol_parameters['intensity']).to_dict()   
+                                              color = self.protocol_parameters['intensity']).to_dict()
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
@@ -99,20 +109,20 @@ class UniformFlash(BaseProtocol):
               'stim_time':0.5,
               'tail_time':1.0,
               'idle_color':0.5}
-# %%       
+# %%
 class SpotSizes(BaseProtocol):
     def __init__(self):
         super().__init__()
-        
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
-        
+
         #adjust center to screen center
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
-        
+
         current_size = self.selectParametersFromLists(self.protocol_parameters['size'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
 
@@ -121,7 +131,7 @@ class SpotSizes(BaseProtocol):
                                               angle = 0,
                                               h = current_size,
                                               w = current_size,
-                                              color = self.protocol_parameters['intensity']).to_dict()   
+                                              color = self.protocol_parameters['intensity']).to_dict()
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
@@ -143,20 +153,20 @@ class SpotSizes(BaseProtocol):
               'stim_time':1.0,
               'tail_time':1.0,
               'idle_color':0.5}
-        
-        
+
+
 # %%
 class MovingRectangle(BaseProtocol):
     def __init__(self):
         super().__init__()
-        
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'],
                                                        randomize_order = self.protocol_parameters['randomize_order'])
-        
+
         self.epoch_parameters = self.getMovingPatchParameters(angle = current_angle)
 
         self.convenience_parameters = self.protocol_parameters.copy()
@@ -183,16 +193,16 @@ class MovingRectangle(BaseProtocol):
 class SpatialTernaryNoise(BaseProtocol):
     def __init__(self):
         super().__init__()
-        
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         stimulus_ID  = 'RandomGrid'
-        
+
         start_seed = int(np.random.choice(range(int(1e6))))
-        
-        
+
+
         distribution_data = {'name':'Ternary',
                                  'args':[],
                                  'kwargs':{'rand_min':self.protocol_parameters['rand_min'],
@@ -212,7 +222,7 @@ class SpatialTernaryNoise(BaseProtocol):
                        'update_rate':10.0,
                        'rand_min': 0.0,
                        'rand_max':1.0}
-    
+
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'CheckerboardWhiteNoise',
               'num_epochs':10,

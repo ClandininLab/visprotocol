@@ -423,6 +423,8 @@ class UniformFlash(BaseProtocol):
 
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
+        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'],
+                                                                randomize_order = self.protocol_parameters['randomize_order'])
 
         trajectory = RectangleTrajectory(
                           x = self.protocol_parameters['center'][0],
@@ -430,13 +432,14 @@ class UniformFlash(BaseProtocol):
                           angle = 0,
                           h = self.protocol_parameters['height'],
                           w = self.protocol_parameters['width'],
-                          color = self.protocol_parameters['intensity']
+                          color = current_intensity
                      ).to_dict()
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
                             'trajectory':trajectory}
         self.convenience_parameters = self.protocol_parameters.copy()
+        self.convenience_parameters['current_intensity'] = current_intensity
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':120.0,
