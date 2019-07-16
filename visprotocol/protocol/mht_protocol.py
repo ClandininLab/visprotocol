@@ -334,20 +334,22 @@ class ExpandingMovingSquare(BaseProtocol):
         self.getParameterDefaults()
     
     def getEpochParameters(self):
-        current_width = self.selectParametersFromLists(self.protocol_parameters['width'],
+        current_width, current_color, current_angle = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['color'], self.protocol_parameters['angle']),
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
         
-        self.epoch_parameters = self.getMovingPatchParameters(width = current_width, height = current_width)
+        self.epoch_parameters = self.getMovingPatchParameters(width = current_width, height = current_width, angle = current_angle, color = current_color)
 
         self.convenience_parameters = self.protocol_parameters.copy()
         self.convenience_parameters['current_width'] = current_width
+        self.convenience_parameters['current_color'] = current_color
+        self.convenience_parameters['current_angle'] = current_angle
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'width':[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
-                       'color':0.0,
+                       'color':[0.0, 1.0],
                        'center': [0, 0],
                        'speed':80.0,
-                       'angle': 0.0,
+                       'angle': [0.0, 90.0, 180.0, 270.0],
                        'randomize_order':True}
 
     
@@ -1134,4 +1136,116 @@ class SineTrajectoryPatch(BaseProtocol):
               'stim_time':2.0,
               'tail_time':0.5,
               'idle_color':0.5}
-
+## %%
+#class GlomDdxSuite(BaseProtocol):
+#    def __init__(self):
+#        super().__init__()
+#        
+#        self.getRunParameterDefaults()
+#        self.getParameterDefaults()
+#        
+#        
+#    def getExpandingMovingSquareParameters(self, current_angle, current_size, current_color):
+#        self.epoch_parameters = self.getMovingPatchParameters(center = self.protocol_parameters['center'],
+#                                                              angle = current_angle, speed = 80, width = current_size, height = current_size, color = current_color)
+#        self.meta_parameters['stim_time'] = 2.0
+#        
+#    def getEpochParameters(self):
+#        
+#        # ExpandingMovingSquare
+#        stim = 'ExpandingMovingSquare'
+#        angles = [0.0, 90.0, 180.0, 270.0]
+#        sizes = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0]
+#        colors = [0.0, 1.0]
+#        parameter_list = [angles, sizes, colors]
+#        ems_parameter_sequence = np.array(np.meshgrid(angles,sizes,colors)).T.reshape(np.prod(list(len(x) for x in parameter_list)), len(parameter_list))
+#        ems_parameter_sequence = np.concatenate((np.expand_dims(np.repeat(stim, ems_parameter_sequence.shape[0]),0).T,ems_parameter_sequence), 1)
+#        ems_parameter_sequence = [tuple(row) for row in ems_parameter_sequence]
+#        
+#        # Drifting Grating
+#        stim = 'DriftingGrating'
+#        angles = [0.0, 90.0, 180.0, 270.0]
+#        dg_parameter_sequence = np.vstack((np.repeat(stim, len(angles)),angles)).T
+#        dg_parameter_sequence = [tuple(row) for row in dg_parameter_sequence]
+#        
+#        # Looming patch
+#        
+#        
+#        # Sequential or random motion
+#            
+#        current_params = self.selectParametersFromLists(param_list)
+#        if current_params[0] == 'ExpandingMovingSquare':
+#            self.getExpandingMovingSquareParameters(current_params[1], current_params[2], current_params[3])
+#        elif current_params[0] == 'DriftingGrating':
+#
+#        elif current_params[0] == 'LoomingPatch':`
+#            
+#        elif current_params[0] == 'SequentialOrRandomMotion':
+#                
+#                    
+#        
+#        
+#        current_start_rate, current_switch_rate = self.selectParametersFromLists((self.protocol_parameters['start_rate'], self.protocol_parameters['switch_rate']),
+#                                                                                             all_combinations = True, 
+#                                                                                             randomize_order = self.protocol_parameters['randomize_order'])
+#
+#        self.epoch_parameters = self.getRotatingGratingParameters(angle = self.protocol_parameters['angle'],
+#                                                    rate = current_start_rate,
+#                                                    period = self.protocol_parameters['grate_period'],
+#                                                    color = self.protocol_parameters['grate_color'],
+#                                                    background = self.protocol_parameters['grate_background'])
+#        
+#        self.convenience_parameters = self.protocol_parameters.copy()
+#        self.convenience_parameters['current_start_rate'] = current_start_rate
+#        self.convenience_parameters['current_switch_rate'] = current_switch_rate
+#        self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
+#                                'center':self.adjustCenter(self.protocol_parameters['center']),
+#                                'switch_rate':current_switch_rate}
+#        
+#    def loadStimuli(self, multicall):
+#        passed_parameters = self.epoch_parameters.copy()
+#        box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
+#        box_max_x = self.meta_parameters['center'][0] + self.meta_parameters['center_size']/2
+#        
+#        box_min_y = self.meta_parameters['center'][1] - self.meta_parameters['center_size']/2
+#        box_max_y = self.meta_parameters['center'][1] + self.meta_parameters['center_size']/2
+#
+#        multicall.load_stim(name='MovingPatch', background = self.run_parameters['idle_color'], trajectory=RectangleTrajectory(w = 0, h = 0).to_dict())
+#
+#        multicall.load_stim(**passed_parameters, 
+#                            box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
+#                            hold=True)
+#
+#
+#
+#    def startStimuli(self, multicall):
+#        sleep(self.run_parameters['pre_time'])
+#        #stim time
+#        multicall.start_stim()
+#        multicall.start_corner_square()
+#        multicall()
+#        sleep(self.run_parameters['stim_time'] / 2)
+#        
+#        multicall.update_stim(rate=self.meta_parameters['switch_rate'])
+#        multicall()
+#        
+#        sleep(self.run_parameters['stim_time'] / 2)
+#        
+#        #tail time
+#        multicall.stop_stim()
+#        multicall.black_corner_square()
+#        multicall()
+#        sleep(self.run_parameters['tail_time'])     
+#
+#    def getParameterDefaults(self):
+#        self.protocol_parameters = {'center':[0, 0],
+#                                    'stim_types':['ExpandingMovingSquare', 'DriftingGrating', 'LoomingPatch', 'SequentialOrRandomMotion'],
+#                                    'randomize_order':True}
+#
+#    def getRunParameterDefaults(self):
+#        self.run_parameters = {'protocol_ID':'GlomDdxSuite',
+#              'num_epochs':165,
+#              'pre_time':1.0,
+#              'stim_time':8.0,
+#              'tail_time':1.0,
+#              'idle_color':0.5}
