@@ -8,18 +8,28 @@ Created on Thu Jun 21 10:51:42 2018
 import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
-                             QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame)
+                             QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame, 
+                             QTableWidget, QTableWidgetItem)
 import PyQt5.QtCore as QtCore
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
 import glob
 
+from lazy5.inspect import get_hierarchy, get_attrs_group
+from lazy5 import alter
+
 from visprotocol.clandinin_client import Client
 from visprotocol.clandinin_data import Data
 from visprotocol.control import EpochRun
 from visprotocol import protocol
+
+
+# TODO: prevent users from editing epoch parameters / hide individual epochs
+# TODO: data file structure reorg
+# TODO: hierarchical drop down?
+# TODO: poi / roi changer?
 
 # TODO: handle params that are meant to be strings
 
@@ -266,7 +276,54 @@ class ImagingExperimentGUI(QWidget):
         self.currentExperimentLabel = QLabel('')
         self.file_grid.addRow(loadButton, self.currentExperimentLabel)
         
+        # # # # Data browser: # # # # # # # #
+        # Heavily based on QtHdfLoad from LazyHDF5
+        #Group selection combobox
+        self.comboBoxGroupSelect = QComboBox()
+        self.comboBoxGroupSelect.currentTextChanged.connect(self.groupChange)
+        
+        self.file_grid.addRow(self.comboBoxGroupSelect)
+        
+        #Attribute table
+        self.tableAttributes = QTableWidget()
+        self.tableAttributes.setStyleSheet("")
+        self.tableAttributes.setColumnCount(2)
+        self.tableAttributes.setObjectName("tableAttributes")
+        self.tableAttributes.setRowCount(0)
+        item = QTableWidgetItem()
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        item.setFont(font)
+        item.setBackground(QtGui.QColor(121, 121, 121))
+        brush = QtGui.QBrush(QtGui.QColor(91, 91, 91))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        item.setForeground(brush)
+        self.tableAttributes.setHorizontalHeaderItem(0, item)
+        item = QTableWidgetItem()
+        item.setBackground(QtGui.QColor(123, 123, 123))
+        brush = QtGui.QBrush(QtGui.QColor(91, 91, 91))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        item.setForeground(brush)
+        self.tableAttributes.setHorizontalHeaderItem(1, item)
+        self.tableAttributes.horizontalHeader().setCascadingSectionResizes(True)
+        self.tableAttributes.horizontalHeader().setDefaultSectionSize(200)
+        self.tableAttributes.horizontalHeader().setHighlightSections(False)
+        self.tableAttributes.horizontalHeader().setSortIndicatorShown(True)
+        self.tableAttributes.horizontalHeader().setStretchLastSection(True)
+        self.tableAttributes.verticalHeader().setVisible(False)
+        self.tableAttributes.verticalHeader().setHighlightSections(False)
+        item = self.tableAttributes.horizontalHeaderItem(0)
+        item.setText("Attribute")
+        item = self.tableAttributes.horizontalHeaderItem(1)
+        item.setText("Value")
+        
+        self.tableAttributes.itemChanged.connect(self.update_attrs_to_file)
+        
+        self.file_grid.addRow(self.tableAttributes)
+        
+        
 
+        # Add all layouts to window and show
         self.layout.addWidget(self.tabs)
         self.protocol_tab.setLayout(self.protocol_grid)
         self.data_tab.setLayout(self.data_grid)
@@ -350,6 +407,7 @@ class ImagingExperimentGUI(QWidget):
             
             self.updateExistingFlyInput()
             self.updateExistingPoiInput()
+            self.populateGroups()
             
         elif sender.text() == 'Load experiment':
             filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
@@ -365,6 +423,7 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setValue(largest_prior_value + 1)
                 self.updateExistingFlyInput()
                 self.updateExistingPoiInput()
+                self.populateGroups()
                 
         elif sender.text() == 'Attach poi data':
             poi_directory = str(QFileDialog.getExistingDirectory(self, "Select experiment date's data directory"))
@@ -566,6 +625,7 @@ class ImagingExperimentGUI(QWidget):
             # Advance the series_count:
             self.data.advanceSeriesCount()
             self.series_counter_input.setValue(self.data.series_count)
+            self.populateGroups()
 
     def updateParametersFromFillableFields(self):
         for key, value in self.run_parameter_input.items():
@@ -585,6 +645,63 @@ class ImagingExperimentGUI(QWidget):
                     self.protocol_object.protocol_parameters[key] = to_a_list
                 else: 
                     self.protocol_object.protocol_parameters[key] = float(new_param_entry)
+                    
+                    
+# # # Methods for data browser / attribute editor. Stolen & modified from LazyHDF5.ui.QtHdfLoad # # # #
+    def populateGroups(self):  # Qt-related pylint: disable=C0103
+        """ Populate dropdown box of group comboBoxGroupSelect """
+        file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
+        self.group_dset_dict = get_hierarchy(file_path)
+        # Load Group dropdown box
+        self.comboBoxGroupSelect.clear()
+        for count in self.group_dset_dict:
+            self.comboBoxGroupSelect.addItem(count)
+        return [file_path]
+    
+    def populate_attrs(self, attr_dict=None):
+        """ Populate attribute for currently selected group """
+        self.tableAttributes.blockSignals(True) #block udpate signals for auto-filled forms
+        self.tableAttributes.setRowCount(0)
+        self.tableAttributes.setColumnCount(2)
+        self.tableAttributes.setSortingEnabled(False)
+
+        if attr_dict:
+            for num, key in enumerate(attr_dict):
+                self.tableAttributes.insertRow(self.tableAttributes.rowCount())
+                key_item = QTableWidgetItem(key)
+                key_item.setFlags( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled )
+                self.tableAttributes.setItem(num, 0, key_item)
+                
+                val_item = QTableWidgetItem(str(attr_dict[key]))
+                val_item.setFlags( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled )
+                self.tableAttributes.setItem(num, 1, val_item)
+                
+        self.tableAttributes.blockSignals(False)
+                    
+                    
+    def update_attrs_to_file(self, item):
+        file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
+        group_path = self.comboBoxGroupSelect.currentText()
+
+        attr_key = self.tableAttributes.item(item.row(),0).text()
+        attr_val = item.text()
+
+        #update attr in file
+        alter.alter_attr(group_path, attr_key, attr_val, file=file_path)
+        print('Changed attr {} to = {}'.format(attr_key, attr_val))
+
+    def groupChange(self):  # Qt-related pylint: disable=C0103
+        """ Action : ComboBox containing Groups with DataSets has changed"""
+        if self.comboBoxGroupSelect.currentText() != '':
+            file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
+            group_path = self.comboBoxGroupSelect.currentText()
+            
+            attr_dict = get_attrs_group(file_path, group_path)            
+            self.populate_attrs(attr_dict = attr_dict)
+
+
+# # # Other accessory classes. For data file initialization and threading # # # #
+
         
 class InitializeExperimentGUI(QWidget):
    def setupUI(self, experimentGuiObject, parent = None):
