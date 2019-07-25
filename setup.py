@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='visprotocol',
-    version='0.1.1',
+    version='2.0.0',
     description='Visual stimulation protocol and metadata handler for flystim experiments',
     url='https://github.com/ClandininLab/visprotocol',
     author='Max Turner',

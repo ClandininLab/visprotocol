@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayou
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame)
 import PyQt5.QtCore as QtCore
+from PyQt5.QtCore import QThread, pyqtSignal
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
@@ -515,7 +516,7 @@ class ImagingExperimentGUI(QWidget):
         
         # Populate parameters from filled fields
         self.updateParametersFromFillableFields()
-
+    
         # Populate fly metadata from fly data fields
         self.data.fly_metadata = {'fly:fly_id':self.fly_id_input.text(),
                                   'fly:sex':self.fly_sex_input.currentText(),
@@ -540,20 +541,31 @@ class ImagingExperimentGUI(QWidget):
                 self.data.poi_metadata[current_tag] = interpreted_range
         
         
-        self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag = save_metadata_flag)       
+        
+        # start the epoch run thread:
+        self.runSeriesThread = runSeriesThread(self.epoch_run,
+                                               self.protocol_object,
+                                               self.data,
+                                               self.client,
+                                               save_metadata_flag)
 
+        self.runSeriesThread.finished.connect(lambda: self.runFinished(save_metadata_flag))
+        self.runSeriesThread.started.connect(lambda: self.runStarted(save_metadata_flag))
+        
+        self.runSeriesThread.start()
+        
+        
+    def runStarted(self, save_metadata_flag):
+        self.status_label.setText('Running series ' + str(self.data.series_count))
+        
+    def runFinished(self, save_metadata_flag):
+        self.status_label.setText('Ready')
         if save_metadata_flag:
             self.updateExistingFlyInput()
             self.updateExistingPoiInput()
-            
-        self.status_label.setText('Ready')
-        
-        if save_metadata_flag:
             # Advance the series_count:
             self.data.advanceSeriesCount()
             self.series_counter_input.setValue(self.data.series_count)
-            
-        QApplication.processEvents()
 
     def updateParametersFromFillableFields(self):
         for key, value in self.run_parameter_input.items():
@@ -631,7 +643,26 @@ class InitializeExperimentGUI(QWidget):
    def onPressedDirectoryButton(self):
        filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
        self.le_DataDirectory.setText(filePath)
-          
+
+class runSeriesThread(QThread):
+    # https://nikolak.com/pyqt-threading-tutorial/
+    # https://stackoverflow.com/questions/41848769/pyqt5-object-has-no-attribute-connect
+    def __init__(self, epoch_run, protocol_object, data, client, save_metadata_flag):
+        QThread.__init__(self)
+        self.epoch_run = epoch_run
+        self.protocol_object = protocol_object
+        self.data = data
+        self.client = client
+        self.save_metadata_flag = save_metadata_flag
+        
+    def __del__(self):
+        self.wait()
+        
+    def _sendRun(self):
+        self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag = self.save_metadata_flag)       
+
+    def run(self):
+        self._sendRun()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
