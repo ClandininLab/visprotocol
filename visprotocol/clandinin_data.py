@@ -125,6 +125,9 @@ class Data():
                 for key in protocol_object.run_parameters:  #add run parameter attributes
                     new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
 
+                for key in protocol_object.protocol_parameters: # add user-entered protocol params
+                    new_epoch_run.attrs[key] = protocol_object.protocol_parameters[key]
+
                 # add subgroups:
                 new_epoch_run.create_group('epochs')
                 new_epoch_run.create_group('rois')
@@ -148,7 +151,7 @@ class Data():
                 new_epoch = epoch_run_group.create_group('epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3)))
                 new_epoch.attrs['epoch_time'] = epoch_time
 
-                epochParametersGroup = new_epoch.create_group('epoch_parameters')
+                epochParametersGroup = new_epoch
                 if type(protocol_object.epoch_parameters) is tuple:  # stimulus is tuple of multiple stims layered on top of one another
                     num_stims = len(protocol_object.epoch_parameters)
                     for stim_ind in range(num_stims):
@@ -170,8 +173,8 @@ class Data():
                             newValue = 'None'
                         epochParametersGroup.attrs[key] = newValue
 
-                convenienceParametersGroup = new_epoch.create_group('convenience_parameters')
-                for key in protocol_object.convenience_parameters: #save out convenience parameters
+                convenienceParametersGroup = new_epoch
+                for key in protocol_object.convenience_parameters:  # save out convenience parameters
                     convenienceParametersGroup.attrs[key] = protocol_object.convenience_parameters[key]
 
         else:

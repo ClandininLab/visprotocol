@@ -9,7 +9,7 @@ import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
-                             QTableWidget, QTableWidgetItem)
+                             QTableWidget, QTableWidgetItem, QSizePolicy)
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
@@ -321,6 +321,7 @@ class ImagingExperimentGUI(QWidget):
         self.tableAttributes.horizontalHeader().setStretchLastSection(True)
         self.tableAttributes.verticalHeader().setVisible(False)
         self.tableAttributes.verticalHeader().setHighlightSections(False)
+        self.tableAttributes.setMinimumSize(QtCore.QSize(200, 400))
         item = self.tableAttributes.horizontalHeaderItem(0)
         item.setText("Attribute")
         item = self.tableAttributes.horizontalHeaderItem(1)
@@ -329,8 +330,6 @@ class ImagingExperimentGUI(QWidget):
         self.tableAttributes.itemChanged.connect(self.update_attrs_to_file)
 
         self.file_grid.addRow(self.tableAttributes)
-
-
 
         # Add all layouts to window and show
         self.layout.addWidget(self.tabs)
@@ -624,7 +623,10 @@ class ImagingExperimentGUI(QWidget):
 
 
     def runStarted(self, save_metadata_flag):
-        self.status_label.setText('Running series ' + str(self.data.series_count))
+        if save_metadata_flag:
+            self.status_label.setText('Recording series ' + str(self.data.series_count))
+        else:
+            self.status_label.setText('Viewing...')
 
     def runFinished(self, save_metadata_flag):
         self.status_label.setText('Ready')
@@ -663,11 +665,16 @@ class ImagingExperimentGUI(QWidget):
         self.group_dset_dict = get_hierarchy(file_path)
         # Load Group dropdown box
         self.comboBoxGroupSelect.clear()
-        for count in self.group_dset_dict:
-            self.comboBoxGroupSelect.addItem(count)
+        for key in self.group_dset_dict:
+            if 'epochs' in key:
+                pass
+            elif 'stimulus_timing' in key:
+                pass
+            else:
+                self.comboBoxGroupSelect.addItem(key)
         return [file_path]
 
-    def populate_attrs(self, attr_dict=None):
+    def populate_attrs(self, attr_dict=None, editable_values = False):
         """ Populate attribute for currently selected group """
         self.tableAttributes.blockSignals(True) #block udpate signals for auto-filled forms
         self.tableAttributes.setRowCount(0)
@@ -682,11 +689,13 @@ class ImagingExperimentGUI(QWidget):
                 self.tableAttributes.setItem(num, 0, key_item)
 
                 val_item = QTableWidgetItem(str(attr_dict[key]))
-                val_item.setFlags( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled )
+                if editable_values:
+                    val_item.setFlags( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled )
+                else:
+                    val_item.setFlags( QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled )
                 self.tableAttributes.setItem(num, 1, val_item)
 
         self.tableAttributes.blockSignals(False)
-
 
     def update_attrs_to_file(self, item):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
@@ -706,7 +715,11 @@ class ImagingExperimentGUI(QWidget):
             group_path = self.comboBoxGroupSelect.currentText()
 
             attr_dict = get_attrs_group(file_path, group_path)
-            self.populate_attrs(attr_dict = attr_dict)
+            if 'series' in group_path.split('/')[-1]:
+                editable_values = False #don't let user edit epoch parameters
+            else:
+                editable_values = True
+            self.populate_attrs(attr_dict = attr_dict, editable_values = editable_values)
 
 
 # # # Other accessory classes. For data file initialization and threading # # # #
