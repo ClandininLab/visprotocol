@@ -11,11 +11,11 @@ import flyrpc.multicall
 class EpochRun():
     def __init__(self):
         self.stop = False
-        
+
     def stopRun(self):
         self.stop = True
         QApplication.processEvents()
-        
+
     def startRun(self, protocol_object, data, client, save_metadata_flag = True):
         """
         Required inputs: protocol_object, data, client are 3 major classes of visprotocol
@@ -25,12 +25,12 @@ class EpochRun():
         """
         self.stop = False
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
-        
+
         if save_metadata_flag:
-            data.saveEpochRunMetaData(protocol_object)
+            data.createEpochRun(protocol_object)
         else:
             print('Warning - you are not saving your metadata!')
-    
+
         # # # Epoch run loop # # #
         protocol_object.num_epochs_completed = 0
         for epoch in range(int(protocol_object.run_parameters['num_epochs'])):
@@ -38,12 +38,12 @@ class EpochRun():
             if self.stop is True:
                 self.stop = False
                 break
-            
+
             #  get stimulus parameters for this epoch
             protocol_object.getEpochParameters()
 
             if save_metadata_flag:
-               data.saveEpochMetaData(protocol_object)
+                data.createEpoch(protocol_object)
 
             if client.send_ttl:
                 # Send a TTL pulse through the NI-USB to trigger acquisition
@@ -62,10 +62,9 @@ class EpochRun():
             # Use the protocol object to send the stimulus to flystim
             self.multicall = flyrpc.multicall.MyMultiCall(client.manager)
             protocol_object.loadStimuli(self.multicall)
-            
+
             protocol_object.startStimuli(self.multicall)
-            
+
             protocol_object.advanceEpochCounter()
-            
+
         # # # Epoch run loop # # #
-    
