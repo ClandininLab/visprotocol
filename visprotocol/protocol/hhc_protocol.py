@@ -224,7 +224,7 @@ class SpatialTernaryNoise(BaseProtocol):
                        'rand_max':1.0}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'CheckerboardWhiteNoise',
+        self.run_parameters = {'protocol_ID':'SpatialTernaryNoise',
               'num_epochs':10,
               'pre_time':1.0,
               'stim_time':30.0,
