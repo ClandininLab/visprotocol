@@ -53,11 +53,9 @@ class Data():
         if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
             self.data_directory = 'D:/Max/FlystimData'
             self.rig = 'AODscope'
-            from visprotocol.acquisition import AODscope as acquisition_plugin
         elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
             self.data_directory = 'E:/Max/FlystimData/'
             self.rig = 'Bruker'
-            from visprotocol.acquisition import Bruker as acquisition_plugin
         else:
             self.data_directory = os.getcwd()
             self.rig = '(rig)'
