@@ -1,0 +1,13 @@
+Default:
+  run_parameters:
+    protocol_ID: CheckerboardWhiteNoise
+    num_epochs: 20.0
+    pre_time: 1.0
+    stim_time: 30.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    checker_width: 2.5
+    update_rate: 10.0
+    rand_min: 0.0
+    rand_max: 1.0
