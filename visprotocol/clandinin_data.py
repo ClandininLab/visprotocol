@@ -1,30 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Data parent class
+Data file class
 
 Data File structure is:
 yyyy-mm-dd
     Client
     Flies
-        series_00n
-            epochs
-                epoch_001
-                epoch_002
-            rois
-            stimulus_timing
+        Fly_n
+            epoch_runs
+                series_00n
+                    acquisition
+                    epochs
+                        epoch_001
+                        epoch_002
+                    rois
+                    stimulus_timing
     Notes
 
 """
 import h5py
 import os
-import shutil
 import inspect
 import yaml
 import socket
 from datetime import datetime
 import numpy as np
 import visprotocol
+
 
 class Data():
     def __init__(self, user_name):
@@ -117,10 +120,10 @@ class Data():
                 fly_group = experiment_file['/Flies/{}/epoch_runs'.format(self.current_fly)]
                 new_epoch_run = fly_group.create_group('series_{}'.format(str(self.series_count).zfill(3)))
                 new_epoch_run.attrs['run_start_time'] = run_start_time
-                for key in protocol_object.run_parameters:  #add run parameter attributes
+                for key in protocol_object.run_parameters:  # add run parameter attributes
                     new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
 
-                for key in protocol_object.protocol_parameters: # add user-entered protocol params
+                for key in protocol_object.protocol_parameters:  # add user-entered protocol params
                     new_epoch_run.attrs[key] = protocol_object.protocol_parameters[key]
 
                 # add subgroups:
@@ -128,11 +131,6 @@ class Data():
                 new_epoch_run.create_group('rois')
                 new_epoch_run.create_group('stimulus_timing')
 
-                # # save poi metadata
-                # poi_parent_group = new_epoch_run.require_group("pois") #opens group if it exists or creates it if it doesn't
-                # for current_tag in self.poi_metadata:
-                #     current_poi_group = poi_parent_group.require_group(current_tag)
-                #     current_poi_group.create_dataset("poi_numbers", data = self.poi_metadata[current_tag])
         else:
             print('Create a data file and/or define a fly first')
 
@@ -186,13 +184,6 @@ class Data():
         else:
             print('Initialize a data file before writing a note')
 
-
-    def attachPhotoDiodeData(self):
-        pass
-
-    def attachRoiData(self):
-        pass
-
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # #  Retrieve / query data file # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -242,109 +233,8 @@ class Data():
                     fly_data_list.append(new_dict)
         return fly_data_list
 
-    def getExistingPoiData(self):
-        # return list of poi sets already present in experiment file
-        poi_data_list = []
-        # if self.experimentFileExists():
-        #     with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
-        #         for er in experiment_file['/epoch_runs']:
-        #             new_pois = experiment_file['/epoch_runs'][er]['pois']
-        #             tg = []
-        #             rg = []
-        #             for k in new_pois:
-        #                 tg.append(k)
-        #                 new_range = str(new_pois.get(k).get('poi_numbers')[:])
-        #                 interpreted_range = re.sub(' +', ' ', re.sub('\[|\]','', new_range)).strip().replace(' ',',')
-        #                 rg.append(interpreted_range)
-        #
-        #             new_dict = {'tag': tg, 'range': rg}
-        #
-        #             if new_dict in poi_data_list:
-        #                 pass
-        #             else:
-        #                 poi_data_list.append(new_dict)
-        #
-        #         id_val = 0
-        #         for ind in range(len(poi_data_list)):
-        #             id_val+=1
-        #             poi_data_list[ind]['poi_id'] = str(id_val)
-        #
-        #         poi_data_list = sorted(poi_data_list, key = lambda i: i['poi_id'])
-
-        return poi_data_list
-
     def selectFly(self, fly_id):
         self.current_fly = fly_id
 
     def advanceSeriesCount(self):
         self.series_count += 1
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # #  Tools for random access scan data  # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-    def attachPoiData(self, poi_directory):
-        if self.experiment_file is not None:
-            #make a backup copy first
-            file_base = os.path.join(self.data_directory, self.experiment_file_name)
-            backup_path = file_base + '_backup' + '.hdf5'
-            ct = 0
-            while os.path.isfile(backup_path):
-                ct+=1
-                backup_path = file_base + '_backup' + str(ct) + '.hdf5'
-            shutil.copyfile(file_base + '.hdf5', backup_path)
-
-            #Attach poi data according to poi names/ranges (if provided)
-            self.reOpenExperimentFile()
-            for er in list(self.experiment_file.get('epoch_runs').keys()):
-                current_run = self.experiment_file.get('epoch_runs')[er]
-                poi_parent_group = current_run.require_group('pois')
-                poi_series_number = int(er)
-                time_points, poi_data_matrix, poi_xy = getPoiData(poi_directory, poi_series_number, pmt = 1)
-                photodiode_time, photodiode_input = getPhotodiodeSignal(poi_directory, poi_series_number)
-                if time_points is None:
-                    print('No POI data found for Series ' + str(er))
-                    continue
-
-                if poi_parent_group.get('poi_data_matrix'): #poi dataset exists already. Delete and overwrite
-                    del poi_parent_group['poi_data_matrix']
-                if poi_parent_group.get('time_points'):
-                    del poi_parent_group['time_points']
-
-                poi_parent_group.create_dataset("time_points", data = time_points)
-                poi_parent_group.create_dataset("poi_data_matrix", data = poi_data_matrix)
-                if photodiode_time is not None:
-                    poi_parent_group.create_dataset("photodiode_time", data = photodiode_time)
-                    poi_parent_group.create_dataset("photodiode_input", data = photodiode_input)
-
-
-
-                # attach random access scan configuration settings as attributes
-                config_dict = getRandomAccessConfigSettings(poi_directory, poi_series_number)
-                for outer_k in config_dict.keys():
-                    for inner_k in config_dict[outer_k].keys():
-                        poi_parent_group.attrs[outer_k + '/' + inner_k] = config_dict[outer_k][inner_k]
-
-                # attach poi map jpeg and Snap Image
-                snap_name = config_dict['Image']['name'].replace('"','')
-                snap_ct=0
-                while (('points' in snap_name) and (snap_ct < 100)): #used snap image from a previous POI scan
-                    snap_ct+=1
-                    alt_dict = getRandomAccessConfigSettings(poi_directory, int(snap_name[6:]))
-                    temp_image = alt_dict.get('Image')
-                    if temp_image is not None:
-                        snap_name = temp_image['name'].replace('"','')
-
-                snap_image, snap_settings, poi_locations = getSnapImage(poi_directory, snap_name, poi_xy, pmt = 1)
-
-                poi_parent_group.create_dataset("poi_locations", data=poi_locations)
-                roi_map = getRoiMapImage(poi_directory, poi_series_number)
-                poi_parent_group.create_dataset("poi_map", data = roi_map)
-                poi_parent_group.create_dataset("snap_image", data = snap_image)
-
-
-                print('Series ' + str(er) + ': added POI data')
-
-            self.experiment_file.close()
-        else:
-            print('No experiment file assigned yet')

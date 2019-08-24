@@ -4,11 +4,11 @@ import socket
 from flystim.stim_server import launch_stim_server
 from flyrpc.transceiver import MySocketClient
 from flystim.screen import Screen
-from math import pi
+
 
 class Client():
     def __init__(self):
-      # # # load rig-specific server/client options # # # 
+        # # # load rig-specific server/client options # # #
         if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
             self.server_options = {'host': '171.65.17.126',
                                    'port': 60629,
@@ -28,13 +28,11 @@ class Client():
             self.NI_USB_name = ''
             self.send_ttl = False
 
-    # # # Start the stim manager and set the frame tracker square to black # # #
+        # # # Start the stim manager and set the frame tracker square to black # # #
         if self.server_options['use_server']:
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
-#            w = 10e-2; h = 10e-2; # meters of image at projection plane
-#            screens = [Screen(width=w, height=h, rotation=0, offset=(0,w/2,-10e-2), fullscreen=False, vsync=None, square_loc='lr')]
-            self.manager = launch_stim_server(Screen(fullscreen=False, width = 3, height = 3, offset=(0,1,0)))
-        
+            self.manager = launch_stim_server(Screen(fullscreen=False, width=3, height=3, offset=(0,1,0)))
+
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)

@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QApplication
 import nidaqmx
 import flyrpc.multicall
 
+
 class EpochRun():
     def __init__(self):
         self.stop = False
@@ -50,14 +51,13 @@ class EpochRun():
                 with nidaqmx.Task() as task:
                     if client.NI_USB_name == 'NI USB-6210':
                         task.co_channels.add_co_pulse_chan_time('Dev5/ctr0',
-                                                              low_time=0.002,
-                                                              high_time=0.001)
+                                                                low_time=0.002,
+                                                                high_time=0.001)
                         task.start()
                     elif client.NI_USB_name == 'NI USB-6001':
                         task.do_channels.add_do_chan('Dev1/port2/line0')
                         task.start()
                         task.write([True, False])
-
 
             # Use the protocol object to send the stimulus to flystim
             self.multicall = flyrpc.multicall.MyMultiCall(client.manager)
