@@ -9,10 +9,10 @@ yyyy-mm-dd
     Flies
         Fly_n
             epoch_runs
-                series_00n
+                series_00n (attrs = protocol_parameters)
                     acquisition
                     epochs
-                        epoch_001
+                        epoch_001 (attrs = epoch_parameters, convenience_parameters)
                         epoch_002
                     rois
                     stimulus_timing
