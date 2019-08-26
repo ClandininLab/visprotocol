@@ -368,7 +368,6 @@ class ImagingExperimentGUI(QWidget):
             self.data.rig = dialog.ui.le_Rig.text()
 
             self.updateExistingFlyInput()
-            self.updateExistingPoiInput()
             self.populateGroups()
 
         elif sender.text() == 'Load experiment':
@@ -381,7 +380,6 @@ class ImagingExperimentGUI(QWidget):
                 # update series count to reflect already-collected series
                 self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
                 self.updateExistingFlyInput()
-                self.updateExistingPoiInput()
                 self.populateGroups()
 
     def onCreatedFly(self):
@@ -542,7 +540,6 @@ class ImagingExperimentGUI(QWidget):
         self.status_label.setText('Ready')
         if save_metadata_flag:
             self.updateExistingFlyInput()
-            self.updateExistingPoiInput()
             # Advance the series_count:
             self.data.advanceSeriesCount()
             self.series_counter_input.setValue(self.data.series_count)
