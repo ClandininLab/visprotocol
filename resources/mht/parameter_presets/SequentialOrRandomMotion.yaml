@@ -14,3 +14,19 @@ LC20:
     - -25
     - 25
     no_steps: 12.0
+LC12:
+  run_parameters:
+    protocol_ID: SequentialOrRandomMotion
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 0.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 5.0
+    color: 0.0
+    elevation: -15.0
+    azimuth_boundaries:
+    - -35.0
+    - -5.0
+    no_steps: 8.0
