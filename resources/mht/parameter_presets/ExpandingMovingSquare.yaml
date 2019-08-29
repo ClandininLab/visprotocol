@@ -24,40 +24,8 @@ whole_glom:
     - 50.0
     color: 0.0
     center:
-    - 0.0
-    - 0.0
+    - -20.0
+    - -15.0
     speed: 80.0
     angle: 0.0
-    randomize_order: true
-PanGlom_wca:
-  run_parameters:
-    protocol_ID: ExpandingMovingSquare
-    num_epochs: 360.0
-    pre_time: 0.5
-    stim_time: 2.0
-    tail_time: 1.0
-    idle_color: 0.5
-  protocol_parameters:
-    width:
-    - 2.0
-    - 5.0
-    - 10.0
-    - 15.0
-    - 20.0
-    - 25.0
-    - 30.0
-    - 40.0
-    - 50.0
-    color:
-    - 0.0
-    - 1.0
-    center:
-    - 0.0
-    - 0.0
-    speed: 80.0
-    angle:
-    - 0.0
-    - 90.0
-    - 180.0
-    - 270.0
     randomize_order: true
