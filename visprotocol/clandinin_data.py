@@ -37,7 +37,7 @@ class Data():
         self.current_fly = None
 
         # load user config file based on user name
-        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'config', user_name + '_config.yaml')
+        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', user_name + '_config.yaml')
         with open(path_to_config_file, 'r') as ymlfile:
             cfg = yaml.safe_load(ymlfile)
 
