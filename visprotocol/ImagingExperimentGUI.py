@@ -9,7 +9,7 @@ import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
-                             QTableWidget, QTableWidgetItem)
+                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem)
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
@@ -17,18 +17,13 @@ from datetime import datetime
 import os
 import glob
 
-from lazy5.inspect import get_hierarchy, get_attrs_group
-from lazy5 import alter
+from visanalysis import plugin
 
 from visprotocol.clandinin_client import Client
 from visprotocol.clandinin_data import Data
 from visprotocol.control import EpochRun
 from visprotocol import protocol
 
-
-# TODO: prevent users from editing epoch parameters / hide individual epochs
-# TODO: hierarchical drop down?
-# TODO: handle params that are meant to be strings
 
 class ImagingExperimentGUI(QWidget):
 
@@ -243,12 +238,10 @@ class ImagingExperimentGUI(QWidget):
         self.file_grid.addRow(loadButton, self.currentExperimentLabel)
 
         # # # # Data browser: # # # # # # # #
-        # Heavily based on QtHdfLoad from LazyHDF5
-        # Group selection combobox
-        self.comboBoxGroupSelect = QComboBox()
-        self.comboBoxGroupSelect.currentTextChanged.connect(self.groupChange)
-
-        self.file_grid.addRow(self.comboBoxGroupSelect)
+        self.groupTree = QTreeWidget(self)
+        self.groupTree.setHeaderHidden(True)
+        self.groupTree.itemClicked.connect(self.onTreeItemClicked)
+        self.file_grid.addRow(self.groupTree)
 
         # Attribute table
         self.tableAttributes = QTableWidget()
@@ -564,21 +557,53 @@ class ImagingExperimentGUI(QWidget):
                 else:
                     self.protocol_object.protocol_parameters[key] = float(new_param_entry)
 
-# # # Methods for data browser / attribute editor. Stolen & modified from LazyHDF5.ui.QtHdfLoad # # # #
-    def populateGroups(self):  # Qt-related pylint: disable=C0103
-        """ Populate dropdown box of group comboBoxGroupSelect """
+    def populateGroups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        self.group_dset_dict = get_hierarchy(file_path)
-        # Load Group dropdown box
-        self.comboBoxGroupSelect.clear()
-        for key in self.group_dset_dict:
-            if 'epochs' in key:
-                pass
-            elif 'stimulus_timing' in key:
-                pass
+        group_dset_dict = plugin.base.getHierarchy(file_path, additional_exclusions='rois')
+        self._populateTree(self.groupTree, group_dset_dict)
+
+    def _populateTree(self, widget, dict):
+        widget.clear()
+        self.fill_item(widget.invisibleRootItem(), dict)
+
+    def fill_item(self, item, value):
+        item.setExpanded(True)
+        if type(value) is dict:
+            for key, val in sorted(value.items()):
+                child = QTreeWidgetItem()
+                child.setText(0, key)
+                item.addChild(child)
+                self.fill_item(child, val)
+        elif type(value) is list:
+            for val in value:
+                child = QTreeWidgetItem()
+                item.addChild(child)
+                if type(val) is dict:
+                    child.setText(0, '[dict]')
+                    self.fill_item(child, val)
+                elif type(val) is list:
+                    child.setText(0, '[list]')
+                    self.fill_item(child, val)
+                else:
+                    child.setText(0, val)
+                child.setExpanded(True)
+        else:
+            child = QTreeWidgetItem()
+            child.setText(0, value)
+            item.addChild(child)
+
+    def onTreeItemClicked(self, item, column):
+        file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
+        group_path = plugin.base.getPathFromTreeItem(self.groupTree.selectedItems()[0])
+
+        if group_path != '':
+            attr_dict = plugin.base.getAttributesFromGroup(file_path, group_path)
+            if 'series' in group_path.split('/')[-1]:
+                editable_values = False  # don't let user edit epoch parameters
             else:
-                self.comboBoxGroupSelect.addItem(key)
-        return [file_path]
+                editable_values = True
+            self.populate_attrs(attr_dict = attr_dict, editable_values = editable_values)
+
 
     def populate_attrs(self, attr_dict=None, editable_values=False):
         """ Populate attribute for currently selected group """
@@ -605,28 +630,14 @@ class ImagingExperimentGUI(QWidget):
 
     def update_attrs_to_file(self, item):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_path = self.comboBoxGroupSelect.currentText()
+        group_path = plugin.base.getPathFromTreeItem(self.groupTree.selectedItems()[0])
 
         attr_key = self.tableAttributes.item(item.row(), 0).text()
         attr_val = item.text()
 
         # update attr in file
-        alter.alter_attr(group_path, attr_key, attr_val, file=file_path)
+        plugin.base.changeAttribute(file_path, group_path, attr_key, attr_val)
         print('Changed attr {} to = {}'.format(attr_key, attr_val))
-
-    def groupChange(self):  # Qt-related pylint: disable=C0103
-        """ Action : ComboBox containing Groups with DataSets has changed"""
-        if self.comboBoxGroupSelect.currentText() != '':
-            file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-            group_path = self.comboBoxGroupSelect.currentText()
-
-            attr_dict = get_attrs_group(file_path, group_path)
-            if 'series' in group_path.split('/')[-1]:
-                editable_values = False  # don't let user edit epoch parameters
-            else:
-                editable_values = True
-            self.populate_attrs(attr_dict=attr_dict, editable_values=editable_values)
-
 
 # # # Other accessory classes. For data file initialization and threading # # # #
 
