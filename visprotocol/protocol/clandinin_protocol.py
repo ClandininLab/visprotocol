@@ -25,6 +25,7 @@ class BaseProtocol():
         self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
         self.send_ttl = False
+        self.convenience_parameters = {}
         self.getRunParameterDefaults()
         self.getParameterDefaults()
         self.loadParameterPresets()
