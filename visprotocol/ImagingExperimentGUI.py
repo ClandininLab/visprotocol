@@ -118,14 +118,14 @@ class ImagingExperimentGUI(QWidget):
         self.updateRunParamtersInput()
 
         # View button:
-        viewButton = QPushButton("View", self)
-        viewButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(viewButton, self.run_params_ct+4, 0)
+        self.viewButton = QPushButton("View", self)
+        self.viewButton.clicked.connect(self.onPressedButton)
+        self.protocol_grid.addWidget(self.viewButton, self.run_params_ct+4, 0)
 
         # Record button:
-        recordButton = QPushButton("Record", self)
-        recordButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(recordButton, self.run_params_ct+4, 1)
+        self.recordButton = QPushButton("Record", self)
+        self.recordButton.clicked.connect(self.onPressedButton)
+        self.protocol_grid.addWidget(self.recordButton, self.run_params_ct+4, 1)
 
         # Stop button:
         stopButton = QPushButton("Stop", self)
@@ -507,6 +507,9 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
     def sendRun(self, save_metadata_flag = True):
+        # Lock the view and run buttons to prevent spinning up multiple threads
+        self.viewButton.setEnabled(False)
+        self.recordButton.setEnabled(False)
         # check to make sure a protocol has been selected
         if self.protocol_object.run_parameters['protocol_ID'] == '':
                 self.status_label.setText('Select a protocol')
@@ -550,6 +553,9 @@ class ImagingExperimentGUI(QWidget):
             self.data.advanceSeriesCount()
             self.series_counter_input.setValue(self.data.series_count)
             self.populateGroups()
+        # re-enable view/record buttons
+        self.viewButton.setEnabled(True)
+        self.recordButton.setEnabled(True)
 
     def updateParametersFromFillableFields(self):
         for key, value in self.run_parameter_input.items():
