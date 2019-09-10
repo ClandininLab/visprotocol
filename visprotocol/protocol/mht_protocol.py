@@ -6,21 +6,15 @@ Created on Thu Jun 21 10:20:02 2018
 @author: mhturner
 """
 import numpy as np
-import os
-import inspect
 from time import sleep
 
-import visprotocol
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import RectangleTrajectory, Trajectory
 
 
-
 class BaseProtocol(clandinin_protocol.BaseProtocol):
-    def __init__(self):
-        super().__init__() #call the parent class init method first
-        user_name = 'mht'
-        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)  # call the parent class init method
 
     def getMovingPatchParameters(self, center = None, angle = None, speed = None, width = None, height = None, color = None, background = None, distance_to_travel = None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
@@ -31,16 +25,15 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         if color is None: color = self.protocol_parameters['color']
         if background is None: background = self.run_parameters['idle_color']
 
-
         centerX = center[0]
         centerY = center[1]
         stim_time = self.run_parameters['stim_time']
-        if distance_to_travel is None: #distance_to_travel is set by speed and stim_time
+        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
             distance_to_travel = speed * stim_time
-            #trajectory just has two points, at time=0 and time=stim_time
-            startX = (0,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            # trajectory just has two points, at time=0 and time=stim_time
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
             endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            startY = (0,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
             endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
             x = [startX, endX]
             y = [startY, endY]
@@ -102,9 +95,11 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
         return color, background
 # %%
+
+
 class CheckerboardWhiteNoise(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -143,9 +138,11 @@ class CheckerboardWhiteNoise(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class ContrastReversingGrating(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -198,9 +195,11 @@ class ContrastReversingGrating(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class DriftingSquareGrating(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -247,9 +246,11 @@ class DriftingSquareGrating(BaseProtocol):
               'tail_time':1.0,
               'idle_color':0.5}
 # %%
+
+
 class DriftingVsStationaryGrating(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -322,9 +323,11 @@ class DriftingVsStationaryGrating(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class ExpandingMovingSquare(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -357,9 +360,11 @@ class ExpandingMovingSquare(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class FlickeringPatch(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -410,9 +415,11 @@ class FlickeringPatch(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class UniformFlash(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -448,12 +455,12 @@ class UniformFlash(BaseProtocol):
               'stim_time':0.5,
               'tail_time':1.0,
               'idle_color':0.5}
-
-
 # %%
+
+
 class LoomingPatch(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -539,11 +546,12 @@ class LoomingPatch(BaseProtocol):
               'stim_time':1.0,
               'tail_time':1.0,
               'idle_color':0.5}
-
 # %%
+
+
 class MovingRectangle(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -572,11 +580,12 @@ class MovingRectangle(BaseProtocol):
               'stim_time':2.0,
               'tail_time':1.0,
               'idle_color':0.5}
-
 # %%
+
+
 class MovingSquareMapping(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -637,9 +646,11 @@ class MovingSquareMapping(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class SequentialOrRandomMotion(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -696,9 +707,11 @@ class SequentialOrRandomMotion(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class SpeedTuningSquare(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -729,11 +742,12 @@ class SpeedTuningSquare(BaseProtocol):
               'tail_time':1.0,
               'idle_color':0.5}
 
-
 # %%
+
+
 class CenterSurroundDriftingSquareGrating(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -801,9 +815,11 @@ class CenterSurroundDriftingSquareGrating(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class MovingPatchOnDriftingGrating(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -860,11 +876,12 @@ class MovingPatchOnDriftingGrating(BaseProtocol):
               'tail_time':1.0,
               'idle_color':0.5}
 
-
 # %%
+
+
 class VelocitySwitchGrating(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -941,11 +958,12 @@ class VelocitySwitchGrating(BaseProtocol):
               'stim_time':8.0,
               'tail_time':1.0,
               'idle_color':0.5}
-
 # %%
+
+
 class SparseNoise(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -987,11 +1005,12 @@ class SparseNoise(BaseProtocol):
               'idle_color':0.5}
 
 
-
 # %%
+
+
 class StationaryMapping(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -1051,9 +1070,11 @@ class StationaryMapping(BaseProtocol):
               'idle_color':0.5}
 
 # %%
+
+
 class SineTrajectoryPatch(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()

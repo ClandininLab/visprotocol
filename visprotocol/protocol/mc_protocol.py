@@ -10,16 +10,12 @@ from flystim.trajectory import RectangleTrajectory
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
-    def __init__(self):
-        super().__init__() #call the parent class init method first
-        user_name = 'mc'
-        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
-
-
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 # %%
 class UniformSquareFlash(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -69,8 +65,8 @@ class UniformSquareFlash(BaseProtocol):
 
 # %%
 class UniformFlashOld(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -108,8 +104,8 @@ class UniformFlashOld(BaseProtocol):
               'idle_color':0.5}
 # %%
 class SpotSizes(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -154,8 +150,8 @@ class SpotSizes(BaseProtocol):
 
 # %%
 class MovingRectangle(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -188,8 +184,8 @@ class MovingRectangle(BaseProtocol):
 
 # %%
 class SpatialTernaryNoise(BaseProtocol):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()

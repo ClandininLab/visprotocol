@@ -16,6 +16,8 @@ import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
 import glob
+import inspect
+import yaml
 
 from visanalysis import plugin
 
@@ -23,6 +25,7 @@ from visprotocol.clandinin_client import Client
 from visprotocol.clandinin_data import Data
 from visprotocol.control import EpochRun
 from visprotocol import protocol
+import visprotocol
 
 
 class ImagingExperimentGUI(QWidget):
@@ -34,23 +37,33 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
 
-        #looks for user names based on .yaml config files in visprotocol/config directory
+        # looks for user names based on .yaml config files in visprotocol/config directory
         # Filenames should be: USER_config.yaml
         config_dir = os.path.join(os.path.abspath(os.path.join(os.path.split(__file__)[0], os.pardir)), 'config')
         user_config_files = [os.path.split(f)[1] for f in glob.glob(os.path.join(config_dir,'*.yaml'))]
 
         user_names = [f.split('_config')[0] for f in user_config_files]
-        user_name, ok = QInputDialog.getItem(self, "select user",
+        self.user_name, ok = QInputDialog.getItem(self, "select user",
                                              "Available users", user_names, 0, False)
+        # open user config file and find available rig configurations
+        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', self.user_name + '_config.yaml')
+        with open(path_to_config_file, 'r') as ymlfile:
+            cfg = yaml.safe_load(ymlfile)
+        rig_configs = list(cfg.get('rig_config').keys())
+        if len(rig_configs) > 1:
+            self.rig_config, ok = QInputDialog.getItem(self, "select rig config",
+                                                  "Available rig configs", rig_configs, 0, False)
+        else:
+            self.rig_config = rig_configs[0]
 
         # start a client
         self.client = Client()
         # start a data object
-        self.data = Data(user_name)
+        self.data = Data(self.user_name, self.rig_config)
         # get a protocol, just start with the base class until user selects one
-        self.protocol_object = getattr(protocol, user_name + '_protocol').BaseProtocol()
+        self.protocol_object = getattr(protocol, self.user_name + '_protocol').BaseProtocol(self.user_name, self.rig_config)
         # get available protocol classes
-        self.available_protocols = getattr(protocol, user_name + '_protocol').BaseProtocol.__subclasses__()
+        self.available_protocols = getattr(protocol, self.user_name + '_protocol').BaseProtocol.__subclasses__()
         # get an epoch run control object
         self.epoch_run = EpochRun()
 
@@ -297,7 +310,7 @@ class ImagingExperimentGUI(QWidget):
 
         # initialize the selected protocol object
         prot_names = [x.__name__ for x in self.available_protocols]
-        self.protocol_object = self.available_protocols[prot_names.index(text)]()
+        self.protocol_object = self.available_protocols[prot_names.index(text)](self.user_name, self.rig_config)
 
         # update display lists of run & protocol parameters
         self.protocol_object.loadParameterPresets()
@@ -603,7 +616,6 @@ class ImagingExperimentGUI(QWidget):
             else:
                 editable_values = True
             self.populate_attrs(attr_dict = attr_dict, editable_values = editable_values)
-
 
     def populate_attrs(self, attr_dict=None, editable_values=False):
         """ Populate attribute for currently selected group """

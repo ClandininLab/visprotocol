@@ -15,13 +15,14 @@ from time import sleep
 
 import os.path
 import yaml
-import socket
+import inspect
 
+import visprotocol
 from flystim.trajectory import RectangleTrajectory
 
 
 class BaseProtocol():
-    def __init__(self):
+    def __init__(self, user_name, rig_config):
         self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
         self.send_ttl = False
@@ -30,13 +31,15 @@ class BaseProtocol():
         self.getParameterDefaults()
         self.loadParameterPresets()
 
-        # Rig-specific screen center
-        if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
-            self.screen_center = [90,90] #az, el (deg.)
-        elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
-            self.screen_center = [130,120] #az, el
-        else:
-            self.screen_center = [90,90] #az, el
+        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
+
+        # Load user config file
+        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', user_name + '_config.yaml')
+        with open(path_to_config_file, 'r') as ymlfile:
+            cfg = yaml.safe_load(ymlfile)
+            # Rig-specific screen center
+            print(rig_config)
+            self.screen_center = cfg.get('rig_config').get(rig_config).get('screen_center', [90,90])
 
     def adjustCenter(self, relative_center):
         absolute_center = [sum(x) for x in zip(relative_center, self.screen_center)]

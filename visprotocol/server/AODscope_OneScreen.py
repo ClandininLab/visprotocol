@@ -13,10 +13,10 @@ def main():
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
          dlpc350_object.set_current(red=0.2, green = 0, blue = 0.1)
-         dlpc350_object.pattern_mode(fps=120, red=True, blue=True, green=False)  
+         dlpc350_object.pattern_mode(fps=120, red=True, blue=True, green=False)
     if len(dlpc350_objects) == 0:
-        print('No lightcrafters detected! Try sudo')   
-     
+        print('No lightcrafters detected! Try sudo')
+
     # Define screen(s) for the rig. Units in meters
     # Define coordinates s.t. screen is parallel to the XZ plane and fly is at (0,0,0)
 
@@ -39,13 +39,13 @@ def main():
 
     #draw_screens(AODscope_left_screen)
     plt.show()
-    
+
     manager =  StimServer(screens=screens, host=host, port=port, auto_stop=False)
-    
+
     manager.black_corner_square()
-    manager.set_idle_background(0)    
-    
+    manager.set_idle_background(0)
+
     manager.loop()
-    
+
 if __name__ == '__main__':
     main()

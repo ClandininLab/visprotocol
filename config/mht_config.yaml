@@ -13,3 +13,8 @@ rig_config:
     data_directory: E:/Max/FlystimData
     screen_center: [130,120]
     rig: Bruker
+
+  Laptop:
+    data_directory: C:/Users/mhturner/Dropbox/ClandininLab/CurrentData/FlystimData
+    screen_center: [90,90]
+    rig: (testing)

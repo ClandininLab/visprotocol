@@ -14,19 +14,16 @@ from flystim.trajectory import RectangleTrajectory, Trajectory
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
-    def __init__(self):
-        super().__init__() #call the parent class init method first
-        user_name = 'mmp'
-        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
-        
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
 # %%
 class BinaryFlash(BaseProtocol):
-    def __init__(self):
-        super().__init__()
-        
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
 
@@ -35,7 +32,7 @@ class BinaryFlash(BaseProtocol):
                                               angle = 0,
                                               h = self.protocol_parameters['height'],
                                               w = self.protocol_parameters['width'],
-                                              color = self.protocol_parameters['intensity']).to_dict()  
+                                              color = self.protocol_parameters['intensity']).to_dict()
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
@@ -59,23 +56,23 @@ class BinaryFlash(BaseProtocol):
 
 #%%
 class MultipleContrastFlash(BaseProtocol):
-    def __init__(self):
-        super().__init__()
-        
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
         current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'],
                                                                 randomize_order = self.protocol_parameters['randomize_order'])
-        
+
         trajectory = RectangleTrajectory(x = self.protocol_parameters['center'][0],
                                               y = self.protocol_parameters['center'][1],
                                               angle = 0,
                                               h = self.protocol_parameters['height'],
                                               w = self.protocol_parameters['width'],
-                                              color = current_intensity).to_dict()   
+                                              color = current_intensity).to_dict()
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
@@ -98,35 +95,35 @@ class MultipleContrastFlash(BaseProtocol):
               'stim_time':0.02,
               'tail_time':0.5,
               'idle_color':0.5}
-        
+
 # %%
 class LoomingPatch(BaseProtocol):
-    def __init__(self):
-        super().__init__()
-        
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
+
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-        
+
     def getEpochParameters(self):
         stimulus_ID = 'MovingPatch'
 
         stim_time = self.run_parameters['stim_time']
         start_size = self.protocol_parameters['start_size']
         end_size = self.protocol_parameters['end_size']
-        
+
         rv_ratio = self.protocol_parameters['rv_ratio'] #msec
         trajectory_code = [0, 1, 2] #0 = expanding, 1 = reversed (shrinking), 2 = randomized
 
         current_rv_ratio, current_trajectory_code = self.selectParametersFromLists((rv_ratio, trajectory_code),
-                                                                                             all_combinations = True, 
+                                                                                             all_combinations = True,
                                                                                              randomize_order = self.protocol_parameters['randomize_order'])
-        
+
         current_rv_ratio = current_rv_ratio / 1e3 #msec -> sec
-    
+
         time_steps = np.arange(0,stim_time-0.001,0.001) #time steps of trajectory
         # calculate angular size at each time step for this rv ratio
         angular_size = 2 * np.rad2deg(np.arctan(current_rv_ratio * (1 /(stim_time - time_steps))))
-        
+
         # shift curve vertically so it starts at start_size
         min_size = angular_size[0]
         size_adjust = min_size - start_size
@@ -139,11 +136,11 @@ class LoomingPatch(BaseProtocol):
         if current_trajectory_code == 0:
             current_trajectory_type = 'expanding'
             angular_size = angular_size # initial trajectory
-            
+
         elif current_trajectory_code == 1:
             current_trajectory_type = 'contracting'
             angular_size = np.flip(angular_size, axis = 0) # reverse in time
-            
+
         elif current_trajectory_code == 2:
             current_trajectory_type = 'randomized'
             angular_size = np.random.permutation(angular_size) #randomize in time
@@ -151,7 +148,7 @@ class LoomingPatch(BaseProtocol):
         # time-modulated trajectories
         h = Trajectory(list(zip(time_steps,angular_size)), kind = 'previous')
         w = Trajectory(list(zip(time_steps,angular_size)), kind = 'previous')
-        
+
         #adjust center to screen center
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
@@ -162,7 +159,7 @@ class LoomingPatch(BaseProtocol):
         angle = Trajectory(0)
         trajectory = {'x': centerX.to_dict(), 'y': centerY.to_dict(), 'w': w.to_dict(), 'h': h.to_dict(),
             'angle': angle.to_dict(), 'color': color.to_dict()}
-        
+
 
         self.epoch_parameters = {'name':stimulus_ID,
                             'background':self.run_parameters['idle_color'],
@@ -182,7 +179,7 @@ class LoomingPatch(BaseProtocol):
                        'end_size': 120.0,
                        'rv_ratio':[5.0, 10.0, 20.0, 40.0, 80.0],
                        'randomize_order': True}
-    
+
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'LoomingPatch',
               'num_epochs':75,

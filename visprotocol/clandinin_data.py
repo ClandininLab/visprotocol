@@ -23,14 +23,13 @@ import h5py
 import os
 import inspect
 import yaml
-import socket
 from datetime import datetime
 import numpy as np
 import visprotocol
 
 
 class Data():
-    def __init__(self, user_name):
+    def __init__(self, user_name, rig_config):
         self.experiment_file_name = None
         self.series_count = 1
         self.fly_metadata = {}  # populated in GUI or user protocol
@@ -49,19 +48,11 @@ class Data():
         self.driverChoices = cfg.get('driver_choices', [])
         self.indicatorChoices = cfg.get('indicator_choices', [])
 
-        # # #  Poi name options # # #
-        self.poiNames = cfg.get('poi_names', [])
-
         # load rig-specific metadata things
-        if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
-            self.data_directory = 'D:/Max/FlystimData'
-            self.rig = 'AODscope'
-        elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
-            self.data_directory = 'E:/Max/FlystimData/'
-            self.rig = 'Bruker'
-        else:
-            self.data_directory = os.getcwd()
-            self.rig = '(rig)'
+        self.data_directory = cfg.get('rig_config').get(rig_config).get('data_directory', os.getcwd())
+        self.rig = cfg.get('rig_config').get(rig_config).get('rig', '(rig)')
+        self.screen_center = cfg.get('rig_config').get(rig_config).get('screen_center', [0, 0])
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # #  Creating experiment file and groups  # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
