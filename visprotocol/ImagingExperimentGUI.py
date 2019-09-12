@@ -22,7 +22,7 @@ import yaml
 from visanalysis import plugin
 
 from visprotocol.clandinin_client import Client
-from visprotocol.clandinin_data import Data
+from visprotocol import clandinin_data
 from visprotocol.control import EpochRun
 from visprotocol import protocol
 import visprotocol
@@ -44,7 +44,7 @@ class ImagingExperimentGUI(QWidget):
 
         user_names = [f.split('_config')[0] for f in user_config_files]
         self.user_name, ok = QInputDialog.getItem(self, "select user",
-                                             "Available users", user_names, 0, False)
+                                                  "Available users", user_names, 0, False)
         # open user config file and find available rig configurations
         path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', self.user_name + '_config.yaml')
         with open(path_to_config_file, 'r') as ymlfile:
@@ -52,18 +52,24 @@ class ImagingExperimentGUI(QWidget):
         rig_configs = list(cfg.get('rig_config').keys())
         if len(rig_configs) > 1:
             self.rig_config, ok = QInputDialog.getItem(self, "select rig config",
-                                                  "Available rig configs", rig_configs, 0, False)
+                                                       "Available rig configs", rig_configs, 0, False)
         else:
             self.rig_config = rig_configs[0]
 
         # start a client
         self.client = Client()
-        # start a data object
-        self.data = Data(self.user_name, self.rig_config)
+
         # get a protocol, just start with the base class until user selects one
         self.protocol_object = getattr(protocol, self.user_name + '_protocol').BaseProtocol(self.user_name, self.rig_config)
         # get available protocol classes
         self.available_protocols = getattr(protocol, self.user_name + '_protocol').BaseProtocol.__subclasses__()
+
+        # start a data object
+        if self.protocol_object.rig == 'AODscope':
+            self.data = clandinin_data.AODscopeData(self.user_name, self.rig_config)
+        else:
+            self.data = clandinin_data.Data(self.user_name, self.rig_config)
+
         # get an epoch run control object
         self.epoch_run = EpochRun()
 
@@ -143,11 +149,19 @@ class ImagingExperimentGUI(QWidget):
 
         # Status window:
         newLabel = QLabel('Status:')
-        self.protocol_grid.addWidget(newLabel, 4, 2)
+        self.protocol_grid.addWidget(newLabel, 3, 2)
         self.status_label = QLabel()
         self.status_label.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_grid.addWidget(self.status_label, 5, 2)
+        self.protocol_grid.addWidget(self.status_label, 4, 2)
         self.status_label.setText('')
+
+        # Imaging type dropdown (if AODscope):
+        if self.data.rig == 'AODscope':
+            self.imagingTypeComboBox = QComboBox(self)
+            self.imagingTypeComboBox.addItem("POI")
+            self.imagingTypeComboBox.addItem("xyt series")
+            self.imagingTypeComboBox.activated[str].connect(self.onChangedDataType)
+            self.protocol_grid.addWidget(self.imagingTypeComboBox, 5, 2)
 
         # Current imaging series counter
         newLabel = QLabel('Series counter:')
@@ -302,6 +316,16 @@ class ImagingExperimentGUI(QWidget):
         self.setWindowTitle('Visprotocol')
         self.show()
 
+    def onChangedDataType(self, text):
+        if text == 'POI':
+            self.data.poi_scan = True
+        elif text == 'xyt series':
+            self.data.poi_scan = False
+        else:
+            self.data.poi_scan = False
+
+        self.series_counter_input.setValue(self.data.getSeriesCount())
+
     def onSelectedProtocolID(self, text):
         if text == "(select a protocol to run)":
             return
@@ -323,7 +347,6 @@ class ImagingExperimentGUI(QWidget):
         sender = self.sender()
         if sender.text() == 'Record':
             if (self.data.experimentFileExists() and self.data.currentFlyExists()):
-                self.status_label.setText('Recording ...')
                 self.sendRun(save_metadata_flag=True)
             else:
                 msg = QMessageBox()
@@ -336,7 +359,6 @@ class ImagingExperimentGUI(QWidget):
                 msg.exec_()
 
         elif sender.text() == 'View':
-            self.status_label.setText('Viewing ...')
             self.sendRun(save_metadata_flag=False)
 
         elif sender.text() == 'Stop':
@@ -371,7 +393,6 @@ class ImagingExperimentGUI(QWidget):
             self.data.experiment_file_name = dialog.ui.le_FileName.text()
             self.data.data_directory = dialog.ui.le_DataDirectory.text()
             self.data.experimenter = dialog.ui.le_Experimenter.text()
-            self.data.rig = dialog.ui.le_Rig.text()
 
             self.updateExistingFlyInput()
             self.populateGroups()
@@ -384,6 +405,7 @@ class ImagingExperimentGUI(QWidget):
             if self.data.experiment_file_name is not '':
                 self.currentExperimentLabel.setText(self.data.experiment_file_name)
                 # update series count to reflect already-collected series
+                self.data.reloadSeriesCount()
                 self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
                 self.updateExistingFlyInput()
                 self.populateGroups()
@@ -499,17 +521,14 @@ class ImagingExperimentGUI(QWidget):
                 self.protocol_grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
 
     def onEnteredSeriesCount(self):
-        self.data.series_count = self.series_counter_input.value()
+        self.data.updateSeriesCount(self.series_counter_input.value())
         if self.data.experimentFileExists:
-            if self.data.series_count <= self.data.getHighestSeriesCount():
+            if self.data.getSeriesCount() <= self.data.getHighestSeriesCount():
                 self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
-    def sendRun(self, save_metadata_flag = True):
-        # Lock the view and run buttons to prevent spinning up multiple threads
-        self.viewButton.setEnabled(False)
-        self.recordButton.setEnabled(False)
+    def sendRun(self, save_metadata_flag=True):
         # check to make sure a protocol has been selected
         if self.protocol_object.run_parameters['protocol_ID'] == '':
                 self.status_label.setText('Select a protocol')
@@ -517,8 +536,8 @@ class ImagingExperimentGUI(QWidget):
 
         # check to make sure the series count does not already exist
         if save_metadata_flag:
-            self.data.series_count = self.series_counter_input.value()
-            if (self.data.series_count in self.data.getExistingSeries()):
+            self.data.updateSeriesCount(self.series_counter_input.value())
+            if (self.data.getSeriesCount() in self.data.getExistingSeries()):
                 self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
                 return  # group already exists, don't send anything
             else:
@@ -540,22 +559,26 @@ class ImagingExperimentGUI(QWidget):
         self.runSeriesThread.start()
 
     def runStarted(self, save_metadata_flag):
+        # Lock the view and run buttons to prevent spinning up multiple threads
+        self.viewButton.setEnabled(False)
+        self.recordButton.setEnabled(False)
         if save_metadata_flag:
-            self.status_label.setText('Recording series ' + str(self.data.series_count))
+            self.status_label.setText('Recording series ' + str(self.data.getSeriesCount()))
         else:
             self.status_label.setText('Viewing...')
 
     def runFinished(self, save_metadata_flag):
+        # re-enable view/record buttons
+        self.viewButton.setEnabled(True)
+        self.recordButton.setEnabled(True)
+
         self.status_label.setText('Ready')
         if save_metadata_flag:
             self.updateExistingFlyInput()
             # Advance the series_count:
             self.data.advanceSeriesCount()
-            self.series_counter_input.setValue(self.data.series_count)
+            self.series_counter_input.setValue(self.data.getSeriesCount())
             self.populateGroups()
-        # re-enable view/record buttons
-        self.viewButton.setEnabled(True)
-        self.recordButton.setEnabled(True)
 
     def updateParametersFromFillableFields(self):
         for key, value in self.run_parameter_input.items():
@@ -682,10 +705,6 @@ class InitializeExperimentGUI(QWidget):
         self.le_Experimenter = QLineEdit(self.experimentGuiObject.data.experimenter)
         layout.addRow(label_Experimenter, self.le_Experimenter)
 
-        label_Rig = QLabel('Rig:')
-        self.le_Rig = QLineEdit(self.experimentGuiObject.data.rig)
-        layout.addRow(label_Rig, self.le_Rig)
-
         self.label_status = QLabel('Enter experiment info')
         layout.addRow(self.label_status)
 
@@ -699,7 +718,6 @@ class InitializeExperimentGUI(QWidget):
         self.experimentGuiObject.data.experiment_file_name = self.le_FileName.text()
         self.experimentGuiObject.data.data_directory = self.le_DataDirectory.text()
         self.experimentGuiObject.data.experimenter = self.le_Experimenter.text()
-        self.experimentGuiObject.data.rig = self.le_Rig.text()
 
         if os.path.isfile(os.path.join(self.experimentGuiObject.data.data_directory, self.experimentGuiObject.data.experiment_file_name) + '.hdf5'):
            self.label_status.setText('Experiment file already exists!')

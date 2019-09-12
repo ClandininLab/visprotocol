@@ -118,6 +118,7 @@ class Data():
                     new_epoch_run.attrs[key] = protocol_object.protocol_parameters[key]
 
                 # add subgroups:
+                new_epoch_run.create_group('acquisition')
                 new_epoch_run.create_group('epochs')
                 new_epoch_run.create_group('rois')
                 new_epoch_run.create_group('stimulus_timing')
@@ -229,3 +230,101 @@ class Data():
 
     def advanceSeriesCount(self):
         self.series_count += 1
+
+    def updateSeriesCount(self, val):
+        self.series_count = val
+
+    def getSeriesCount(self):
+        return self.series_count
+
+    def reloadSeriesCount(self):
+        all_series = []
+        with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
+            for fly_id in list(experiment_file['/Flies'].keys()):
+                new_series = list(experiment_file['/Flies/{}/epoch_runs'.format(fly_id)].keys())
+                all_series.append(new_series)
+        all_series = [val for s in all_series for val in s]
+        series = [int(x.split('_')[-1]) for x in all_series]
+
+        if len(series) == 0:
+            self.series_count = 0 + 1
+        else:
+            self.series_count = np.max(series) + 1
+
+
+class AODscopeData(Data):
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
+        self.poi_scan = True
+        self.poi_count = 1
+        self.xyt_count = 1
+
+    def advanceSeriesCount(self):
+        self.series_count += 1
+        if self.poi_scan:
+            self.poi_count += 1
+        else:
+            self.xyt_count += 1
+
+    def updateSeriesCount(self, val):
+        if self.poi_scan:
+            self.poi_count = val
+        else:
+            self.xyt_count = val
+
+    def getSeriesCount(self):
+        if self.poi_scan:
+            return self.poi_count
+        else:
+            return self.xyt_count
+
+    def getExistingSeries(self):
+        poi_series = []
+        xyt_series = []
+        with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
+            for fly_id in list(experiment_file['/Flies'].keys()):
+                for series_id in experiment_file['/Flies/{}/epoch_runs'.format(fly_id)]:
+                    acq_group = experiment_file['/Flies/{}/epoch_runs/{}/acquisition'.format(fly_id, series_id)]
+                    if acq_group.attrs['poi_scan']:
+                        poi_series.append(acq_group.attrs['poi_count'])
+                    else:
+                        xyt_series.append(acq_group.attrs['xyt_count'])
+
+        poi_series = [int(x) for x in poi_series]
+        xyt_series = [int(x) for x in xyt_series]
+
+        if self.poi_scan:
+            return poi_series
+        else:
+            return xyt_series
+
+    def createEpochRun(self, protocol_object):
+        """"
+        """
+        # create a new epoch run group in the data file
+        if (self.currentFlyExists() and self.experimentFileExists()):
+            with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
+                run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                fly_group = experiment_file['/Flies/{}/epoch_runs'.format(self.current_fly)]
+                new_epoch_run = fly_group.create_group('series_{}'.format(str(self.series_count).zfill(3)))
+                new_epoch_run.attrs['run_start_time'] = run_start_time
+                for key in protocol_object.run_parameters:  # add run parameter attributes
+                    new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
+
+                for key in protocol_object.protocol_parameters:  # add user-entered protocol params
+                    new_epoch_run.attrs[key] = protocol_object.protocol_parameters[key]
+
+                # add subgroups:
+                new_epoch_run.create_group('acquisition')
+                new_epoch_run.create_group('epochs')
+                new_epoch_run.create_group('rois')
+                new_epoch_run.create_group('stimulus_timing')
+
+                # AODscope-specific data stuff:
+                new_epoch_run['acquisition'].attrs['poi_scan'] = self.poi_scan
+                if self.poi_scan:
+                    new_epoch_run['acquisition'].attrs['poi_count'] = self.poi_count
+                else:
+                    new_epoch_run['acquisition'].attrs['xyt_count'] = self.xyt_count
+        else:
+            print('Create a data file and/or define a fly first')
