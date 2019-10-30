@@ -84,8 +84,11 @@ class BaseProtocol():
         self.num_epochs_completed += 1
 
     def loadStimuli(self, multicall):
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
         passedParameters = self.epoch_parameters.copy()
-        multicall.load_stim(**passedParameters)
+        multicall.load_stim(**passedParameters, hold=True)
 
     def startStimuli(self, multicall):
         sleep(self.run_parameters['pre_time'])
