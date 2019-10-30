@@ -619,9 +619,9 @@ class ForestRandomWalk(BaseProtocol):
 
         # random walk trajectory
         tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
-        dx = -0.05 + 0.02*np.random.normal(size=len(tt))
+        dx = -0.025 + 0.02*np.random.normal(size=len(tt))
         dy = 0.01*np.random.normal(size=len(tt))
-        dtheta = 10*np.random.normal(size=len(tt))
+        dtheta = 0.25*np.random.normal(size=len(tt))
 
         fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
         fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
@@ -643,7 +643,7 @@ class ForestRandomWalk(BaseProtocol):
                                  'tree_y_locations': tree_y_locations}
 
     def loadStimuli(self, multicall):
-        z_level = 0.1
+        z_level = -0.2
         passedParameters = self.epoch_parameters.copy()
 
         multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
@@ -665,7 +665,7 @@ class ForestRandomWalk(BaseProtocol):
                                 color=[0, 0, 0, 0.5],
                                 cylinder_height=passedParameters['tree_height'],
                                 cylinder_radius=0.1,
-                                cylinder_location=[passedParameters['tree_x_locations'][tree], passedParameters['tree_y_locations'][tree], z_level-passedParameters['tree_height']/2],
+                                cylinder_location=[passedParameters['tree_x_locations'][tree], passedParameters['tree_y_locations'][tree], z_level+passedParameters['tree_height']/2],
                                 hold=True)
 
     def getParameterDefaults(self):
