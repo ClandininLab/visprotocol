@@ -606,6 +606,85 @@ class MovingSquareMapping(BaseProtocol):
 
 # %%
 
+
+# TODO: pass params for tree positioning, fly trajectory, and do random seed control for repeated walks
+class ForestRandomWalk(BaseProtocol):
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+
+        # random walk trajectory
+        tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
+        dx = -0.05 + 0.02*np.random.normal(size=len(tt))
+        dy = 0.01*np.random.normal(size=len(tt))
+        dtheta = 10*np.random.normal(size=len(tt))
+
+        fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
+        fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
+        fly_theta_trajectory = Trajectory(list(zip(tt, np.cumsum(dtheta)))).to_dict()
+
+        tree_x_locations = np.random.uniform(-20, 0, size=int(self.protocol_parameters['n_trees']))
+        tree_y_locations = np.random.uniform(-3, 3, size=int(self.protocol_parameters['n_trees']))
+
+        self.epoch_parameters = {'name': 'Composite',
+                                 'n_trees': int(self.protocol_parameters['n_trees']),
+                                 'tree_height': self.protocol_parameters['tree_height'],
+                                 'floor_color': self.protocol_parameters['floor_color'],
+                                 'sky_color': self.protocol_parameters['sky_color'],
+                                 'tree_color': self.protocol_parameters['tree_color'],
+                                 'fly_x_trajectory': fly_x_trajectory,
+                                 'fly_y_trajectory': fly_y_trajectory,
+                                 'fly_theta_trajectory': fly_theta_trajectory,
+                                 'tree_x_locations': tree_x_locations,
+                                 'tree_y_locations': tree_y_locations}
+
+    def loadStimuli(self, multicall):
+        z_level = 0.1
+        passedParameters = self.epoch_parameters.copy()
+
+        multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
+                                     passedParameters['fly_y_trajectory'],
+                                     passedParameters['fly_theta_trajectory'])
+
+        sc = passedParameters['sky_color']
+        multicall.load_stim(name='ConstantBackground',
+                            color=[sc, sc, sc, 1.0])
+
+        fc = passedParameters['floor_color']
+        multicall.load_stim(name='Floor',
+                            color=[fc, fc, fc, 1.0],
+                            z_level=z_level,
+                            hold=True)
+
+        for tree in range(passedParameters['n_trees']):
+            multicall.load_stim(name='Tower',
+                                color=[0, 0, 0, 0.5],
+                                cylinder_height=passedParameters['tree_height'],
+                                cylinder_radius=0.1,
+                                cylinder_location=[passedParameters['tree_x_locations'][tree], passedParameters['tree_y_locations'][tree], z_level-passedParameters['tree_height']/2],
+                                hold=True)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'n_trees': 20,
+                                    'tree_height': 1.0,
+                                    'floor_color': 0.25,
+                                    'sky_color': 0.5,
+                                    'tree_color': 0.0}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'ForestRandomWalk',
+                               'num_epochs': 20,
+                               'pre_time': 1.0,
+                               'stim_time': 6.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
+
 # TODO update
 # class SequentialOrRandomMotion(BaseProtocol):
 #     def __init__(self, user_name, rig_config):
