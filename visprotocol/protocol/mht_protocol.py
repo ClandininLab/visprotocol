@@ -129,7 +129,7 @@ class ContrastReversingGrating(BaseProtocol):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
 
         # Make the contrast trajectory
-        t = np.arange(0, self.run_parameters['stim_time'], 0.01)
+        t = np.arange(0, self.run_parameters['stim_time'], 0.001)
         c = self.protocol_parameters['contrast'] * np.sin(2*np.pi*current_temporal_frequency*t)
         tv_pairs = list(zip(t, c))
         contrast_traj = Trajectory(tv_pairs, kind='linear').to_dict()
@@ -345,7 +345,7 @@ class FlickeringPatch(BaseProtocol):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
 
         # make color trajectory
-        t = np.arange(0, self.run_parameters['stim_time'], 0.01)
+        t = np.arange(0, self.run_parameters['stim_time'], 0.001)
         contrast = self.protocol_parameters['contrast'] * np.sin(2*np.pi*current_temporal_frequency*t)
         col = self.protocol_parameters['mean'] + self.protocol_parameters['mean'] * contrast
         tv_pairs = list(zip(t, col))
