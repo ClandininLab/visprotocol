@@ -417,7 +417,6 @@ class UniformFlash(BaseProtocol):
 # %%
 
 
-
 class LoomingSpot(BaseProtocol):
     def __init__(self, user_name, rig_config):
         super().__init__(user_name, rig_config)
@@ -512,7 +511,7 @@ class MovingRectangle(BaseProtocol):
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-# TODO: fix angle in moving patch stim. Currently non-cardinal axes have thing coming through at weird angles?
+
     def getEpochParameters(self):
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order=self.protocol_parameters['randomize_order'])
 
@@ -660,7 +659,7 @@ class ForestRandomWalk(BaseProtocol):
 
         for tree in range(passedParameters['n_trees']):
             multicall.load_stim(name='Tower',
-                                color=[0, 0, 0, 0.5],
+                                color=[0, 0, 0, 1.0],
                                 cylinder_height=passedParameters['tree_height'],
                                 cylinder_radius=0.1,
                                 cylinder_location=[passedParameters['tree_x_locations'][tree], passedParameters['tree_y_locations'][tree], z_level+passedParameters['tree_height']/2],

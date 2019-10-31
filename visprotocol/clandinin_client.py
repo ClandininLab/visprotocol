@@ -32,7 +32,7 @@ class Client():
         if self.server_options['use_server']:
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
-            self.manager = launch_stim_server(Screen(fullscreen=False, width=3, height=3, offset=(0,1,0)))
+            self.manager = launch_stim_server(Screen(fullscreen=False, width=0.1, height=0.1, offset=(0,1,0)))
 
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
