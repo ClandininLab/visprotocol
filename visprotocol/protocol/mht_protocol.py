@@ -6,7 +6,6 @@ Created on Thu Jun 21 10:20:02 2018
 @author: mhturner
 """
 import numpy as np
-from time import sleep
 
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import Trajectory
@@ -70,6 +69,59 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                             'phi': y_trajectory,
                             'angle': angle}
         return patch_parameters
+
+
+    def getMovingSpotParameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
+        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
+        if angle is None: angle = self.protocol_parameters['angle']
+        if speed is None: speed = self.protocol_parameters['speed']
+        if radius is None: radius = self.protocol_parameters['radius']
+        if color is None: color = self.protocol_parameters['color']
+
+        centerX = center[0]
+        centerY = center[1]
+        stim_time = self.run_parameters['stim_time']
+        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
+            distance_to_travel = speed * stim_time
+            # trajectory just has two points, at time=0 and time=stim_time
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            x = [startX, endX]
+            y = [startY, endY]
+
+        else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
+            travel_time = distance_to_travel / speed
+            if travel_time > stim_time:
+                print('Warning: stim_time is too short to show whole trajectory at this speed!')
+                hang_time = 0
+            else:
+                hang_time = (stim_time - travel_time)/2
+
+            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
+            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+
+            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+
+            x = [x_1, x_2, x_3, x_4]
+            y = [y_1, y_2, y_3, y_4]
+
+        x_trajectory = Trajectory(x, kind='linear').to_dict()
+        y_trajectory = Trajectory(y, kind='linear').to_dict()
+
+        spot_parameters = {'name': 'MovingSpot',
+                           'radius': radius,
+                           'color': color,
+                           'theta': x_trajectory,
+                           'phi': y_trajectory}
+        return spot_parameters
 
 # %%
 
@@ -296,7 +348,7 @@ class DriftingSquareGrating(BaseProtocol):
 # %%
 
 
-class ExpandingMovingSquare(BaseProtocol):
+class ExpandingMovingSpot(BaseProtocol):
     def __init__(self, user_name, rig_config):
         super().__init__(user_name, rig_config)
 
@@ -304,22 +356,21 @@ class ExpandingMovingSquare(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_width = self.selectParametersFromLists(self.protocol_parameters['width'], randomize_order=self.protocol_parameters['randomize_order'])
+        current_diameter, current_intensity = self.selectParametersFromLists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        self.epoch_parameters = self.getMovingPatchParameters(width=current_width,
-                                                              height=current_width,
-                                                              angle=self.protocol_parameters['angle'],
-                                                              color=self.protocol_parameters['intensity'])
+        self.epoch_parameters = self.getMovingSpotParameters(radius=current_diameter/2,
+                                                             color=current_intensity)
 
-        self.convenience_parameters = {'current_width': current_width}
+        self.convenience_parameters = {'current_diameter': current_diameter,
+                                       'current_intensity': current_intensity}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'width': [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
-                                    'intensity': 0.0,
+        self.protocol_parameters = {'diameter': [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
+                                    'intensity': [0.0, 1.0],
                                     'center': [0, 0],
                                     'speed': 80.0,
                                     'angle': 0.0,
-                                    'randomize_order':True}
+                                    'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'ExpandingMovingSquare',
@@ -392,20 +443,24 @@ class UniformFlash(BaseProtocol):
     def getEpochParameters(self):
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
+        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'], randomize_order=self.protocol_parameters['randomize_order'])
+
         self.epoch_parameters = {'name': 'MovingPatch',
                                  'width': self.protocol_parameters['width'],
                                  'height': self.protocol_parameters['height'],
                                  'sphere_radius': 1,
-                                 'color': self.protocol_parameters['intensity'],
+                                 'color': current_intensity,
                                  'theta': adj_center[0],
                                  'phi': adj_center[1],
                                  'angle': 0}
+        self.convenience_parameters = {'current_intensity': current_intensity}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'height': 120.0,
                                     'width': 120.0,
                                     'center': [0, 0],
-                                    'intensity': 1.0}
+                                    'intensity': [1.0, 0.0],
+                                    'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'UniformFlash',
@@ -425,13 +480,12 @@ class LoomingSpot(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        # adjust center to screen center
-        adj_center = self.adjustCenter(self.protocol_parameters['center'])
-
         stim_time = self.run_parameters['stim_time']
         start_size = self.protocol_parameters['start_size']
         end_size = self.protocol_parameters['end_size']
 
+        # adjust center to screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
         rv_ratio = self.protocol_parameters['rv_ratio']  # msec
         trajectory_code = [0]  # 0 = expanding, 1 = reversed (shrinking), 2 = randomized
         if self.protocol_parameters['include_reversed_loom']:
@@ -442,20 +496,8 @@ class LoomingSpot(BaseProtocol):
         current_rv_ratio, current_trajectory_code = self.selectParametersFromLists((rv_ratio, trajectory_code),
                                                                                              all_combinations=True,
                                                                                              randomize_order=self.protocol_parameters['randomize_order'])
-
         current_rv_ratio = current_rv_ratio / 1e3  # msec -> sec
-
-        time_steps = np.arange(0, stim_time-0.001, 0.001)  # time steps of trajectory
-        # calculate angular size at each time step for this rv ratio
-        angular_size = 2 * np.rad2deg(np.arctan(current_rv_ratio * (1 / (stim_time - time_steps))))
-
-        # shift curve vertically so it starts at start_size
-        min_size = angular_size[0]
-        size_adjust = min_size - start_size
-        angular_size = angular_size - size_adjust
-        # Cap the curve at end_size and have it just hang there
-        max_size_ind = np.where(angular_size > end_size)[0][0]
-        angular_size[max_size_ind:] = end_size
+        time_steps, angular_size = getLoomTrajectory(current_rv_ratio, stim_time, start_size, end_size)
 
         # Get the correct trajectory type
         if current_trajectory_code == 0:
@@ -470,8 +512,8 @@ class LoomingSpot(BaseProtocol):
             current_trajectory_type = 'randomized'
             angular_size = np.random.permutation(angular_size)  # randomize in time
 
-        # time-modulated trajectory. Note div. by 2 to get spot radius
-        r_traj = Trajectory(list(zip(time_steps, angular_size/2)), kind='previous').to_dict()
+        # time-modulated trajectory
+        r_traj = Trajectory(list(zip(time_steps, angular_size)), kind='previous').to_dict()
 
         self.epoch_parameters = {'name': 'MovingSpot',
                                  'radius': r_traj,
@@ -679,7 +721,113 @@ class ForestRandomWalk(BaseProtocol):
                                'stim_time': 6.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+# %%
 
+
+class PanGlomSuite(BaseProtocol):
+    def __init__(self, user_name, rig_config):
+        super().__init__(user_name, rig_config)
+        self.user_name = user_name
+        self.rig_config = rig_config
+        self.stim_list = ['LoomingSpot', 'DriftingSquareGrating', 'ExpandingMovingSpot',
+                          'UniformFlash', 'FlickeringPatch']
+        n = [2, 2, 6, 2, 3]  # weight each stim draw by how many trial types it has
+        self.stim_p = n / np.sum(n)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stim_type = str(np.random.choice(self.stim_list, p=self.stim_p))
+
+        self.convenience_parameters = {'component_stim_type': stim_type}
+        if stim_type == 'LoomingSpot':
+            self.component_class = LoomingSpot(self.user_name, self.rig_config)
+            self.component_class.protocol_parameters = {'intensity': 0.0,
+                                                        'center': [0, 0],
+                                                        'start_size': 2.5,
+                                                        'end_size': 80.0,
+                                                        'rv_ratio': [10.0, 100.0],
+                                                        'randomize_order': True,
+                                                        'include_reversed_loom': False,
+                                                        'include_randomized_loom': False}
+
+        elif stim_type == 'DriftingSquareGrating':
+            self.component_class = DriftingSquareGrating(self.user_name, self.rig_config)
+            self.component_class.protocol_parameters = {'period': 20.0,
+                                                        'rate': 20.0,
+                                                        'contrast': 1.0,
+                                                        'mean': 0.5,
+                                                        'angle': [0.0, 180.0],
+                                                        'center': [0, 0],
+                                                        'center_size': 180.0,
+                                                        'randomize_order': True}
+
+        elif stim_type == 'ExpandingMovingSpot':
+            self.component_class = ExpandingMovingSpot(self.user_name, self.rig_config)
+            self.component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
+                                                        'intensity': [0.0, 1.0],
+                                                        'center': [0, 0],
+                                                        'speed': 80.0,
+                                                        'angle': 0.0,
+                                                        'randomize_order': True}
+
+        elif stim_type == 'UniformFlash':
+            self.component_class = UniformFlash(self.user_name, self.rig_config)
+            self.component_class.protocol_parameters = {'height': 120.0,
+                                                        'width': 120.0,
+                                                        'center': [0, 0],
+                                                        'intensity': [1.0, 0.0],
+                                                        'randomize_order': True}
+
+        elif stim_type == 'FlickeringPatch':
+            self.component_class = FlickeringPatch(self.user_name, self.rig_config)
+            self.component_class.protocol_parameters = {'height': 30.0,
+                                                        'width': 30.0,
+                                                        'center': [0, 0],
+                                                        'contrast': 1.0,
+                                                        'mean': 0.5,
+                                                        'temporal_frequency': [1.0, 4.0, 8.0],
+                                                        'randomize_order': True}
+
+        self.component_class.getEpochParameters()
+        self.convenience_parameters.update(self.component_class.convenience_parameters)
+        self.epoch_parameters = self.component_class.epoch_parameters
+
+    def loadStimuli(self, multicall):
+        self.component_class.loadStimuli(multicall)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'PanGlomSuite',
+                               'num_epochs': 75,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.5,
+                               'idle_color': 0.5}
+
+
+# %% shared fxns
+
+def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
+    # rv_ratio in sec
+    time_steps = np.arange(0, stim_time-0.001, 0.001)  # time steps of trajectory
+    # calculate angular size at each time step for this rv ratio
+    angular_size = 2 * np.rad2deg(np.arctan(rv_ratio * (1 / (stim_time - time_steps))))
+
+    # shift curve vertically so it starts at start_size
+    min_size = angular_size[0]
+    size_adjust = min_size - start_size
+    angular_size = angular_size - size_adjust
+    # Cap the curve at end_size and have it just hang there
+    max_size_ind = np.where(angular_size > end_size)[0][0]
+    angular_size[max_size_ind:] = end_size
+    # divide by  2 to get spot radius
+    angular_size = angular_size / 2
+
+    return time_steps, angular_size
 # %%
 
 # TODO update
