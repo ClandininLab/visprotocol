@@ -10,7 +10,7 @@ from time import sleep
 
 import visprotocol
 from visprotocol.protocol import clandinin_protocol
-from flystim.trajectory import RectangleTrajectory, Trajectory
+from flystim.trajectory import Trajectory
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):

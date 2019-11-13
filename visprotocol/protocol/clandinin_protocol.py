@@ -18,7 +18,6 @@ import yaml
 import inspect
 
 import visprotocol
-from flystim.trajectory import RectangleTrajectory
 
 
 class BaseProtocol():

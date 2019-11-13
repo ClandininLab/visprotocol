@@ -6,7 +6,6 @@ import numpy as np
 
 import visprotocol
 from visprotocol.protocol import clandinin_protocol
-from flystim.trajectory import RectangleTrajectory
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
