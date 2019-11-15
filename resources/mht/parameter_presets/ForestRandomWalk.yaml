@@ -1,7 +1,7 @@
 panglom_forest_prelim:
   run_parameters:
     protocol_ID: ForestRandomWalk
-    num_epochs: 20.0
+    num_epochs: 100.0
     pre_time: 1.0
     stim_time: 3.0
     tail_time: 1.0
@@ -28,3 +28,18 @@ panglom_forest_prelim:
     sky_color: 0.5
     tree_color: 0.0
     rand_seed: 0.0
+panglom_forest_prelim_single:
+  run_parameters:
+    protocol_ID: ForestRandomWalk
+    num_epochs: 30.0
+    pre_time: 1.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    n_trees: 20.0
+    tree_height: 1.0
+    floor_color: 0.25
+    sky_color: 0.5
+    tree_color: 0.0
+    rand_seed: 1.0
