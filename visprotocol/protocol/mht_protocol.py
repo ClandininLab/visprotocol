@@ -6,6 +6,7 @@ Created on Thu Jun 21 10:20:02 2018
 @author: mhturner
 """
 import numpy as np
+import os
 
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import Trajectory
@@ -655,24 +656,23 @@ class ForestRandomWalk(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
+        # set random seed
+        np.random.seed(int(self.protocol_parameters['rand_seed']))
 
         # random walk trajectory
         tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
-        dx = -0.025 + 0.02*np.random.normal(size=len(tt))
-        dy = 0.01*np.random.normal(size=len(tt))
-        dtheta = 0.25*np.random.normal(size=len(tt))
+        dx = -0.001*np.ones(shape=(len(tt),1)) # meters per time step
+        dy = -0.00*np.ones(shape=(len(tt),1))
+        dtheta = 0.0*np.random.normal(size=len(tt))
 
         fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
         fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
         fly_theta_trajectory = Trajectory(list(zip(tt, np.cumsum(dtheta)))).to_dict()
 
-        # set random seed
-        np.random.seed(int(self.protocol_parameters['rand_seed']))
-
-        z_level = -0.2
+        z_level = -0.01
         tree_locations = []
         for tree in range(int(self.protocol_parameters['n_trees'])):
-            tree_locations.append([np.random.uniform(0, 20), np.random.uniform(-3, 3), z_level+self.protocol_parameters['tree_height']/2])
+            tree_locations.append([np.random.uniform(-5, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
 
         self.epoch_parameters = {'name': 'Composite',
                                  'tree_height': self.protocol_parameters['tree_height'],
@@ -696,8 +696,14 @@ class ForestRandomWalk(BaseProtocol):
         multicall.load_stim(name='ConstantBackground',
                             color=[sc, sc, sc, 1.0])
 
+        base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
+        fn = 'imk00125.iml'
+        multicall.load_stim(name='HorizonCylinder',
+                            image_path=os.path.join(base_dir, fn),
+                            fly_pos=(0,0,0))
+
         fc = passedParameters['floor_color']
-        multicall.load_stim(name='Floor',
+        multicall.load_stim(name='TexturedGround',
                             color=[fc, fc, fc, 1.0],
                             z_level=passedParameters['z_level'],
                             hold=True)
