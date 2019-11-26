@@ -24,7 +24,7 @@ def main():
 
     aux_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_side=0)
 
-    screens = [aux_screen]
+    screens = [bruker_left_screen, aux_screen]
     port = 60629
     host = ''
 
