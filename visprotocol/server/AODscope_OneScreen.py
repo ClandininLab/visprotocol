@@ -18,7 +18,7 @@ def main():
         print('No lightcrafters detected! Try sudo')
 
     # Define screen(s) for the rig. Units in meters
-    # Define coordinates s.t. screen is parallel to the XZ plane and fly is at (0,0,0)
+    # Define coordinates s.t. screen is parallel to the YZ plane and fly is at (0,0,0)
 
     pts = [
             ((1.0, 1.0), (20.1e-3, -46.3e-3, 12.0e-3)),
@@ -26,6 +26,8 @@ def main():
             ((-0.70, -1.0), (20.1e-3, +72.4e-3, -82.9e-3)),
             ((1.0, -1.0), (20.1e-3, -46.3e-3, -82.9e-3))
         ]
+
+
 
     tri_list = Screen.quad_to_tri_list(*pts)
 
