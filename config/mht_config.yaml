@@ -11,7 +11,7 @@ rig_config:
 
   Bruker_LeftScreen:
     data_directory: E:/Max/FlystimData
-    screen_center: [0,0]
+    screen_center: [225,-30]
     rig: Bruker
 
   Laptop:

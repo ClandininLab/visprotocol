@@ -644,9 +644,8 @@ class MovingSquareMapping(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+
 # %%
-
-
 # TODO: pass params for tree positioning, fly trajectory, and do random seed control for repeated walks
 class ForestRandomWalk(BaseProtocol):
     def __init__(self, user_name, rig_config):
@@ -699,8 +698,7 @@ class ForestRandomWalk(BaseProtocol):
         base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
         fn = 'imk00125.iml'
         multicall.load_stim(name='HorizonCylinder',
-                            image_path=os.path.join(base_dir, fn),
-                            fly_pos=(0,0,0))
+                            image_path=os.path.join(base_dir, fn))
 
         fc = passedParameters['floor_color']
         multicall.load_stim(name='TexturedGround',
@@ -785,8 +783,8 @@ class PanGlomSuite(BaseProtocol):
 
         elif stim_type == 'UniformFlash':
             self.component_class = UniformFlash(self.user_name, self.rig_config)
-            self.component_class.protocol_parameters = {'height': 120.0,
-                                                        'width': 120.0,
+            self.component_class.protocol_parameters = {'height': 180.0,
+                                                        'width': 180.0,
                                                         'center': [0, 0],
                                                         'intensity': [1.0, 0.0],
                                                         'randomize_order': True}
