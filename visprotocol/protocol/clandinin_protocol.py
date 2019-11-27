@@ -37,7 +37,7 @@ class BaseProtocol():
         with open(path_to_config_file, 'r') as ymlfile:
             cfg = yaml.safe_load(ymlfile)
             # Rig-specific screen center
-            self.screen_center = cfg.get('rig_config').get(rig_config).get('screen_center', [90,90])
+            self.screen_center = cfg.get('rig_config').get(rig_config).get('screen_center', [0,0])
             self.rig = cfg.get('rig_config').get(rig_config).get('rig', '(rig)')
 
     def adjustCenter(self, relative_center):

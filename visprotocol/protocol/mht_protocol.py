@@ -196,7 +196,8 @@ class ContrastReversingGrating(BaseProtocol):
                                  'offset': 0.0,
                                  'cylinder_radius': 1.0,
                                  'cylinder_height': 10.0,
-                                 'profile': 'square'}
+                                 'profile': 'square',
+                                 'theta': self.screen_center[0]}
 
         self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
 
@@ -245,7 +246,8 @@ class DriftingSquareGrating(BaseProtocol):
                                  'offset': 0.0,
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
-                                 'profile': 'square'}
+                                 'profile': 'square',
+                                 'theta': self.screen_center[0]}
 
         self.convenience_parameters = {'current_angle': current_angle}
 
