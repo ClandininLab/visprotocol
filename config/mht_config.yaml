@@ -6,15 +6,15 @@ indicator_choices: [TdTomato, GCaMP7f, GCaMP6f, GCaMP6m,ASAP2f, ASAP4c, ASAP4c_F
 rig_config:
   AODscope_OneScreen:
     data_directory: D:/Max/FlystimData
-    screen_center: [90,90]
+    screen_center: [0, 180]
     rig: AODscope
 
   Bruker_LeftScreen:
     data_directory: E:/Max/FlystimData
-    screen_center: [130,120]
+    screen_center: [225,-30]
     rig: Bruker
 
   Laptop:
     data_directory: C:/Users/mhturner/Dropbox/ClandininLab/CurrentData/FlystimData
-    screen_center: [90,90]
+    screen_center: [0, 0]
     rig: (testing)

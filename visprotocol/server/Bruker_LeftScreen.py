@@ -13,30 +13,30 @@ def main():
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
          dlpc350_object.pattern_mode(fps=120)
-    
+
     if len(dlpc350_objects) == 0:
-        print('No lightcrafters detected! Try sudo')   
-     
+        print('No lightcrafters detected! Try sudo')
+
     # Define screen(s) for the rig
     w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
 
-    bruker_left_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), id=1, fullscreen=True, vsync=True, square_side=5e-2, square_loc='lr')
- 
-    aux_screen = Screen(width=w, height=h, rotation=pi+pi/4, offset=(-3.9e-2, 4.0e-2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_side=0)
+    bruker_left_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=1, fullscreen=True, vsync=True, square_side=5e-2, square_loc='lr')
+
+    aux_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_side=0)
 
     screens = [bruker_left_screen, aux_screen]
     port = 60629
     host = ''
 
-    #draw_screens(bruker_left_screen)
-    #plt.show()
-    
+    draw_screens(bruker_left_screen)
+    plt.show()
+
     manager =  StimServer(screens=screens, host=host, port=port, auto_stop=False)
-    
+
     manager.black_corner_square()
-    manager.set_idle_background(0)    
-    
+    manager.set_idle_background(0)
+
     manager.loop()
-    
+
 if __name__ == '__main__':
     main()

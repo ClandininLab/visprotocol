@@ -18,16 +18,13 @@ def main():
         print('No lightcrafters detected! Try sudo')
 
     # Define screen(s) for the rig. Units in meters
-    # Define coordinates s.t. screen is parallel to the XZ plane and fly is at (0,0,0)
+    # Define coordinates s.t. screen is parallel to the YZ plane and fly is at (0,0,0)
+    pt2 = ((1.0, -1.0), (20.1e-3, 46.3e-3, -82.9e-3))
+    pt1 = ((-0.70, -1.0), (20.1e-3, -72.4e-3, -82.9e-3))
+    pt4 = ((-0.70, 1.0), (20.1e-3, -72.4e-3, 12.0e-3))
+    pt3 = ((1.0, 1.0), (20.1e-3, 46.3e-3, 12.0e-3))
 
-    pts = [
-            ((1.0, 1.0), (46.3e-3, 20.1e-3, 12.0e-3)),
-            ((-0.70, 1.0), (-72.4e-3, 20.1e-3, 12.0e-3)),
-            ((-0.70, -1.0), (-72.4e-3, 20.1e-3, -82.9e-3)),
-            ((1.0, -1.0), (46.3e-3, 20.1e-3, -82.9e-3))
-        ]
-
-    tri_list = Screen.quad_to_tri_list(*pts)
+    tri_list = Screen.quad_to_tri_list(pt1, pt2, pt3, pt4)
 
     AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=True, square_side=3.0e-2, square_loc='ll')
 
