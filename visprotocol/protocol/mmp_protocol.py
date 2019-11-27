@@ -39,7 +39,7 @@ class BinaryFlash(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':180.0,
                        'width':180.0,
-                       'center': [90.0, 120.0],
+                       'center': [0.0, 0.0],
                        'intensity': 1.0}
 
 
@@ -79,7 +79,7 @@ class MultipleContrastFlash(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'height':180.0,
                        'width':180.0,
-                       'center': [90.0, 120.0],
+                       'center': [0.0, 0.0],
                        'intensity': [0, 0.25, 0.375, 0.625, 0.75, 1.0],
                        'randomize_order': True}
 

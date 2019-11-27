@@ -10,5 +10,5 @@ poi_names: [background, cell body, M1, M2, M3, M5, M10]
 rig_config:
   AODscope_OneScreen:
     data_directory: D:/Michelle/FlystimData
-    screen_center: [0, 0]
+    screen_center: [0, 180]
     rig: AODscope
