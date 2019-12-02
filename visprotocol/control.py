@@ -6,7 +6,6 @@ EpochRun object controls presentation of a sequence of epochs ("epoch run")
 
 from PyQt5.QtWidgets import QApplication
 import nidaqmx
-import flyrpc.multicall
 
 
 class EpochRun():
@@ -60,10 +59,9 @@ class EpochRun():
                         task.write([True, False])
 
             # Use the protocol object to send the stimulus to flystim
-            self.multicall = flyrpc.multicall.MyMultiCall(client.manager)
-            protocol_object.loadStimuli(self.multicall)
+            protocol_object.loadStimuli(client)
 
-            protocol_object.startStimuli(self.multicall)
+            protocol_object.startStimuli(client)
 
             protocol_object.advanceEpochCounter()
 

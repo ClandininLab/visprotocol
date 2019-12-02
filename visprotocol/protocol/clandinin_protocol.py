@@ -16,6 +16,7 @@ from time import sleep
 import os.path
 import yaml
 import inspect
+import flyrpc.multicall
 
 import visprotocol
 
@@ -82,15 +83,18 @@ class BaseProtocol():
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
 
-    def loadStimuli(self, multicall):
+    def loadStimuli(self, client):
         bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
 
         passedParameters = self.epoch_parameters.copy()
         multicall.load_stim(**passedParameters, hold=True)
+        multicall()
 
-    def startStimuli(self, multicall):
+    def startStimuli(self, client):
         sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
         #stim time
         multicall.start_stim()
         multicall.start_corner_square()
@@ -98,7 +102,8 @@ class BaseProtocol():
         sleep(self.run_parameters['stim_time'])
 
         #tail time
-        multicall.stop_stim()
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=True)
         multicall.black_corner_square()
         multicall()
         sleep(self.run_parameters['tail_time'])
