@@ -103,7 +103,7 @@ class BaseProtocol():
 
         #tail time
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.stop_stim(print_profile=True)
+        multicall.stop_stim(print_profile=False)
         multicall.black_corner_square()
         multicall()
         sleep(self.run_parameters['tail_time'])
