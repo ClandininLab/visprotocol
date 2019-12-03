@@ -30,7 +30,7 @@ def main():
 
     aux_screen = Screen(tri_list=tri_list, server_number=1, id=0, fullscreen=False, vsync=True, square_side=0, square_loc='ll')
 
-    screens = [AODscope_left_screen]
+    screens = [AODscope_left_screen, aux_screen]
     port = 60629
     host = ''
 
