@@ -14,12 +14,12 @@ from flystim.trajectory import Trajectory
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 # %%
 class BinaryFlash(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -53,8 +53,8 @@ class BinaryFlash(BaseProtocol):
 
 #%%
 class MultipleContrastFlash(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
