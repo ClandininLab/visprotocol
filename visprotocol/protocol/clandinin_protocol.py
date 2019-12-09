@@ -22,7 +22,7 @@ import visprotocol
 
 
 class BaseProtocol():
-    def __init__(self, user_name, rig_config):
+    def __init__(self, cfg):
         self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
         self.send_ttl = False
@@ -30,16 +30,15 @@ class BaseProtocol():
         self.getRunParameterDefaults()
         self.getParameterDefaults()
         self.loadParameterPresets()
+        self.user_name = cfg.get('user_name')
+        self.rig_name = cfg.get('rig_name')
+        self.cfg = cfg
 
-        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', user_name, 'parameter_presets')
+        self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'parameter_presets')
 
-        # Load user config file
-        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', user_name + '_config.yaml')
-        with open(path_to_config_file, 'r') as ymlfile:
-            cfg = yaml.safe_load(ymlfile)
-            # Rig-specific screen center
-            self.screen_center = cfg.get('rig_config').get(rig_config).get('screen_center', [0,0])
-            self.rig = cfg.get('rig_config').get(rig_config).get('rig', '(rig)')
+        # Rig-specific screen center
+        self.screen_center = self.cfg.get('rig_config').get(self.rig_name).get('screen_center', [0,0])
+        self.rig = self.cfg.get('rig_config').get(self.rig_name).get('rig', '(rig)')
 
     def adjustCenter(self, relative_center):
         absolute_center = [sum(x) for x in zip(relative_center, self.screen_center)]

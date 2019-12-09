@@ -29,29 +29,27 @@ import visprotocol
 
 
 class Data():
-    def __init__(self, user_name, rig_config):
+    def __init__(self, cfg):
         self.experiment_file_name = None
         self.series_count = 1
         self.fly_metadata = {}  # populated in GUI or user protocol
         self.current_fly = None
+        self.user_name = cfg.get('user_name')
+        self.rig_name = cfg.get('rig_name')
+        self.cfg = cfg
 
-        # load user config file based on user name
-        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', user_name + '_config.yaml')
-        with open(path_to_config_file, 'r') as ymlfile:
-            cfg = yaml.safe_load(ymlfile)
-
-        # # # Other metadata defaults # # #
-        self.experimenter = cfg.get('experimenter', '')
+        # # # Metadata defaults # # #
+        self.experimenter = self.cfg.get('experimenter', '')
 
         # # #  Lists of fly metadata # # #
-        self.prepChoices = cfg.get('prep_choices', [])
-        self.driverChoices = cfg.get('driver_choices', [])
-        self.indicatorChoices = cfg.get('indicator_choices', [])
+        self.prepChoices = self.cfg.get('prep_choices', [])
+        self.driverChoices = self.cfg.get('driver_choices', [])
+        self.indicatorChoices = self.cfg.get('indicator_choices', [])
 
         # load rig-specific metadata things
-        self.data_directory = cfg.get('rig_config').get(rig_config).get('data_directory', os.getcwd())
-        self.rig = cfg.get('rig_config').get(rig_config).get('rig', '(rig)')
-        self.screen_center = cfg.get('rig_config').get(rig_config).get('screen_center', [0, 0])
+        self.data_directory = self.cfg.get('rig_config').get(self.rig_name).get('data_directory', os.getcwd())
+        self.rig = self.cfg.get('rig_config').get(self.rig_name).get('rig', '(rig)')
+        self.screen_center = self.cfg.get('rig_config').get(self.rig_name).get('screen_center', [0, 0])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # #  Creating experiment file and groups  # # # # # # # # # # # #
@@ -253,8 +251,8 @@ class Data():
 
 
 class AODscopeData(Data):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
         self.poi_scan = True
         self.poi_count = 1
         self.xyt_count = 1

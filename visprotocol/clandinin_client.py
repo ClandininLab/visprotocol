@@ -8,8 +8,11 @@ from math import pi
 
 
 class Client():
-    def __init__(self):
-        # # # load rig-specific server/client options # # #
+    def __init__(self, cfg):
+        self.user_name = cfg.get('user_name')
+        self.rig_name = cfg.get('rig_name')
+        self.cfg = cfg
+        # # # load rig-specific server/client options # #
         if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
             self.server_options = {'host': '171.65.17.126',
                                    'port': 60629,
@@ -28,6 +31,7 @@ class Client():
                                    'use_server': False}
             self.NI_USB_name = ''
             self.send_ttl = False
+
 
         # # # Start the stim manager and set the frame tracker square to black # # #
         if self.server_options['use_server']:

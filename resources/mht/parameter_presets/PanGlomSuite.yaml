@@ -1,7 +1,16 @@
 suite_10x:
   run_parameters:
     protocol_ID: PanGlomSuite
-    num_epochs: 150.0
+    num_epochs: 190.0
+    pre_time: 2.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters: {}
+? ''
+: run_parameters:
+    protocol_ID: PanGlomSuite
+    num_epochs: 190.0
     pre_time: 2.0
     stim_time: 3.0
     tail_time: 1.0
