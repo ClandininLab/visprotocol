@@ -741,6 +741,108 @@ class ForestRandomWalk(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
+# %%
+
+
+# class PylonWalk(BaseProtocol):
+#     def __init__(self, cfg):
+#         super().__init__(cfg)
+#
+#         self.getRunParameterDefaults()
+#         self.getParameterDefaults()
+#
+#     def getEpochParameters(self):
+#         # set random seed
+#         np.random.seed(int(self.protocol_parameters['rand_seed']))
+#
+#         """"
+#         Forward velocity
+#         +/- pylons (1-4)
+#         +/- floor
+#         +/- sky cylinder
+#
+#         Try to do world rotation for fly orientation
+#             global phi offset?
+#         """"
+#
+#
+#         # random walk trajectory
+#         tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
+#         dx = -0.001*np.ones(shape=(len(tt),1)) # meters per time step
+#         dy = -0.00*np.ones(shape=(len(tt),1))
+#         dtheta = 0.0*np.random.normal(size=len(tt))
+#
+#         fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
+#         fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
+#         fly_theta_trajectory = Trajectory(list(zip(tt, np.cumsum(dtheta)))).to_dict()
+#
+#         z_level = -0.01
+#         tree_locations = []
+#         for tree in range(int(self.protocol_parameters['n_trees'])):
+#             tree_locations.append([np.random.uniform(-5, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
+#
+#         self.epoch_parameters = {'name': 'Composite',
+#                                  'tree_height': self.protocol_parameters['tree_height'],
+#                                  'floor_color': self.protocol_parameters['floor_color'],
+#                                  'sky_color': self.protocol_parameters['sky_color'],
+#                                  'tree_color': self.protocol_parameters['tree_color'],
+#                                  'fly_x_trajectory': fly_x_trajectory,
+#                                  'fly_y_trajectory': fly_y_trajectory,
+#                                  'fly_theta_trajectory': fly_theta_trajectory,
+#                                  'tree_locations': tree_locations,
+#                                  'z_level': z_level}
+#
+#     def loadStimuli(self, client):
+#         passedParameters = self.epoch_parameters.copy()
+#
+#         multicall = flyrpc.multicall.MyMultiCall(client.manager)
+#
+#         multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
+#                                      passedParameters['fly_y_trajectory'],
+#                                      passedParameters['fly_theta_trajectory'])
+#
+#         sc = passedParameters['sky_color']
+#         multicall.load_stim(name='ConstantBackground',
+#                             color=[sc, sc, sc, 1.0])
+#
+#         base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
+#         fn = 'imk00125.iml'
+#         multicall.load_stim(name='HorizonCylinder',
+#                             image_path=os.path.join(base_dir, fn))
+#
+#         fc = passedParameters['floor_color']
+#         multicall.load_stim(name='TexturedGround',
+#                             color=[fc, fc, fc, 1.0],
+#                             z_level=passedParameters['z_level'],
+#                             hold=True)
+#
+#         multicall.load_stim(name='Forest',
+#                             color = [0, 0, 0, 1],
+#                             cylinder_height=passedParameters['tree_height'],
+#                             cylinder_radius=0.1,
+#                             cylinder_locations=passedParameters['tree_locations'],
+#                             n_faces=4,
+#                             hold=True)
+#
+#         multicall()
+#
+#
+#     def getParameterDefaults(self):
+#         self.protocol_parameters = {'n_trees': 20,
+#                                     'tree_height': 1.0,
+#                                     'floor_color': 0.25,
+#                                     'sky_color': 0.5,
+#                                     'tree_color': 0.0,
+#                                     'rand_seed': 0}
+#
+#     def getRunParameterDefaults(self):
+#         self.run_parameters = {'protocol_ID': 'PylonWalk',
+#                                'num_epochs': 20,
+#                                'pre_time': 1.0,
+#                                'stim_time': 3.0,
+#                                'tail_time': 1.0,
+#                                'idle_color': 0.5}
 # %%
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -754,8 +856,9 @@ class PanGlomSuite(BaseProtocol):
         super().__init__(cfg)
         self.cfg = cfg
         self.stim_list = ['LoomingSpot', 'DriftingSquareGrating', 'ExpandingMovingSpot',
-                          'UniformFlash', 'FlickeringPatch', 'MovingSpotOnDriftingGrating']
-        n = [2, 2, 6, 2, 3, 4]  # weight each stim draw by how many trial types it has
+                          'UniformFlash', 'FlickeringPatch', 'MovingSpotOnDriftingGrating',
+                          'MovingRectangle']
+        n = [2, 2, 6, 2, 3, 4, 4]  # weight each stim draw by how many trial types it has
         self.stim_p = n / np.sum(n)
 
         self.getRunParameterDefaults()
@@ -825,6 +928,17 @@ class PanGlomSuite(BaseProtocol):
                                                         'angle': 0.0,
                                                         'randomize_order': True}
 
+        elif stim_type == 'MovingRectangle':
+            self.component_class = MovingRectangle(self.cfg)
+            self.component_class.protocol_parameters = {'width': 20.0,
+                                                        'height': 180.0,
+                                                        'intensity': 0.0,
+                                                        'center': [0, 0],
+                                                        'speed': 80.0,
+                                                        'angle': [0.0, 90.0, 180.0, 270.0],
+                                                        'randomize_order': True}
+
+
         # Lock component stim timing run params to suite run params
         self.component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
         self.component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
@@ -843,7 +957,7 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 190, #190 = 19 * 10 averages each
+                               'num_epochs': 230, #230 = 23 * 10 averages each
                                'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
