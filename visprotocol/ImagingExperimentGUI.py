@@ -15,17 +15,11 @@ from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
-import glob
-import inspect
-import yaml
-
 from visanalysis import plugin
 
 from visprotocol.clandinin_client import Client
-from visprotocol import clandinin_data
+from visprotocol import clandinin_data, util, protocol
 from visprotocol.control import EpochRun
-from visprotocol import protocol
-import visprotocol
 
 
 class ImagingExperimentGUI(QWidget):
@@ -37,38 +31,32 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
 
-        # looks for user names based on .yaml config files in visprotocol/config directory
-        # Filenames should be: USER_config.yaml
-        config_dir = os.path.join(os.path.abspath(os.path.join(os.path.split(__file__)[0], os.pardir)), 'config')
-        user_config_files = [os.path.split(f)[1] for f in glob.glob(os.path.join(config_dir,'*.yaml'))]
+        # user input for user name and rig config
+        dialog = QDialog()
+        dialog.ui = InitializeRigGUI(parent=dialog)
+        dialog.ui.setupUI(self, dialog)
+        dialog.setFixedSize(200, 200)
+        dialog.exec_()
 
-        user_names = [f.split('_config')[0] for f in user_config_files]
-        self.user_name, ok = QInputDialog.getItem(self, "select user",
-                                                  "Available users", user_names, 0, False)
-        # open user config file and find available rig configurations
-        path_to_config_file = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'config', self.user_name + '_config.yaml')
-        with open(path_to_config_file, 'r') as ymlfile:
-            cfg = yaml.safe_load(ymlfile)
-        rig_configs = list(cfg.get('rig_config').keys())
-        if len(rig_configs) > 1:
-            self.rig_config, ok = QInputDialog.getItem(self, "select rig config",
-                                                       "Available rig configs", rig_configs, 0, False)
-        else:
-            self.rig_config = rig_configs[0]
+        # load user and rig configurations
+        self.user_configuration = util.getUserConfiguration(self.user_name)
+        self.cfg = self.user_configuration.copy()
+        self.cfg['user_name'] = self.user_name
+        self.cfg['rig_name'] = self.rig_name
 
         # start a client
-        self.client = Client()
+        self.client = Client(self.cfg)
 
         # get a protocol, just start with the base class until user selects one
-        self.protocol_object = getattr(protocol, self.user_name + '_protocol').BaseProtocol(self.user_name, self.rig_config)
+        self.protocol_object = getattr(protocol, self.user_name + '_protocol').BaseProtocol(self.cfg)
         # get available protocol classes
         self.available_protocols = getattr(protocol, self.user_name + '_protocol').BaseProtocol.__subclasses__()
 
         # start a data object
         if self.protocol_object.rig == 'AODscope':
-            self.data = clandinin_data.AODscopeData(self.user_name, self.rig_config)
+            self.data = clandinin_data.AODscopeData(self.cfg)
         else:
-            self.data = clandinin_data.Data(self.user_name, self.rig_config)
+            self.data = clandinin_data.Data(self.cfg)
 
         # get an epoch run control object
         self.epoch_run = EpochRun()
@@ -205,36 +193,36 @@ class ImagingExperimentGUI(QWidget):
         newLabel = QLabel('Prep:')
         self.fly_prep_input = QComboBox()
         self.fly_prep_input.addItem("")
-        for prepID in self.data.prepChoices:
-            self.fly_prep_input.addItem(prepID)
+        for choiceID in self.data.prepChoices:
+            self.fly_prep_input.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_prep_input)
         # Driver1:
         newLabel = QLabel('Driver_1:')
         self.fly_driver_1 = QComboBox()
         self.fly_driver_1.addItem("")
-        for prepID in self.data.driverChoices:
-            self.fly_driver_1.addItem(prepID)
+        for choiceID in self.data.driverChoices:
+            self.fly_driver_1.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_driver_1)
         # Indicator1:
         newLabel = QLabel('Indicator_1:')
         self.fly_indicator_1 = QComboBox()
         self.fly_indicator_1.addItem("")
-        for prepID in self.data.indicatorChoices:
-            self.fly_indicator_1.addItem(prepID)
+        for choiceID in self.data.indicatorChoices:
+            self.fly_indicator_1.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_indicator_1)
         # Driver2:
         newLabel = QLabel('Driver_2:')
         self.fly_driver_2 = QComboBox()
         self.fly_driver_2.addItem("")
-        for prepID in self.data.driverChoices:
-            self.fly_driver_2.addItem(prepID)
+        for choiceID in self.data.driverChoices:
+            self.fly_driver_2.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_driver_2)
         # Indicator2:
         newLabel = QLabel('Indicator_2:')
         self.fly_indicator_2 = QComboBox()
         self.fly_indicator_2.addItem("")
-        for prepID in self.data.indicatorChoices:
-            self.fly_indicator_2.addItem(prepID)
+        for choiceID in self.data.indicatorChoices:
+            self.fly_indicator_2.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_indicator_2)
         # Fly genotype:
         newLabel = QLabel('Genotype:')
@@ -334,7 +322,7 @@ class ImagingExperimentGUI(QWidget):
 
         # initialize the selected protocol object
         prot_names = [x.__name__ for x in self.available_protocols]
-        self.protocol_object = self.available_protocols[prot_names.index(text)](self.user_name, self.rig_config)
+        self.protocol_object = self.available_protocols[prot_names.index(text)](self.cfg)
 
         # update display lists of run & protocol parameters
         self.protocol_object.loadParameterPresets()
@@ -734,6 +722,50 @@ class InitializeExperimentGUI(QWidget):
     def onPressedDirectoryButton(self):
         filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.le_DataDirectory.setText(filePath)
+
+class InitializeRigGUI(QWidget):
+    def setupUI(self, experimentGuiObject, parent=None):
+        super(InitializeRigGUI, self).__init__(parent)
+        self.parent = parent
+        self.experimentGuiObject = experimentGuiObject
+        self.user_name = None
+        self.available_rig_configs = []
+
+        self.layout = QFormLayout()
+
+        label_UserName = QLabel('User Name:')
+        self.UserComboBox = QComboBox()
+        self.UserComboBox.activated[str].connect(self.onSelectedUserName)
+        for choiceID in util.getAvailableUserNames():
+            self.UserComboBox.addItem(choiceID)
+        self.layout.addRow(label_UserName, self.UserComboBox)
+
+        label_RigName = QLabel('Rig Config:')
+        self.RigComboBox = QComboBox()
+        self.RigComboBox.activated[str].connect(self.onSelectedRig)
+        self.layout.addRow(label_RigName, self.RigComboBox)
+        self.updateAvailableRigs()
+
+        self.setLayout(self.layout)
+        self.show()
+
+    def updateAvailableRigs(self):
+        self.RigComboBox.clear()
+        for choiceID in self.available_rig_configs:
+            self.RigComboBox.addItem(choiceID)
+
+    def onSelectedUserName(self, text):
+        self.user_name = text
+        self.available_rig_configs = util.getAvailableRigConfigs(self.user_name)
+        self.updateAvailableRigs()
+        self.show()
+
+    def onSelectedRig(self, text):
+        self.rig_name = text
+        self.experimentGuiObject.user_name = self.user_name
+        self.experimentGuiObject.rig_name = self.rig_name
+        self.close()
+        self.parent.close()
 
 
 class runSeriesThread(QThread):

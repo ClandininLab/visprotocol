@@ -7,14 +7,15 @@ Created on Thu Jun 21 10:20:02 2018
 """
 import numpy as np
 import os
+import flyrpc.multicall
 
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import Trajectory
 
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)  # call the parent class init method
+    def __init__(self, cfg):
+        super().__init__(cfg)  # call the parent class init method
 
     def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
@@ -125,11 +126,15 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         return spot_parameters
 
 # %%
-
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # FLY-CENTERED STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
 # TODO update
 # class CheckerboardWhiteNoise(BaseProtocol):
-#     def __init__(self, user_name, rig_config):
-#         super().__init__(user_name, rig_config)
+#     def __init__(self, cfg):
+#         super().__init__(cfg)
 #
 #         self.getRunParameterDefaults()
 #         self.getParameterDefaults()
@@ -171,8 +176,8 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
 
 class ContrastReversingGrating(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -226,8 +231,8 @@ class ContrastReversingGrating(BaseProtocol):
 
 
 class DriftingSquareGrating(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -271,89 +276,13 @@ class DriftingSquareGrating(BaseProtocol):
                                'stim_time': 4.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-# %%
-
-# TODO update or toss?
-# class DriftingVsStationaryGrating(BaseProtocol):
-#     def __init__(self, user_name, rig_config):
-#         super().__init__(user_name, rig_config)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         stationary_code = [0, 1] #0 = stationary, 1 = drifting
-#
-#         current_temporal_frequency, current_stationary_code = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], stationary_code),
-#                                                                                              all_combinations = True,
-#                                                                                              randomize_order = self.protocol_parameters['randomize_order'])
-#
-#         if current_stationary_code == 0: #stationary, contrast reversing grating
-#             self.epoch_parameters =  {'name':'ContrastReversingGrating',
-#                                       'temporal_waveform':'square',
-#                                       'spatial_period':self.protocol_parameters['spatial_period'],
-#                                       'temporal_frequency':current_temporal_frequency,
-#                                       'contrast_scale':self.protocol_parameters['contrast_scale'],
-#                                       'mean':self.protocol_parameters['mean'],
-#                                       'angle':self.protocol_parameters['angle']}
-#
-#         elif current_stationary_code == 1: #drifting grating
-#             background = self.protocol_parameters['mean'] - self.protocol_parameters['contrast_scale'] * self.protocol_parameters['mean']
-#             color = self.protocol_parameters['mean'] + self.protocol_parameters['contrast_scale'] * self.protocol_parameters['mean']
-#
-#             rate = current_temporal_frequency * self.protocol_parameters['spatial_period']
-#             self.epoch_parameters = {'name':'RotatingBars',
-#                                      'period':self.protocol_parameters['spatial_period'],
-#                                      'duty_cycle':0.5,
-#                                      'rate':rate,
-#                                      'color':color,
-#                                      'background':background,
-#                                      'angle':self.protocol_parameters['angle']}
-#
-#         self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency,
-#                                        'current_stationary_code': current_stationary_code}
-#
-#         self.meta_parameters = {'center_size':self.protocol_parameters['center_size'],
-#                                 'center':self.adjustCenter(self.protocol_parameters['center'])}
-#
-#     def loadStimuli(self, multicall):
-#         passed_parameters = self.epoch_parameters.copy()
-#         box_min_x = self.meta_parameters['center'][0] - self.meta_parameters['center_size']/2
-#         box_max_x = self.meta_parameters['center'][0] + self.meta_parameters['center_size']/2
-#
-#         box_min_y = self.meta_parameters['center'][1] - self.meta_parameters['center_size']/2
-#         box_max_y = self.meta_parameters['center'][1] + self.meta_parameters['center_size']/2
-#
-#         multicall.load_stim(name='MovingPatch', background = self.run_parameters['idle_color'], trajectory=RectangleTrajectory(w = 0, h = 0).to_dict())
-#
-#         multicall.load_stim(**passed_parameters,
-#                             box_min_x=box_min_x, box_max_x=box_max_x, box_min_y=box_min_y, box_max_y=box_max_y,
-#                             hold=True)
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'spatial_period':10.0,
-#                        'contrast_scale':1.0,
-#                        'mean':0.5,
-#                        'temporal_frequency':[0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
-#                        'center':[0, 0],
-#                        'center_size':30.0,
-#                        'angle':0.0,
-#                        'randomize_order':True}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID':'DriftingVsStationaryGrating',
-#               'num_epochs':60,
-#               'pre_time':1.0,
-#               'stim_time':4.0,
-#               'tail_time':1.0,
-#               'idle_color':0.5}
 
 # %%
 
 
 class ExpandingMovingSpot(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -387,8 +316,8 @@ class ExpandingMovingSpot(BaseProtocol):
 
 
 class FlickeringPatch(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -436,48 +365,9 @@ class FlickeringPatch(BaseProtocol):
 # %%
 
 
-class UniformFlash(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        adj_center = self.adjustCenter(self.protocol_parameters['center'])
-
-        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'], randomize_order=self.protocol_parameters['randomize_order'])
-
-        self.epoch_parameters = {'name': 'MovingPatch',
-                                 'width': self.protocol_parameters['width'],
-                                 'height': self.protocol_parameters['height'],
-                                 'sphere_radius': 1,
-                                 'color': current_intensity,
-                                 'theta': adj_center[0],
-                                 'phi': adj_center[1],
-                                 'angle': 0}
-        self.convenience_parameters = {'current_intensity': current_intensity}
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 120.0,
-                                    'width': 120.0,
-                                    'center': [0, 0],
-                                    'intensity': [1.0, 0.0],
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'UniformFlash',
-                               'num_epochs': 10,
-                               'pre_time': 1.0,
-                               'stim_time': 0.5,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-# %%
-
-
 class LoomingSpot(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -541,18 +431,86 @@ class LoomingSpot(BaseProtocol):
                                     'include_randomized_loom': False}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'LoomingPatch',
+        self.run_parameters = {'protocol_ID': 'LoomingSpot',
                                'num_epochs': 75,
                                'pre_time': 0.5,
                                'stim_time': 1.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
+
+# %%
+
+class MovingSpotOnDriftingGrating(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_spot_speed, current_grate_rate = self.selectParametersFromLists((self.protocol_parameters['spot_speed'],self.protocol_parameters['grate_rate']),
+                                                                                 all_combinations = True,
+                                                                                 randomize_order = self.protocol_parameters['randomize_order'])
+
+        patch_parameters = self.getMovingSpotParameters(speed = current_spot_speed,
+                                                        radius = self.protocol_parameters['spot_radius'],
+                                                        color = self.protocol_parameters['spot_color'],
+                                                        distance_to_travel = 180)
+
+        grate_parameters = {'name': 'RotatingGrating',
+                            'period': self.protocol_parameters['grate_period'],
+                            'rate': current_grate_rate,
+                            'color': [1, 1, 1, 1],
+                            'mean': self.run_parameters['idle_color'],
+                            'contrast': self.protocol_parameters['grate_contrast'],
+                            'angle': self.protocol_parameters['angle'],
+                            'offset': 0.0,
+                            'cylinder_radius': 1.1,
+                            'cylinder_height': 20,
+                            'profile': 'square',
+                            'theta': self.screen_center[0]}
+
+        self.epoch_parameters = (grate_parameters, patch_parameters)
+        self.convenience_parameters = {'current_spot_speed': current_spot_speed,
+                                       'current_grate_rate': current_grate_rate}
+
+    def loadStimuli(self, client):
+        grate_parameters = self.epoch_parameters[0].copy()
+        patch_parameters = self.epoch_parameters[1].copy()
+
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim(**grate_parameters, hold=True)
+        multicall.load_stim(**patch_parameters, hold=True)
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'spot_radius': 10.0,
+                                    'spot_color': 0.0,
+                                    'spot_speed': [30.0, 60.0, 90.0],
+                                    'grate_period': 10.0,
+                                    'grate_rate': [-120.0, -90.0, -60.0, -30.0, -15.0, 0.0,
+                                                  15.0, 30.0, 60.0, 90.0, 120.0],
+                                    'grate_contrast': 0.5,
+                                    'angle': 0.0,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'MovingSpotOnDriftingGrating',
+                               'num_epochs':165,
+                               'pre_time':1.0,
+                               'stim_time':6.0,
+                               'tail_time':1.0,
+                               'idle_color':0.5}
+
 # %%
 
 
 class MovingRectangle(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -584,8 +542,8 @@ class MovingRectangle(BaseProtocol):
 
 
 class MovingSquareMapping(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -648,10 +606,57 @@ class MovingSquareMapping(BaseProtocol):
 
 
 # %%
+
+
+class UniformFlash(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'], randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.epoch_parameters = {'name': 'MovingPatch',
+                                 'width': self.protocol_parameters['width'],
+                                 'height': self.protocol_parameters['height'],
+                                 'sphere_radius': 1,
+                                 'color': current_intensity,
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1],
+                                 'angle': 0}
+        self.convenience_parameters = {'current_intensity': current_intensity}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 120.0,
+                                    'width': 120.0,
+                                    'center': [0, 0],
+                                    'intensity': [1.0, 0.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'UniformFlash',
+                               'num_epochs': 10,
+                               'pre_time': 1.0,
+                               'stim_time': 0.5,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
+
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # VR WORLD STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
+
 # TODO: pass params for tree positioning, fly trajectory, and do random seed control for repeated walks
 class ForestRandomWalk(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
@@ -686,8 +691,10 @@ class ForestRandomWalk(BaseProtocol):
                                  'tree_locations': tree_locations,
                                  'z_level': z_level}
 
-    def loadStimuli(self, multicall):
+    def loadStimuli(self, client):
         passedParameters = self.epoch_parameters.copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
 
         multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
                                      passedParameters['fly_y_trajectory'],
@@ -713,8 +720,10 @@ class ForestRandomWalk(BaseProtocol):
                             cylinder_height=passedParameters['tree_height'],
                             cylinder_radius=0.1,
                             cylinder_locations=passedParameters['tree_locations'],
-                            hold=True,
-                            n_faces=4)
+                            n_faces=4,
+                            hold=True)
+
+        multicall()
 
 
     def getParameterDefaults(self):
@@ -732,17 +741,124 @@ class ForestRandomWalk(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
 # %%
 
 
+# class PylonWalk(BaseProtocol):
+#     def __init__(self, cfg):
+#         super().__init__(cfg)
+#
+#         self.getRunParameterDefaults()
+#         self.getParameterDefaults()
+#
+#     def getEpochParameters(self):
+#         # set random seed
+#         np.random.seed(int(self.protocol_parameters['rand_seed']))
+#
+#         """"
+#         Forward velocity
+#         +/- pylons (1-4)
+#         +/- floor
+#         +/- sky cylinder
+#
+#         Try to do world rotation for fly orientation
+#             global phi offset?
+#         """"
+#
+#
+#         # random walk trajectory
+#         tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
+#         dx = -0.001*np.ones(shape=(len(tt),1)) # meters per time step
+#         dy = -0.00*np.ones(shape=(len(tt),1))
+#         dtheta = 0.0*np.random.normal(size=len(tt))
+#
+#         fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
+#         fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
+#         fly_theta_trajectory = Trajectory(list(zip(tt, np.cumsum(dtheta)))).to_dict()
+#
+#         z_level = -0.01
+#         tree_locations = []
+#         for tree in range(int(self.protocol_parameters['n_trees'])):
+#             tree_locations.append([np.random.uniform(-5, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
+#
+#         self.epoch_parameters = {'name': 'Composite',
+#                                  'tree_height': self.protocol_parameters['tree_height'],
+#                                  'floor_color': self.protocol_parameters['floor_color'],
+#                                  'sky_color': self.protocol_parameters['sky_color'],
+#                                  'tree_color': self.protocol_parameters['tree_color'],
+#                                  'fly_x_trajectory': fly_x_trajectory,
+#                                  'fly_y_trajectory': fly_y_trajectory,
+#                                  'fly_theta_trajectory': fly_theta_trajectory,
+#                                  'tree_locations': tree_locations,
+#                                  'z_level': z_level}
+#
+#     def loadStimuli(self, client):
+#         passedParameters = self.epoch_parameters.copy()
+#
+#         multicall = flyrpc.multicall.MyMultiCall(client.manager)
+#
+#         multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
+#                                      passedParameters['fly_y_trajectory'],
+#                                      passedParameters['fly_theta_trajectory'])
+#
+#         sc = passedParameters['sky_color']
+#         multicall.load_stim(name='ConstantBackground',
+#                             color=[sc, sc, sc, 1.0])
+#
+#         base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
+#         fn = 'imk00125.iml'
+#         multicall.load_stim(name='HorizonCylinder',
+#                             image_path=os.path.join(base_dir, fn))
+#
+#         fc = passedParameters['floor_color']
+#         multicall.load_stim(name='TexturedGround',
+#                             color=[fc, fc, fc, 1.0],
+#                             z_level=passedParameters['z_level'],
+#                             hold=True)
+#
+#         multicall.load_stim(name='Forest',
+#                             color = [0, 0, 0, 1],
+#                             cylinder_height=passedParameters['tree_height'],
+#                             cylinder_radius=0.1,
+#                             cylinder_locations=passedParameters['tree_locations'],
+#                             n_faces=4,
+#                             hold=True)
+#
+#         multicall()
+#
+#
+#     def getParameterDefaults(self):
+#         self.protocol_parameters = {'n_trees': 20,
+#                                     'tree_height': 1.0,
+#                                     'floor_color': 0.25,
+#                                     'sky_color': 0.5,
+#                                     'tree_color': 0.0,
+#                                     'rand_seed': 0}
+#
+#     def getRunParameterDefaults(self):
+#         self.run_parameters = {'protocol_ID': 'PylonWalk',
+#                                'num_epochs': 20,
+#                                'pre_time': 1.0,
+#                                'stim_time': 3.0,
+#                                'tail_time': 1.0,
+#                                'idle_color': 0.5}
+# %%
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # MULTI-COMPONENT STIMS # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
+
+# TODO: add moving bars, starfield
 class PanGlomSuite(BaseProtocol):
-    def __init__(self, user_name, rig_config):
-        super().__init__(user_name, rig_config)
-        self.user_name = user_name
-        self.rig_config = rig_config
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.cfg = cfg
         self.stim_list = ['LoomingSpot', 'DriftingSquareGrating', 'ExpandingMovingSpot',
-                          'UniformFlash', 'FlickeringPatch']
-        n = [2, 2, 6, 2, 3]  # weight each stim draw by how many trial types it has
+                          'UniformFlash', 'FlickeringPatch', 'MovingSpotOnDriftingGrating',
+                          'MovingRectangle']
+        n = [2, 2, 6, 2, 3, 4, 4]  # weight each stim draw by how many trial types it has
         self.stim_p = n / np.sum(n)
 
         self.getRunParameterDefaults()
@@ -753,18 +869,18 @@ class PanGlomSuite(BaseProtocol):
 
         self.convenience_parameters = {'component_stim_type': stim_type}
         if stim_type == 'LoomingSpot':
-            self.component_class = LoomingSpot(self.user_name, self.rig_config)
+            self.component_class = LoomingSpot(self.cfg)
             self.component_class.protocol_parameters = {'intensity': 0.0,
                                                         'center': [0, 0],
                                                         'start_size': 2.5,
                                                         'end_size': 80.0,
-                                                        'rv_ratio': [10.0, 100.0],
+                                                        'rv_ratio': [20.0, 100.0],
                                                         'randomize_order': True,
                                                         'include_reversed_loom': False,
                                                         'include_randomized_loom': False}
 
         elif stim_type == 'DriftingSquareGrating':
-            self.component_class = DriftingSquareGrating(self.user_name, self.rig_config)
+            self.component_class = DriftingSquareGrating(self.cfg)
             self.component_class.protocol_parameters = {'period': 20.0,
                                                         'rate': 20.0,
                                                         'contrast': 1.0,
@@ -775,7 +891,7 @@ class PanGlomSuite(BaseProtocol):
                                                         'randomize_order': True}
 
         elif stim_type == 'ExpandingMovingSpot':
-            self.component_class = ExpandingMovingSpot(self.user_name, self.rig_config)
+            self.component_class = ExpandingMovingSpot(self.cfg)
             self.component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
                                                         'intensity': [0.0, 1.0],
                                                         'center': [0, 0],
@@ -784,7 +900,7 @@ class PanGlomSuite(BaseProtocol):
                                                         'randomize_order': True}
 
         elif stim_type == 'UniformFlash':
-            self.component_class = UniformFlash(self.user_name, self.rig_config)
+            self.component_class = UniformFlash(self.cfg)
             self.component_class.protocol_parameters = {'height': 180.0,
                                                         'width': 180.0,
                                                         'center': [0, 0],
@@ -792,7 +908,7 @@ class PanGlomSuite(BaseProtocol):
                                                         'randomize_order': True}
 
         elif stim_type == 'FlickeringPatch':
-            self.component_class = FlickeringPatch(self.user_name, self.rig_config)
+            self.component_class = FlickeringPatch(self.cfg)
             self.component_class.protocol_parameters = {'height': 30.0,
                                                         'width': 30.0,
                                                         'center': [0, 0],
@@ -800,27 +916,60 @@ class PanGlomSuite(BaseProtocol):
                                                         'mean': 0.5,
                                                         'temporal_frequency': [1.0, 4.0, 8.0],
                                                         'randomize_order': True}
+        elif stim_type == 'MovingSpotOnDriftingGrating':
+            self.component_class = MovingSpotOnDriftingGrating(self.cfg)
+            self.component_class.protocol_parameters = {'center': [0, 0],
+                                                        'spot_radius': 7.5,
+                                                        'spot_color': 0.0,
+                                                        'spot_speed': 60.0,
+                                                        'grate_period': 20.0,
+                                                        'grate_rate': [-120.0, -30.0, 30.0, 120.0],
+                                                        'grate_contrast': 0.5,
+                                                        'angle': 0.0,
+                                                        'randomize_order': True}
+
+        elif stim_type == 'MovingRectangle':
+            self.component_class = MovingRectangle(self.cfg)
+            self.component_class.protocol_parameters = {'width': 20.0,
+                                                        'height': 180.0,
+                                                        'intensity': 0.0,
+                                                        'center': [0, 0],
+                                                        'speed': 80.0,
+                                                        'angle': [0.0, 90.0, 180.0, 270.0],
+                                                        'randomize_order': True}
+
+
+        # Lock component stim timing run params to suite run params
+        self.component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
+        self.component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
+        self.component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
+        self.component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
         self.epoch_parameters = self.component_class.epoch_parameters
 
-    def loadStimuli(self, multicall):
-        self.component_class.loadStimuli(multicall)
+    def loadStimuli(self, client):
+        self.component_class.loadStimuli(client)
 
     def getParameterDefaults(self):
         self.protocol_parameters = {}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 75,
-                               'pre_time': 0.5,
+                               'num_epochs': 230, #230 = 23 * 10 averages each
+                               'pre_time': 2.0,
                                'stim_time': 3.0,
-                               'tail_time': 1.5,
+                               'tail_time': 1.0,
                                'idle_color': 0.5}
 
 
-# %% shared fxns
+# %%
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # SHARED FUNCTIONS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
 
 def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
     # rv_ratio in sec
@@ -843,8 +992,8 @@ def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
 
 # TODO update
 # class SequentialOrRandomMotion(BaseProtocol):
-#     def __init__(self, user_name, rig_config):
-#         super().__init__(user_name, rig_config)
+#     def __init__(self, cfg):
+#         super().__init__(cfg)
 #
 #         self.getRunParameterDefaults()
 #         self.getParameterDefaults()
@@ -902,72 +1051,14 @@ def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
 
 # %%
 
-# TODO update
-# class MovingPatchOnDriftingGrating(BaseProtocol):
-#     def __init__(self, user_name, rig_config):
-#         super().__init__(user_name, rig_config)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         current_patch_speed, current_grate_rate = self.selectParametersFromLists((self.protocol_parameters['patch_speed'], self.protocol_parameters['grate_rate']),
-#                                                                                              all_combinations = True,
-#                                                                                              randomize_order = self.protocol_parameters['randomize_order'])
-#
-#         patch_parameters = self.getMovingPatchParameters(center = self.adjustCenter(self.protocol_parameters['center']),
-#                                                          angle = self.protocol_parameters['angle'],
-#                                                          speed = current_patch_speed,
-#                                                          width = self.protocol_parameters['patch_size'],
-#                                                          height = self.protocol_parameters['patch_size'],
-#                                                          color = self.protocol_parameters['patch_color'],
-#                                                          distance_to_travel = 140)
-#         patch_parameters['background'] = None #transparent background
-#
-#         grate_color, grate_background = self.getColorAndBackgroundFromContrast(self.protocol_parameters['grate_contrast'])
-#         grate_parameters = self.getRotatingGratingParameters(angle = self.protocol_parameters['angle'],
-#                                                     rate = current_grate_rate,
-#                                                     period = self.protocol_parameters['grate_period'],
-#                                                     color = grate_color,
-#                                                     background = grate_background)
-#
-#         self.epoch_parameters = (grate_parameters, patch_parameters)
-#         self.convenience_parameters = {'current_patch_speed': current_patch_speed,
-#                                        'current_grate_rate': current_grate_rate}
-#
-#     def loadStimuli(self, multicall):
-#         grate_parameters = self.epoch_parameters[0].copy()
-#         patch_parameters = self.epoch_parameters[1].copy()
-#
-#         multicall.load_stim(**grate_parameters)
-#         multicall.load_stim(**patch_parameters, vary='intensity', hold=True)
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'center': [0, 0],
-#                                     'patch_size':10.0,
-#                                     'patch_color':0.0,
-#                        'patch_speed':[20.0, 40.0, 80.0],
-#                        'grate_period':10.0,
-#                        'grate_rate':[-100.0, -80.0, -40.0, -20.0, -10.0, 0.0,
-#                                      10.0, 20.0, 40.0, 80.0, 100.0],
-#                        'grate_contrast':0.5,
-#                        'angle':0.0,
-#                        'randomize_order':True}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID':'MovingPatchOnDriftingGrating',
-#               'num_epochs':165,
-#               'pre_time':1.0,
-#               'stim_time':7.0,
-#               'tail_time':1.0,
-#               'idle_color':0.5}
+
 
 # %%
 
 # TODO update
 # class SparseNoise(BaseProtocol):
-#     def __init__(self, user_name, rig_config):
-#         super().__init__(user_name, rig_config)
+#     def __init__(self, cfg):
+#         super().__init__(cfg)
 #
 #         self.getRunParameterDefaults()
 #         self.getParameterDefaults()

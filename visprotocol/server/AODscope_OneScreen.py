@@ -12,7 +12,7 @@ def main():
     # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
-         dlpc350_object.set_current(red=0.2, green = 0, blue = 0.1)
+         dlpc350_object.set_current(red=0, green = 0, blue = 0.1)
          dlpc350_object.pattern_mode(fps=120, red=True, blue=True, green=False)
     if len(dlpc350_objects) == 0:
         print('No lightcrafters detected! Try sudo')
