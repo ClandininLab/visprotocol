@@ -45,9 +45,9 @@ class BinaryFlash(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'BinaryFlash',
-              'num_epochs':30,
-              'pre_time':0.25,
-              'stim_time':0.5,
+              'num_epochs':100,
+              'pre_time':0.05,
+              'stim_time':0.3,
               'tail_time':0.25,
               'idle_color':0.5}
 
@@ -86,8 +86,8 @@ class MultipleContrastFlash(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'MultipleContrastFlash',
-              'num_epochs':100,
-              'pre_time':0.08,
+              'num_epochs':600,
+              'pre_time':0.05,
               'stim_time':0.02,
-              'tail_time':0.5,
+              'tail_time':0.45,
               'idle_color':0.5}
