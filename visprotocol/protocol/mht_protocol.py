@@ -645,6 +645,118 @@ class UniformFlash(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+
+# %%
+class BallisticDotFieldWithMotionPopout(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stim_codes = [0, 1]
+        current_global_motion_speed, current_popout_motion_speed, current_stim_code = self.selectParametersFromLists((self.protocol_parameters['global_motion_speed'], self.protocol_parameters['popout_motion_speed'], stim_codes), randomize_order=self.protocol_parameters['randomize_order'])
+        if current_stim_code == 0:
+            current_stim_type = 'popout_only'
+        elif current_stim_code == 1:
+            current_stim_type = 'popout_plus_global'
+
+        # dot field grid: random dot placement
+        np.random.seed(int(self.protocol_parameters['dot_location_seed']))
+        theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots']))
+        phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots']))
+        global_theta = [x + self.screen_center[0] for x in theta_ctr]
+        global_phi = [y + self.screen_center[1] for y in phi_ctr]
+
+        # put the pop out at screen center
+        popout_theta = [self.screen_center[0]]
+        popout_phi = [self.screen_center[1]]
+
+        # global motion trajectory
+        distance_to_travel = current_global_motion_speed * self.run_parameters['stim_time']
+        startX = (0, -distance_to_travel/2)
+        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
+        startY = (0, 0)
+        endY = (self.run_parameters['stim_time'], 0)
+
+        global_theta_traj = Trajectory([startX, endX], kind='linear').to_dict()
+        global_phi_traj = Trajectory([startY, endY], kind='linear').to_dict()
+
+        # Pop out motion trajectory
+        distance_to_travel = 140
+        travel_time = distance_to_travel / np.abs(current_popout_motion_speed)
+        if travel_time > self.run_parameters['stim_time']:
+            print('Warning: stim_time is too short to show whole trajectory at this speed!')
+            hang_time = 0
+        else:
+            hang_time = (self.run_parameters['stim_time'] - travel_time)/2
+
+        # split up hang time in pre and post such that trajectory always hits (0, 0) at stim_time/2
+        x_1 = (0, -(current_popout_motion_speed * travel_time)/2)
+        x_2 = (hang_time, -(current_popout_motion_speed * travel_time)/2)
+        x_3 = (hang_time+travel_time, (current_popout_motion_speed * travel_time)/2)
+        x_4 = (hang_time+travel_time+hang_time, (current_popout_motion_speed * travel_time)/2)
+
+        popout_theta_traj = Trajectory([x_1, x_2, x_3, x_4], kind='linear').to_dict()
+        popout_phi_traj = Trajectory([(0, 0), (self.run_parameters['stim_time'], 0)], kind='linear').to_dict()
+
+
+        global_parameters = {'name': 'CoherentMotionDotField',
+                            'point_size': self.protocol_parameters['point_size'],
+                            'sphere_radius': 1.0,
+                            'color': self.protocol_parameters['dot_color'],
+                            'theta_locations': global_theta,
+                            'phi_locations': global_phi,
+                            'theta_trajectory': global_theta_traj,
+                            'phi_trajectory': global_phi_traj}
+
+        popout_parameters = {'name': 'CoherentMotionDotField',
+                            'point_size': self.protocol_parameters['point_size'],
+                            'sphere_radius': 1.0,
+                            'color': self.protocol_parameters['dot_color'],
+                            'theta_locations': popout_theta,
+                            'phi_locations': popout_phi,
+                            'theta_trajectory': popout_theta_traj,
+                            'phi_trajectory': popout_phi_traj}
+
+        self.meta_parameters = {'current_stim_type': current_stim_type}
+
+        self.epoch_parameters = (global_parameters, popout_parameters)
+        self.convenience_parameters = {'current_popout_motion_speed': current_popout_motion_speed,
+                                       'current_global_motion_speed': current_global_motion_speed,
+                                       'current_stim_type': current_stim_type}
+
+    def loadStimuli(self, client):
+        global_parameters = self.epoch_parameters[0].copy()
+        popout_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+        if self.meta_parameters.get('current_stim_type') == 'popout_plus_global':
+            multicall.load_stim(**global_parameters, hold=True)
+
+        multicall.load_stim(**popout_parameters, hold=True)
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'point_size': 10.0,
+                                    'n_global_dots': 200,
+                                    'dot_location_seed': 1,
+                                    'global_motion_speed': 40.0,
+                                    'popout_motion_speed': [20.0, 30.0, 40.0, 50.0, 80.0],
+                                    'dot_color': 0.25,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'BallisticDotFieldWithMotionPopout',
+                               'num_epochs':100,
+                               'pre_time':1.0,
+                               'stim_time':7.0,
+                               'tail_time':1.0,
+                               'idle_color':0.5}
+
 # %%
 
 """
@@ -743,114 +855,12 @@ class ForestRandomWalk(BaseProtocol):
                                'idle_color': 0.5}
 
 # %%
-
-
-# class PylonWalk(BaseProtocol):
-#     def __init__(self, cfg):
-#         super().__init__(cfg)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         # set random seed
-#         np.random.seed(int(self.protocol_parameters['rand_seed']))
-#
-#         """"
-#         Forward velocity
-#         +/- pylons (1-4)
-#         +/- floor
-#         +/- sky cylinder
-#
-#         Try to do world rotation for fly orientation
-#             global phi offset?
-#         """"
-#
-#
-#         # random walk trajectory
-#         tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
-#         dx = -0.001*np.ones(shape=(len(tt),1)) # meters per time step
-#         dy = -0.00*np.ones(shape=(len(tt),1))
-#         dtheta = 0.0*np.random.normal(size=len(tt))
-#
-#         fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
-#         fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
-#         fly_theta_trajectory = Trajectory(list(zip(tt, np.cumsum(dtheta)))).to_dict()
-#
-#         z_level = -0.01
-#         tree_locations = []
-#         for tree in range(int(self.protocol_parameters['n_trees'])):
-#             tree_locations.append([np.random.uniform(-5, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
-#
-#         self.epoch_parameters = {'name': 'Composite',
-#                                  'tree_height': self.protocol_parameters['tree_height'],
-#                                  'floor_color': self.protocol_parameters['floor_color'],
-#                                  'sky_color': self.protocol_parameters['sky_color'],
-#                                  'tree_color': self.protocol_parameters['tree_color'],
-#                                  'fly_x_trajectory': fly_x_trajectory,
-#                                  'fly_y_trajectory': fly_y_trajectory,
-#                                  'fly_theta_trajectory': fly_theta_trajectory,
-#                                  'tree_locations': tree_locations,
-#                                  'z_level': z_level}
-#
-#     def loadStimuli(self, client):
-#         passedParameters = self.epoch_parameters.copy()
-#
-#         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-#
-#         multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
-#                                      passedParameters['fly_y_trajectory'],
-#                                      passedParameters['fly_theta_trajectory'])
-#
-#         sc = passedParameters['sky_color']
-#         multicall.load_stim(name='ConstantBackground',
-#                             color=[sc, sc, sc, 1.0])
-#
-#         base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
-#         fn = 'imk00125.iml'
-#         multicall.load_stim(name='HorizonCylinder',
-#                             image_path=os.path.join(base_dir, fn))
-#
-#         fc = passedParameters['floor_color']
-#         multicall.load_stim(name='TexturedGround',
-#                             color=[fc, fc, fc, 1.0],
-#                             z_level=passedParameters['z_level'],
-#                             hold=True)
-#
-#         multicall.load_stim(name='Forest',
-#                             color = [0, 0, 0, 1],
-#                             cylinder_height=passedParameters['tree_height'],
-#                             cylinder_radius=0.1,
-#                             cylinder_locations=passedParameters['tree_locations'],
-#                             n_faces=4,
-#                             hold=True)
-#
-#         multicall()
-#
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'n_trees': 20,
-#                                     'tree_height': 1.0,
-#                                     'floor_color': 0.25,
-#                                     'sky_color': 0.5,
-#                                     'tree_color': 0.0,
-#                                     'rand_seed': 0}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID': 'PylonWalk',
-#                                'num_epochs': 20,
-#                                'pre_time': 1.0,
-#                                'stim_time': 3.0,
-#                                'tail_time': 1.0,
-#                                'idle_color': 0.5}
-# %%
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # MULTI-COMPONENT STIMS # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
-# TODO: add moving bars, starfield
 class PanGlomSuite(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -962,7 +972,6 @@ class PanGlomSuite(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-
 
 # %%
 """
