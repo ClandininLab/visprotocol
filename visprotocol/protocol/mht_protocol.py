@@ -667,7 +667,7 @@ class BallisticDotFieldWithMotionPopout(BaseProtocol):
         current_location_seed = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
         np.random.seed(int(current_location_seed))
         theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots']))
-        phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots']))
+        phi_ctr = np.random.uniform(low=-50, high=20, size=int(self.protocol_parameters['n_global_dots']))
         global_theta = [x + self.screen_center[0] for x in theta_ctr]
         global_phi = [y + self.screen_center[1] for y in phi_ctr]
 
@@ -745,16 +745,16 @@ class BallisticDotFieldWithMotionPopout(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'point_size': 30.0,
-                                    'n_global_dots': 60,
+                                    'n_global_dots': 100,
                                     'dot_location_start_seed': 1,
                                     'global_motion_speed': 60.0,
-                                    'popout_motion_speed': [30.0, 60.0, 90.0, 120.0],
+                                    'popout_motion_speed': [-90.0, -60.0, -30.0, 30.0, 60.0, 90.0],
                                     'dot_color': 0.25,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'BallisticDotFieldWithMotionPopout',
-                               'num_epochs': 80, # n popout speeds x 2 x n_averages
+                               'num_epochs': 120, # n popout speeds x 2 x n_averages
                                'pre_time': 1.0,
                                'stim_time': 5.0,
                                'tail_time': 1.0,
