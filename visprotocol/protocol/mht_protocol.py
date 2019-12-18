@@ -662,8 +662,10 @@ class BallisticDotFieldWithMotionPopout(BaseProtocol):
         elif current_stim_code == 1:
             current_stim_type = 'popout_plus_global'
 
-        # dot field grid: random dot placement
-        np.random.seed(int(self.protocol_parameters['dot_location_seed']))
+
+        # dot field grid: random dot placement. Advance random seed each trial
+        current_location_seed = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
+        np.random.seed(int(current_location_seed))
         theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots']))
         phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots']))
         global_theta = [x + self.screen_center[0] for x in theta_ctr]
@@ -725,7 +727,8 @@ class BallisticDotFieldWithMotionPopout(BaseProtocol):
         self.epoch_parameters = (global_parameters, popout_parameters)
         self.convenience_parameters = {'current_popout_motion_speed': current_popout_motion_speed,
                                        'current_global_motion_speed': current_global_motion_speed,
-                                       'current_stim_type': current_stim_type}
+                                       'current_stim_type': current_stim_type,
+                                       'current_lotation_seed': current_location_seed}
 
     def loadStimuli(self, client):
         global_parameters = self.epoch_parameters[0].copy()
@@ -741,21 +744,21 @@ class BallisticDotFieldWithMotionPopout(BaseProtocol):
         multicall()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'point_size': 10.0,
-                                    'n_global_dots': 200,
-                                    'dot_location_seed': 1,
-                                    'global_motion_speed': 40.0,
-                                    'popout_motion_speed': [20.0, 30.0, 40.0, 50.0, 80.0],
+        self.protocol_parameters = {'point_size': 30.0,
+                                    'n_global_dots': 60,
+                                    'dot_location_start_seed': 1,
+                                    'global_motion_speed': 60.0,
+                                    'popout_motion_speed': [30.0, 60.0, 90.0, 120.0],
                                     'dot_color': 0.25,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID':'BallisticDotFieldWithMotionPopout',
-                               'num_epochs':100,
-                               'pre_time':1.0,
-                               'stim_time':7.0,
-                               'tail_time':1.0,
-                               'idle_color':0.5}
+                               'num_epochs': 80, # n popout speeds x 2 x n_averages
+                               'pre_time': 1.0,
+                               'stim_time': 5.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
 
 # %%
 
@@ -865,10 +868,9 @@ class PanGlomSuite(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         self.cfg = cfg
-        self.stim_list = ['LoomingSpot', 'DriftingSquareGrating', 'ExpandingMovingSpot',
-                          'UniformFlash', 'FlickeringPatch', 'MovingSpotOnDriftingGrating',
+        self.stim_list = ['LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
                           'MovingRectangle']
-        n = [2, 2, 6, 2, 3, 4, 4]  # weight each stim draw by how many trial types it has
+        n = [2, 6, 4, 4]  # weight each stim draw by how many trial types it has
         self.stim_p = n / np.sum(n)
 
         self.getRunParameterDefaults()
@@ -967,7 +969,7 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 230, #230 = 23 * 10 averages each
+                               'num_epochs': 160, #160 = 16 * 10 averages each
                                'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
