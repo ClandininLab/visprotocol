@@ -1,0 +1,22 @@
+global200_30size:
+  run_parameters:
+    protocol_ID: BallisticDotFieldWithMotionPopout
+    num_epochs: 120.0
+    pre_time: 1.0
+    stim_time: 5.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    point_size: 30.0
+    n_global_dots: 200.0
+    dot_location_start_seed: 1.0
+    global_motion_speed: 60.0
+    popout_motion_speed:
+    - -90.0
+    - -60.0
+    - -30.0
+    - 30.0
+    - 60.0
+    - 90.0
+    dot_color: 0.25
+    randomize_order: true
