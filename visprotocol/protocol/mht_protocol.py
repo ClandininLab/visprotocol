@@ -762,6 +762,114 @@ class BallisticDotFieldWithMotionPopout(BaseProtocol):
 
 # %%
 
+class SeparableMovingDotFields(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stim_codes = [0, 1]
+        current_global_motion_speed_1, current_global_motion_speed_2, current_stim_code = self.selectParametersFromLists((self.protocol_parameters['global_motion_speed_1'], self.protocol_parameters['global_motion_speed_2'], stim_codes), randomize_order=self.protocol_parameters['randomize_order'])
+        if current_stim_code == 0:
+            current_stim_type = 'global_2'
+        elif current_stim_code == 1:
+            current_stim_type = 'global_1_2'
+
+        # dot field grid: random dot placement. Advance random seed each trial
+        current_location_seed_1 = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
+        np.random.seed(int(current_location_seed_1))
+        theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots_each']))
+        phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots_each']))
+        global_theta_1 = [x + self.screen_center[0] for x in theta_ctr]
+        global_phi_1 = [y + self.screen_center[1] for y in phi_ctr]
+
+        current_location_seed_2 = self.protocol_parameters['dot_location_start_seed'] + 10*self.num_epochs_completed
+        np.random.seed(int(current_location_seed_2))
+        theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots_each']))
+        phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots_each']))
+        global_theta_2 = [x + self.screen_center[0] for x in theta_ctr]
+        global_phi_2 = [y + self.screen_center[1] for y in phi_ctr]
+
+        # motion trajectory
+        distance_to_travel = current_global_motion_speed_1 * self.run_parameters['stim_time']
+        startX = (0, -distance_to_travel/2)
+        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
+        startY = (0, 0)
+        endY = (self.run_parameters['stim_time'], 0)
+        global_theta_traj_1 = Trajectory([startX, endX], kind='linear').to_dict()
+        global_phi_traj_1 = Trajectory([startY, endY], kind='linear').to_dict()
+
+        distance_to_travel = current_global_motion_speed_2 * self.run_parameters['stim_time']
+        startX = (0, -distance_to_travel/2)
+        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
+        startY = (0, 0)
+        endY = (self.run_parameters['stim_time'], 0)
+        global_theta_traj_2 = Trajectory([startX, endX], kind='linear').to_dict()
+        global_phi_traj_2 = Trajectory([startY, endY], kind='linear').to_dict()
+
+        global_parameters_1 = {'name': 'CoherentMotionDotField',
+                               'point_size': self.protocol_parameters['point_size'],
+                               'sphere_radius': 1.0,
+                               'color': self.protocol_parameters['dot_color'],
+                               'theta_locations': global_theta_1,
+                               'phi_locations': global_phi_1,
+                               'theta_trajectory': global_theta_traj_1,
+                               'phi_trajectory': global_phi_traj_1}
+
+        global_parameters_2 = {'name': 'CoherentMotionDotField',
+                               'point_size': self.protocol_parameters['point_size'],
+                               'sphere_radius': 1.0,
+                               'color': self.protocol_parameters['dot_color'],
+                               'theta_locations': global_theta_2,
+                               'phi_locations': global_phi_2,
+                               'theta_trajectory': global_theta_traj_2,
+                               'phi_trajectory': global_phi_traj_2}
+
+        self.meta_parameters = {'current_stim_type': current_stim_type}
+
+        self.epoch_parameters = (global_parameters_1, global_parameters_2)
+        self.convenience_parameters = {'current_global_motion_speed_1': current_global_motion_speed_1,
+                                       'current_global_motion_speed_2': current_global_motion_speed_2,
+                                       'current_stim_type': current_stim_type,
+                                       'current_lotation_seed_1': current_location_seed_1,
+                                       'current_lotation_seed_2': current_location_seed_2}
+
+    def loadStimuli(self, client):
+        global_parameters_1 = self.epoch_parameters[0].copy()
+        global_parameters_2 = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+        if self.meta_parameters.get('current_stim_type') == 'global_2':
+            multicall.load_stim(**global_parameters_2, hold=True)
+        elif self.meta_parameters.get('current_stim_type') == 'global_1_2':
+            multicall.load_stim(**global_parameters_1, hold=True)
+            multicall.load_stim(**global_parameters_2, hold=True)
+
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'point_size': 30.0,
+                                    'n_global_dots_each': 60,
+                                    'dot_location_start_seed': 1,
+                                    'global_motion_speed_1': 60.0,
+                                    'global_motion_speed_2': [-90.0, -60.0, -30.0, 30.0, 60.0, 90.0],
+                                    'dot_color': 0.25,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'SeparableMovingDotFields',
+                               'num_epochs': 120,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
+
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # VR WORLD STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
