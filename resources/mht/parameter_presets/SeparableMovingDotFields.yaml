@@ -1,0 +1,22 @@
+R92B02:
+  run_parameters:
+    protocol_ID: SeparableMovingDotFields
+    num_epochs: 120.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    point_size: 20.0
+    n_global_dots_each: 200.0
+    dot_location_start_seed: 1.0
+    global_motion_speed_1: 60.0
+    global_motion_speed_2:
+    - -90.0
+    - -60.0
+    - -30.0
+    - 30.0
+    - 60.0
+    - 90.0
+    dot_color: 0.25
+    randomize_order: true
