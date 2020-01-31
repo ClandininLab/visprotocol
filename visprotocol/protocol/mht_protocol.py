@@ -75,11 +75,13 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
 
     def getMovingSpotParameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
-        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
+        if center is None: center = self.protocol_parameters['center']
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
         if radius is None: radius = self.protocol_parameters['radius']
         if color is None: color = self.protocol_parameters['color']
+
+        center = self.adjustCenter(center)
 
         centerX = center[0]
         centerY = center[1]
@@ -648,6 +650,66 @@ class UniformFlash(BaseProtocol):
 
 
 # %%
+class SpotPair(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_speed_2 = self.selectParametersFromLists(self.protocol_parameters['speed_2'], randomize_order=self.protocol_parameters['randomize_order'])
+
+        center = self.protocol_parameters['center']
+        center_1 = [center[0], center[1] + self.protocol_parameters['y_separation']/2]
+        spot_1_parameters =  self.getMovingSpotParameters(color=self.protocol_parameters['intensity'][0],
+                                                          radius=self.protocol_parameters['diameter'][0]/2,
+                                                          center=center_1,
+                                                          speed=self.protocol_parameters['speed_1'],
+                                                          angle=0)
+        center_2 = [center[0], center[1] - self.protocol_parameters['y_separation']/2]
+        spot_2_parameters =  self.getMovingSpotParameters(color=self.protocol_parameters['intensity'][1],
+                                                          radius=self.protocol_parameters['diameter'][1]/2,
+                                                          center=center_2,
+                                                          speed=current_speed_2,
+                                                          angle=0)
+
+
+        self.epoch_parameters = (spot_1_parameters, spot_2_parameters)
+
+        self.convenience_parameters = {'current_angle': current_speed_2}
+
+    def loadStimuli(self, client):
+        spot_1_parameters = self.epoch_parameters[0].copy()
+        spot_2_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+        multicall.load_stim(**spot_1_parameters, hold=True)
+        multicall.load_stim(**spot_2_parameters, hold=True)
+
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'diameter': [5.0, 5.0],
+                                    'intensity': [0.0, 0.0],
+                                    'center': [0, 0],
+                                    'y_separation': 7.0,
+                                    'speed_1': 80.0,
+                                    'speed_2': [-80.0, -40.0, 0.0, 40.0, 80.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SpotPair',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+# %%
 class CoherentDotFieldPair(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -994,19 +1056,24 @@ class ForestRandomWalk(BaseProtocol):
         np.random.seed(int(self.protocol_parameters['rand_seed']))
 
         # random walk trajectory
-        tt = np.arange(0, self.run_parameters['stim_time'], 0.01)
-        dx = -0.001*np.ones(shape=(len(tt),1)) # meters per time step
-        dy = -0.00*np.ones(shape=(len(tt),1))
-        dtheta = 0.0*np.random.normal(size=len(tt))
+        tt = np.arange(0, self.run_parameters['stim_time'], 0.01) # seconds
+        velocity_x = 0.02 # meters per sec
+        velocity_y = 0.00
 
-        fly_x_trajectory = Trajectory(list(zip(tt, np.cumsum(dx)))).to_dict()
-        fly_y_trajectory = Trajectory(list(zip(tt, np.cumsum(dy)))).to_dict()
-        fly_theta_trajectory = Trajectory(list(zip(tt, np.cumsum(dtheta)))).to_dict()
+        xx = tt * velocity_x
+        yy = tt * velocity_y
+
+        dtheta = 0.0*np.random.normal(size=len(tt))
+        theta = np.cumsum(dtheta)
+
+        fly_x_trajectory = Trajectory(list(zip(tt, xx))).to_dict()
+        fly_y_trajectory = Trajectory(list(zip(tt, yy))).to_dict()
+        fly_theta_trajectory = Trajectory(list(zip(tt, theta))).to_dict()
 
         z_level = -0.01
         tree_locations = []
         for tree in range(int(self.protocol_parameters['n_trees'])):
-            tree_locations.append([np.random.uniform(-5, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
+            tree_locations.append([np.random.uniform(1, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
 
         self.epoch_parameters = {'name': 'Composite',
                                  'tree_height': self.protocol_parameters['tree_height'],
@@ -1034,22 +1101,26 @@ class ForestRandomWalk(BaseProtocol):
 
         base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
         fn = 'imk00125.iml'
-        multicall.load_stim(name='HorizonCylinder',
-                            image_path=os.path.join(base_dir, fn))
+        # multicall.load_stim(name='HorizonCylinder',
+        #                     image_path=os.path.join(base_dir, fn))
 
-        fc = passedParameters['floor_color']
-        multicall.load_stim(name='TexturedGround',
-                            color=[fc, fc, fc, 1.0],
-                            z_level=passedParameters['z_level'],
-                            hold=True)
+        # fc = passedParameters['floor_color']
+        # multicall.load_stim(name='TexturedGround',
+        #                     color=[fc, fc, fc, 1.0],
+        #                     z_level=passedParameters['z_level'],
+        #                     hold=True)
+        #
+        # multicall.load_stim(name='Forest',
+        #                     color = [0, 0, 0, 1],
+        #                     cylinder_height=passedParameters['tree_height'],
+        #                     cylinder_radius=0.1,
+        #                     cylinder_locations=passedParameters['tree_locations'],
+        #                     n_faces=4,
+        #                     hold=True)
 
-        multicall.load_stim(name='Forest',
-                            color = [0, 0, 0, 1],
-                            cylinder_height=passedParameters['tree_height'],
-                            cylinder_radius=0.1,
-                            cylinder_locations=passedParameters['tree_locations'],
-                            n_faces=4,
-                            hold=True)
+        multicall.load_stim(name='Tower', color=[1, 0, 0, 1], cylinder_location=[1, +1, 0],  cylinder_height=0.1, cylinder_radius=0.05, hold=True) # red, +x, left
+        multicall.load_stim(name='Tower', color=[0, 1, 0, 1], cylinder_location=[1, 0, 0],  cylinder_height=0.1, cylinder_radius=0.05, hold=True) # green, +x, center
+        multicall.load_stim(name='Tower', color=[0, 0, 1, 1], cylinder_location=[1, -1, 0],  cylinder_height=0.1, cylinder_radius=0.05, hold=True) # blue, +x, right
 
         multicall()
 
