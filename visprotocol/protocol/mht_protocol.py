@@ -8,6 +8,7 @@ Created on Thu Jun 21 10:20:02 2018
 import numpy as np
 import os
 import flyrpc.multicall
+from copy import deepcopy
 
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import Trajectory
@@ -647,6 +648,110 @@ class UniformFlash(BaseProtocol):
 
 
 # %%
+class CoherentDotFieldPair(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_num_dots, current_frac_dark = self.selectParametersFromLists((self.protocol_parameters['num_dots'], self.protocol_parameters['fraction_dark']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        num_dark_dots = current_frac_dark * current_num_dots
+        num_bright_dots = (1-current_frac_dark) * current_num_dots
+        # dark dot field
+        dark_location_seed = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
+        np.random.seed(int(dark_location_seed))
+        theta_ctr = np.random.uniform(low=-180, high=180, size=int(num_dark_dots))
+        phi_ctr = np.random.uniform(low=-50, high=30, size=int(num_dark_dots))
+        dark_theta = [x + self.screen_center[0] for x in theta_ctr]
+        dark_phi = [y + self.screen_center[1] for y in phi_ctr]
+
+        # bright dot field
+        bright_location_seed = self.protocol_parameters['dot_location_start_seed'] + 10*self.num_epochs_completed + 1
+        np.random.seed(int(bright_location_seed))
+        theta_ctr = np.random.uniform(low=-180, high=180, size=int(num_bright_dots))
+        phi_ctr = np.random.uniform(low=-50, high=30, size=int(num_bright_dots))
+        bright_theta = [x + self.screen_center[0] for x in theta_ctr]
+        bright_phi = [y + self.screen_center[1] for y in phi_ctr]
+
+        # motion trajectory: applied to both dot field
+        distance_to_travel = self.protocol_parameters['global_motion_speed'] * self.run_parameters['stim_time']
+        startX = (0, -distance_to_travel/2)
+        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
+        startY = (0, 0)
+        endY = (self.run_parameters['stim_time'], 0)
+        theta_traj = Trajectory([startX, endX], kind='linear').to_dict()
+        phi_traj = Trajectory([startY, endY], kind='linear').to_dict()
+
+        dark_parameters =  {'name': 'CoherentMotionDotField',
+                            'point_size': self.protocol_parameters['point_size'],
+                            'sphere_radius': 1.0,
+                            'color': 0,
+                            'theta_locations': dark_theta,
+                            'phi_locations': dark_phi,
+                            'theta_trajectory': theta_traj,
+                            'phi_trajectory': phi_traj}
+
+        bright_parameters = {'name': 'CoherentMotionDotField',
+                               'point_size': self.protocol_parameters['point_size'],
+                               'sphere_radius': 1.0,
+                               'color': 1,
+                               'theta_locations': bright_theta,
+                               'phi_locations': bright_phi,
+                               'theta_trajectory': theta_traj,
+                               'phi_trajectory': phi_traj}
+
+        if current_frac_dark == 1:
+            self.meta_parameters = {'stim_type': 'dark_only'}
+        elif current_frac_dark == 0:
+            self.meta_parameters = {'stim_type': 'bright_only'}
+        else:
+            self.meta_parameters = {'stim_type': 'dark_and_bright'}
+
+        self.epoch_parameters = (dark_parameters, bright_parameters)
+
+        self.convenience_parameters = {'current_num_dots': current_num_dots,
+                                       'current_frac_dark': current_frac_dark}
+
+        print('Num dots = {}; frac_dark = {}'.format(current_num_dots, current_frac_dark))
+
+    def loadStimuli(self, client):
+        dark_parameters = self.epoch_parameters[0].copy()
+        bright_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
+        if self.meta_parameters['stim_type'] == 'dark_only':
+            multicall.load_stim(**dark_parameters, hold=True)
+        elif self.meta_parameters['stim_type'] == 'bright_only':
+            multicall.load_stim(**bright_parameters, hold=True)
+        elif self.meta_parameters['stim_type'] == 'dark_and_bright':
+            multicall.load_stim(**dark_parameters, hold=True)
+            multicall.load_stim(**bright_parameters, hold=True)
+
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'point_size': 30.0,
+                                    'num_dots': [50, 100, 200, 400, 800],
+                                    'dot_location_start_seed': 1,
+                                    'global_motion_speed': 90.0,
+                                    'fraction_dark': [1.0, 0.75, 0.5, 0.25, 0.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID':'CoherentDotFieldPair',
+                               'num_epochs': 125,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
 class BallisticDotFieldWithMotionPopout(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -785,7 +890,7 @@ class SeparableMovingDotFields(BaseProtocol):
         global_theta_1 = [x + self.screen_center[0] for x in theta_ctr]
         global_phi_1 = [y + self.screen_center[1] for y in phi_ctr]
 
-        current_location_seed_2 = self.protocol_parameters['dot_location_start_seed'] + 10*self.num_epochs_completed
+        current_location_seed_2 = self.protocol_parameters['dot_location_start_seed'] + 10*self.num_epochs_completed + 1
         np.random.seed(int(current_location_seed_2))
         theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots_each']))
         phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots_each']))
