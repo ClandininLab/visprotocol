@@ -677,7 +677,7 @@ class SpotPair(BaseProtocol):
 
         self.epoch_parameters = (spot_1_parameters, spot_2_parameters)
 
-        self.convenience_parameters = {'current_angle': current_speed_2}
+        self.convenience_parameters = {'current_speed_2': current_speed_2}
 
     def loadStimuli(self, client):
         spot_1_parameters = self.epoch_parameters[0].copy()
