@@ -130,3 +130,43 @@ LC12:
     - 270.0
     - 315.0
     randomize_order: true
+Fast_frontback:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 10.0
+    intensity: 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+Fast_updown:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 10.0
+    intensity: 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 90.0
+    - 270.0
+    randomize_order: true
