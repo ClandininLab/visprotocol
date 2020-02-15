@@ -611,6 +611,62 @@ class MovingSquareMapping(BaseProtocol):
 # %%
 
 
+class VelocityNoise(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
+        np.random.seed(int(current_seed))
+        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate'])/2)
+        velocity = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std'])
+        velocity = np.concatenate([velocity, -velocity]) #concat reversed velocity as 2nd half so the bar comes back to the center but distr stays white
+
+        time_steps = np.linspace(0, self.run_parameters['stim_time'], 2*n_updates)  # time steps of trajectory
+        position = adj_center[0] + np.cumsum(velocity)
+
+
+        theta_traj = Trajectory(list(zip(time_steps, position)), kind='previous').to_dict()
+
+
+
+        self.epoch_parameters = {'name': 'MovingPatch',
+                                 'width': self.protocol_parameters['width'],
+                                 'height': self.protocol_parameters['height'],
+                                 'sphere_radius': 1,
+                                 'color': self.protocol_parameters['intensity'],
+                                 'theta': theta_traj,
+                                 'phi': adj_center[1],
+                                 'angle': 0}
+        self.convenience_parameters = {'current_seed': current_seed,
+                                       'time_steps': time_steps,
+                                       'velocity': velocity,
+                                       'position': position}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 80.0,
+                                    'width': 5.0,
+                                    'center': [0, 0],
+                                    'velocity_std': 5, # deg/sec
+                                    'velocity_update_rate': 5, # Hz
+                                    'start_seed': 0,
+                                    'intensity': 0.0}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'VelocityNoise',
+                               'num_epochs': 10,
+                               'pre_time': 1.0,
+                               'stim_time': 5.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
+
 class UniformFlash(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
