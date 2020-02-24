@@ -9,6 +9,7 @@ import numpy as np
 import os
 import flyrpc.multicall
 from copy import deepcopy
+from scipy.interpolate import interp1d
 
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import Trajectory
@@ -621,19 +622,29 @@ class VelocityNoise(BaseProtocol):
     def getEpochParameters(self):
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
-        current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
+        if self.protocol_parameters['start_seed'] == -1:
+            current_seed = np.random.randint(0, 10000)
+        else:
+            current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
+
         np.random.seed(int(current_seed))
         n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate'])/2)
-        velocity = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std'])
-        velocity = np.concatenate([velocity, -velocity]) #concat reversed velocity as 2nd half so the bar comes back to the center but distr stays white
+        v = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # deg/sec -> deg/update
 
-        time_steps = np.linspace(0, self.run_parameters['stim_time'], 2*n_updates)  # time steps of trajectory
-        position = adj_center[0] + np.cumsum(velocity)
+        # partition velocity trace up into splits, and follow each split with a reversed version of itself:
+        #   ensures that position keeps coming back to center
+        split_size = 2 #sec
+        splits = int(self.run_parameters['stim_time'] / split_size)
+        v_orig = np.reshape(v, [splits, -1])
+        v_rev = -v_orig
+        v_comb = np.concatenate([v_orig, v_rev], axis=1)
+        velocity = np.ravel(v_comb)
 
+        time_steps = np.linspace(0, self.run_parameters['stim_time'], 2*n_updates)  # time steps of update trajectory
 
-        theta_traj = Trajectory(list(zip(time_steps, position)), kind='previous').to_dict()
+        position = adj_center[0] + np.cumsum(velocity) #position at each update time point, according to new velocity value
 
-
+        theta_traj = Trajectory(list(zip(time_steps, position)), kind='linear').to_dict()
 
         self.epoch_parameters = {'name': 'MovingPatch',
                                  'width': self.protocol_parameters['width'],
@@ -649,19 +660,19 @@ class VelocityNoise(BaseProtocol):
                                        'position': position}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 80.0,
+        self.protocol_parameters = {'height': 30.0,
                                     'width': 5.0,
                                     'center': [0, 0],
-                                    'velocity_std': 5, # deg/sec
-                                    'velocity_update_rate': 5, # Hz
-                                    'start_seed': 0,
+                                    'velocity_std': 80, # deg/sec
+                                    'velocity_update_rate': 8, # Hz
+                                    'start_seed': -1,
                                     'intensity': 0.0}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'VelocityNoise',
                                'num_epochs': 10,
                                'pre_time': 1.0,
-                               'stim_time': 5.0,
+                               'stim_time': 20.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
