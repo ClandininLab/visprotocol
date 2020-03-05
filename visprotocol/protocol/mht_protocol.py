@@ -634,7 +634,7 @@ class VelocityNoise(BaseProtocol):
 
         # partition velocity trace up into splits, and follow each split with a reversed version of itself:
         #   ensures that position keeps coming back to center
-        split_size = 2 #sec
+        split_size = 6 #sec
         splits = int(self.run_parameters['stim_time'] / split_size)
         v_orig = np.reshape(v, [splits, -1])
         v_rev = -v_orig
@@ -661,7 +661,7 @@ class VelocityNoise(BaseProtocol):
                                        'position': position}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 30.0,
+        self.protocol_parameters = {'height': 10.0,
                                     'width': 5.0,
                                     'center': [0, 0],
                                     'velocity_std': 80, # deg/sec
@@ -671,9 +671,9 @@ class VelocityNoise(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'VelocityNoise',
-                               'num_epochs': 10,
+                               'num_epochs': 40,
                                'pre_time': 1.0,
-                               'stim_time': 20.0,
+                               'stim_time': 30.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
