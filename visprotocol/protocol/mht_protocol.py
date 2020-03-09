@@ -612,6 +612,68 @@ class MovingSquareMapping(BaseProtocol):
 
 # %%
 
+class PeriodicVelocityNoise(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        if self.protocol_parameters['start_seed'] == -1:
+            current_seed = np.random.randint(0, 10000)
+        else:
+            current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
+
+        np.random.seed(int(current_seed))
+        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate']))
+        velocity = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # deg/sec -> deg/update
+
+        time_steps = np.linspace(0, self.run_parameters['stim_time'], n_updates)  # time steps of update trajectory
+
+        position = np.cumsum(velocity) #position at each update time point, according to new velocity value
+
+        theta_traj = Trajectory(list(zip(time_steps, position)), kind='linear').to_dict()
+
+        distribution_data = {'name': 'Binary',
+                             'args': [],
+                             'kwargs': {'rand_min': self.protocol_parameters['intensity'],
+                                        'rand_max': self.protocol_parameters['intensity']}}
+
+        self.epoch_parameters = {'name': 'RandomBars',
+                                 'distribution_data': distribution_data,
+                                 'period': self.protocol_parameters['period'],
+                                 'width': self.protocol_parameters['width'],
+                                 'vert_extent': self.protocol_parameters['height'],
+                                 'background': 0.5,
+                                 'color': [1, 1, 1, 1],
+                                 'theta': theta_traj,
+                                 'cylinder_location': (0, 0, self.protocol_parameters['z_offset'])}
+
+        self.convenience_parameters = {'current_seed': current_seed,
+                                       'time_steps': time_steps,
+                                       'velocity': velocity,
+                                       'position': position}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 10.0,
+                                    'width': 5.0,
+                                    'period': 40.0, # deg spacing between bars
+                                    'z_offset': 0.35, #meters, offset of cylinder
+                                    'velocity_std': 80, # deg/sec
+                                    'velocity_update_rate': 8, # Hz
+                                    'start_seed': -1,
+                                    'intensity': 0.0}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'PeriodicVelocityNoise',
+                               'num_epochs': 40,
+                               'pre_time': 1.0,
+                               'stim_time': 30.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
 
 class VelocityNoise(BaseProtocol):
     def __init__(self, cfg):
@@ -628,20 +690,22 @@ class VelocityNoise(BaseProtocol):
         else:
             current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
 
-        np.random.seed(int(current_seed))
-        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate'])/2)
-        v = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # deg/sec -> deg/update
-
         # partition velocity trace up into splits, and follow each split with a reversed version of itself:
         #   ensures that position keeps coming back to center
+        np.random.seed(int(current_seed))
+        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate'])/2)
+        out = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # deg/sec -> deg/update
+        back = -out
+
         split_size = 6 #sec
         splits = int(self.run_parameters['stim_time'] / split_size)
-        v_orig = np.reshape(v, [splits, -1])
-        v_rev = -v_orig
-        v_comb = np.concatenate([v_orig, v_rev], axis=1)
+
+        out = np.reshape(out, [splits, -1])
+        back = np.reshape(back, [splits, -1])
+        v_comb = np.concatenate([out, back], axis=1)
         velocity = np.ravel(v_comb)
 
-        time_steps = np.linspace(0, self.run_parameters['stim_time'], 2*n_updates)  # time steps of update trajectory
+        time_steps = np.linspace(0, self.run_parameters['stim_time'], len(velocity))  # time steps of update trajectory
 
         position = adj_center[0] + np.cumsum(velocity) #position at each update time point, according to new velocity value
 
@@ -671,9 +735,9 @@ class VelocityNoise(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'VelocityNoise',
-                               'num_epochs': 40,
+                               'num_epochs': 20,
                                'pre_time': 1.0,
-                               'stim_time': 30.0,
+                               'stim_time': 36.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
