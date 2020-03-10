@@ -175,3 +175,38 @@ AOD_10square:
     - 60.0
     speed: 80.0
     randomize_order: true
+ext az:
+  run_parameters:
+    protocol_ID: MovingSquareMapping
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    square_width: 5.0
+    intensity: 0.0
+    elevation_locations:
+    - -20.0
+    - -15.0
+    - -10.0
+    - -5.0
+    - 0.0
+    - 5.0
+    - 10.0
+    - 15.0
+    - 20.0
+    azimuth_locations:
+    - -25.0
+    - -20.0
+    - -15.0
+    - -10.0
+    - -5.0
+    - 0.0
+    - 5.0
+    - 10.0
+    - 15.0
+    - 20.0
+    - 25.0
+    speed: 80.0
+    randomize_order: true
