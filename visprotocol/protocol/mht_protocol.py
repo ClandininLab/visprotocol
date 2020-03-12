@@ -11,7 +11,9 @@ import os
 import flyrpc.multicall
 from copy import deepcopy
 from scipy.interpolate import interp1d
+import inspect
 
+import visprotocol
 from visprotocol.protocol import clandinin_protocol
 from flystim.trajectory import Trajectory
 
@@ -1174,104 +1176,6 @@ class SeparableMovingDotFields(BaseProtocol):
 # # # # # # VR WORLD STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
-#
-# # TODO: pass params for tree positioning, fly trajectory, and do random seed control for repeated walks
-# class ForestRandomWalk(BaseProtocol):
-#     def __init__(self, cfg):
-#         super().__init__(cfg)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         # set random seed
-#         np.random.seed(int(self.protocol_parameters['rand_seed']))
-#
-#         # random walk trajectory
-#         tt = np.arange(0, self.run_parameters['stim_time'], 0.01) # seconds
-#         velocity_x = 0.02 # meters per sec
-#         velocity_y = 0.00
-#
-#         xx = tt * velocity_x
-#         yy = tt * velocity_y
-#
-#         dtheta = 0.0*np.random.normal(size=len(tt))
-#         theta = np.cumsum(dtheta)
-#
-#         fly_x_trajectory = Trajectory(list(zip(tt, xx))).to_dict()
-#         fly_y_trajectory = Trajectory(list(zip(tt, yy))).to_dict()
-#         fly_theta_trajectory = Trajectory(list(zip(tt, theta))).to_dict()
-#
-#         z_level = -0.01
-#         tree_locations = []
-#         for tree in range(int(self.protocol_parameters['n_trees'])):
-#             tree_locations.append([np.random.uniform(1, 5), np.random.uniform(-5, 5), z_level+self.protocol_parameters['tree_height']/2])
-#
-#         self.epoch_parameters = {'name': 'Composite',
-#                                  'tree_height': self.protocol_parameters['tree_height'],
-#                                  'floor_color': self.protocol_parameters['floor_color'],
-#                                  'sky_color': self.protocol_parameters['sky_color'],
-#                                  'tree_color': self.protocol_parameters['tree_color'],
-#                                  'fly_x_trajectory': fly_x_trajectory,
-#                                  'fly_y_trajectory': fly_y_trajectory,
-#                                  'fly_theta_trajectory': fly_theta_trajectory,
-#                                  'tree_locations': tree_locations,
-#                                  'z_level': z_level}
-#
-#     def loadStimuli(self, client):
-#         passedParameters = self.epoch_parameters.copy()
-#
-#         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-#
-#         multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
-#                                      passedParameters['fly_y_trajectory'],
-#                                      passedParameters['fly_theta_trajectory'])
-#
-#         sc = passedParameters['sky_color']
-#         multicall.load_stim(name='ConstantBackground',
-#                             color=[sc, sc, sc, 1.0])
-#
-#         base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
-#         fn = 'imk00125.iml'
-#         # multicall.load_stim(name='HorizonCylinder',
-#         #                     image_path=os.path.join(base_dir, fn))
-#
-#         # fc = passedParameters['floor_color']
-#         # multicall.load_stim(name='TexturedGround',
-#         #                     color=[fc, fc, fc, 1.0],
-#         #                     z_level=passedParameters['z_level'],
-#         #                     hold=True)
-#         #
-#         # multicall.load_stim(name='Forest',
-#         #                     color = [0, 0, 0, 1],
-#         #                     cylinder_height=passedParameters['tree_height'],
-#         #                     cylinder_radius=0.1,
-#         #                     cylinder_locations=passedParameters['tree_locations'],
-#         #                     n_faces=4,
-#         #                     hold=True)
-#
-#         multicall.load_stim(name='Tower', color=[1, 0, 0, 1], cylinder_location=[1, +1, 0],  cylinder_height=0.1, cylinder_radius=0.05, hold=True) # red, +x, left
-#         multicall.load_stim(name='Tower', color=[0, 1, 0, 1], cylinder_location=[1, 0, 0],  cylinder_height=0.1, cylinder_radius=0.05, hold=True) # green, +x, center
-#         multicall.load_stim(name='Tower', color=[0, 0, 1, 1], cylinder_location=[1, -1, 0],  cylinder_height=0.1, cylinder_radius=0.05, hold=True) # blue, +x, right
-#
-#         multicall()
-#
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'n_trees': 20,
-#                                     'tree_height': 1.0,
-#                                     'floor_color': 0.25,
-#                                     'sky_color': 0.5,
-#                                     'tree_color': 0.0,
-#                                     'rand_seed': 0}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID': 'ForestRandomWalk',
-#                                'num_epochs': 20,
-#                                'pre_time': 1.0,
-#                                'stim_time': 3.0,
-#                                'tail_time': 1.0,
-#                                'idle_color': 0.5}
 
 class RealWalkThroughFakeForest(BaseProtocol):
     def __init__(self, cfg):
@@ -1281,25 +1185,17 @@ class RealWalkThroughFakeForest(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        # set random seed
-        np.random.seed(int(self.protocol_parameters['rand_seed']))
+        current_trajectory_index = int(self.selectParametersFromLists(self.protocol_parameters['trajectory_range'], randomize_order=True))
 
         # load walk trajectory
-        data_dir = r'C:\Users\mhturner\Dropbox\ClandininLab\Analysis\WalkingTrajectories'
-        file_name = r'wt_mel_virgin_mated_velocities_for_max_110119.csv'
-        df = pd.read_csv(os.path.join(data_dir, file_name), header=1) #100 hz
-        fwd_vel = np.array(df.get('0'))
-        ang_vel = np.array(df.get('0.1'))
-
-        sample_rate = 100
-        time_pts = self.run_parameters['stim_time'] * sample_rate
-        start_pt = np.random.choice(np.arange(len(fwd_vel)-time_pts))
-
-        t = np.linspace(0, self.run_parameters['stim_time'], time_pts)
-        x, y, heading = trajectoryFromVelocities(fwd_vel[int(start_pt):int(start_pt+time_pts)], ang_vel[int(start_pt):int(start_pt+time_pts)], sample_rate=sample_rate)
-
-        x = x / 1e2 # cm -> m
-        y = y / 1e2 # cm -> m
+        trajectory_dir = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'walking_trajectories')
+        file_name = 'walking_traj_20200312.npy'
+        snippets = np.load(os.path.join(trajectory_dir, file_name), allow_pickle=True)
+        snippet = snippets[current_trajectory_index]
+        t = snippet['t']
+        x = snippet['x']
+        y = snippet['y']
+        heading = snippet['a']
 
         fly_x_trajectory = Trajectory(list(zip(t, x))).to_dict()
         fly_y_trajectory = Trajectory(list(zip(t, y))).to_dict()
@@ -1321,7 +1217,8 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                  'tree_locations': tree_locations,
                                  'z_level': z_level}
 
-        self.convenience_parameters = {'start_pt': start_pt}
+        self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
+                                        'current_trajectory_library': file_name}
 
     def loadStimuli(self, client):
         passedParameters = self.epoch_parameters.copy()
@@ -1364,14 +1261,15 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                     'floor_color': 0.40,
                                     'sky_color': 0.5,
                                     'tree_color': 0.0,
-                                    'rand_seed': 1}
+                                    'rand_seed': 1,
+                                    'trajectory_range': [0, 1, 2, 3, 4]}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'ForestRandomWalk',
-                               'num_epochs': 20,
-                               'pre_time': 1.0,
-                               'stim_time': 30.0,
-                               'tail_time': 1.0,
+                               'num_epochs': 25,
+                               'pre_time': 2.0,
+                               'stim_time': 20.0,
+                               'tail_time': 2.0,
                                'idle_color': 0.5}
 
 # %%
@@ -1486,7 +1384,7 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 230, #230 = 23 * 10 averages each
+                               'num_epochs': 165, #165 = 23 * 5 averages each
                                'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 2.0,
@@ -1498,19 +1396,6 @@ class PanGlomSuite(BaseProtocol):
 # # # # # # SHARED FUNCTIONS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
-
-def trajectoryFromVelocities(fwd_vel, ang_vel, sample_rate):
-    # vel in cm/sec
-    # sample rate in samples/sec
-    dx = fwd_vel * np.cos(np.radians(ang_vel)) / sample_rate  # convert velocity to cm / data point
-    dy = fwd_vel * np.sin(np.radians(ang_vel)) / sample_rate  # convert velocity to cm / data point
-    dtheta = ang_vel / sample_rate  # convert velocity to deg / data point
-
-    x = np.concatenate([[0], np.cumsum(dx)[:-1]])
-    y = np.concatenate([[0], np.cumsum(dy)[:-1]])
-    heading = np.concatenate([[0], np.cumsum(dtheta)[:-1]])
-
-    return x, y, heading
 
 def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
     # rv_ratio in sec
