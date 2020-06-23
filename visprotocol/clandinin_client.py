@@ -39,6 +39,7 @@ class Client():
         else:
             w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
             aux_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_side=0)
+            # aux_screen = Screen(width=w, height=h, rotation=pi, offset=(h/2, w/2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_side=0)
 
             # pt2 = ((1.0, -1.0), (20.1e-3, 46.3e-3, -82.9e-3))
             # pt1 = ((-0.70, -1.0), (20.1e-3, -72.4e-3, -82.9e-3))

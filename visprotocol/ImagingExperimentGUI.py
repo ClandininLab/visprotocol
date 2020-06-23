@@ -121,10 +121,15 @@ class ImagingExperimentGUI(QWidget):
         self.recordButton.clicked.connect(self.onPressedButton)
         self.protocol_grid.addWidget(self.recordButton, self.run_params_ct+4, 1)
 
+        # Pause/resume button:
+        self.pauseButton = QPushButton("Pause", self)
+        self.pauseButton.clicked.connect(self.onPressedButton)
+        self.protocol_grid.addWidget(self.pauseButton, self.run_params_ct+4, 2)
+
         # Stop button:
         stopButton = QPushButton("Stop", self)
         stopButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(stopButton, self.run_params_ct+4, 2)
+        self.protocol_grid.addWidget(stopButton, self.run_params_ct+4, 3)
 
         # Enter note button:
         noteButton = QPushButton("Enter note", self)
@@ -140,7 +145,7 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(newLabel, 3, 2)
         self.status_label = QLabel()
         self.status_label.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_grid.addWidget(self.status_label, 4, 2)
+        self.protocol_grid.addWidget(self.status_label, 3, 3)
         self.status_label.setText('')
 
         # Imaging type dropdown (if AODscope):
@@ -153,13 +158,13 @@ class ImagingExperimentGUI(QWidget):
 
         # Current imaging series counter
         newLabel = QLabel('Series counter:')
-        self.protocol_grid.addWidget(newLabel, self.run_params_ct+1, 2)
+        self.protocol_grid.addWidget(newLabel, self.run_params_ct+2, 2)
         self.series_counter_input = QSpinBox()
         self.series_counter_input.setMinimum(1)
         self.series_counter_input.setMaximum(1000)
         self.series_counter_input.setValue(1)
         self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
-        self.protocol_grid.addWidget(self.series_counter_input, self.run_params_ct+2, 2)
+        self.protocol_grid.addWidget(self.series_counter_input, self.run_params_ct+2, 3)
 
         # # # TAB 2: Current FLY metadata information
         # # Fly info:
@@ -348,9 +353,23 @@ class ImagingExperimentGUI(QWidget):
 
         elif sender.text() == 'View':
             self.sendRun(save_metadata_flag=False)
+            self.pauseButton.setText('Pause')
+
+        elif sender.text() == 'Pause':
+            self.epoch_run.pauseRun()
+            self.pauseButton.setText('Resume')
+            self.status_label.setText('Paused...')
+            self.show()
+
+        elif sender.text() == 'Resume':
+            self.epoch_run.resumeRun()
+            self.pauseButton.setText('Pause')
+            self.status_label.setText('Viewing...')
+            self.show()
 
         elif sender.text() == 'Stop':
             self.epoch_run.stopRun()
+            self.pauseButton.setText('Pause')
 
         elif sender.text() == 'Enter note':
             self.noteText = self.notesEdit.toPlainText()
@@ -390,7 +409,7 @@ class ImagingExperimentGUI(QWidget):
             self.data.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
             self.data.data_directory = os.path.split(filePath)[0]
 
-            if self.data.experiment_file_name is not '':
+            if self.data.experiment_file_name != '':
                 self.currentExperimentLabel.setText(self.data.experiment_file_name)
                 # update series count to reflect already-collected series
                 self.data.reloadSeriesCount()
@@ -561,6 +580,7 @@ class ImagingExperimentGUI(QWidget):
         self.recordButton.setEnabled(True)
 
         self.status_label.setText('Ready')
+        self.pauseButton.setText('Pause')
         if save_metadata_flag:
             self.updateExistingFlyInput()
             # Advance the series_count:
@@ -783,7 +803,7 @@ class runSeriesThread(QThread):
         self.wait()
 
     def _sendRun(self):
-        self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag = self.save_metadata_flag)
+        self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag=self.save_metadata_flag)
 
     def run(self):
         self._sendRun()
