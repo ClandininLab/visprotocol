@@ -752,6 +752,7 @@ class InitializeRigGUI(QWidget):
         self.available_rig_configs = []
 
         self.layout = QFormLayout()
+        self.resize(200, 400)
 
         label_UserName = QLabel('User Name:')
         self.UserComboBox = QComboBox()

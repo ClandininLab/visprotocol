@@ -1328,8 +1328,8 @@ class PanGlomSuite(BaseProtocol):
 
         elif stim_type == 'UniformFlash':
             self.component_class = UniformFlash(self.cfg)
-            self.component_class.protocol_parameters = {'height': 180.0,
-                                                        'width': 180.0,
+            self.component_class.protocol_parameters = {'height': 240.0,
+                                                        'width': 240.0,
                                                         'center': [0, 0],
                                                         'intensity': [1.0, 0.0],
                                                         'randomize_order': True}
@@ -1358,7 +1358,7 @@ class PanGlomSuite(BaseProtocol):
         elif stim_type == 'MovingRectangle':
             self.component_class = MovingRectangle(self.cfg)
             self.component_class.protocol_parameters = {'width': 20.0,
-                                                        'height': 180.0,
+                                                        'height': 120.0,
                                                         'intensity': 0.0,
                                                         'center': [0, 0],
                                                         'speed': 80.0,
