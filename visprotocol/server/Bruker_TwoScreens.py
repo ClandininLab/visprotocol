@@ -15,7 +15,7 @@ def main():
      
     w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
 
-    bruker_right_screen = Screen(width=w, height=h, rotation=pi/4, offset=(3.0e-2, -4.4e-2, -6.1e-2), id=2, fullscreen=True, vsync=True, square_side=5e-2, square_loc='ll')
+    bruker_right_screen = Screen(width=w, height=h, rotation=pi/4, offset=(3.0e-2, -4.4e-2, -5.8e-2), id=2, fullscreen=True, vsync=True, square_side=5e-2, square_loc='ll')
     bruker_left_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=1, fullscreen=True, vsync=True, square_side=5e-2, square_loc='lr')
 
     aux_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_side=0)
