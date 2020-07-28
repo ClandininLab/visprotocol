@@ -26,9 +26,9 @@ def main():
 
     tri_list = Screen.quad_to_tri_list(pt1, pt2, pt3, pt4)
 
-    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=True, square_side=6.0e-2, square_loc='ll')
+    AODscope_left_screen = Screen(tri_list=tri_list, server_number=1, id=1, fullscreen=True, vsync=True, square_size=(0.10, 0.10), square_loc=(-1.0, -1.0))
 
-    aux_screen = Screen(tri_list=tri_list, server_number=1, id=0, fullscreen=False, vsync=True, square_side=0, square_loc='ll')
+    aux_screen = Screen(tri_list=tri_list, server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1.0, -1.0))
 
     screens = [AODscope_left_screen, aux_screen]
     port = 60629
