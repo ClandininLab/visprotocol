@@ -12,7 +12,12 @@ def main():
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
          dlpc350_object.pattern_mode(fps=120)
+<<<<<<< HEAD
 
+=======
+         dlpc350_object.pattern_mode(fps=120)
+     
+>>>>>>> 0e908def370a97c5b830233c7b9e9fa338abc167
     w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
 
     bruker_right_screen = Screen(width=w, height=h, rotation=pi/4, offset=(3.0e-2, -4.4e-2, -5.8e-2), id=2, fullscreen=True, vsync=True, square_size=(0.2, 0.2), square_loc=(-1.0, -1.0))
