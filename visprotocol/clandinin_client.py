@@ -5,6 +5,7 @@ from flystim.stim_server import launch_stim_server
 from flyrpc.transceiver import MySocketClient
 from flystim.screen import Screen
 from math import pi
+from flystim.draw import draw_screens
 
 
 class Client():
@@ -37,8 +38,9 @@ class Client():
         if self.server_options['use_server']:
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
-            w = 20.6e-2; h = 12.8e-2; # meters of image at projection plane
-            aux_screen = Screen(width=w, height=h, rotation=pi-pi/4, offset=(4.0e-2, 3.9e-2, -6.1e-2), id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
+            w = 0.4; h = 0.3; # meters of image at projection plane
+            aux_screen = Screen(width=w, height=h, rotation=0, offset=(0, 0.15, 0), id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
+            draw_screens(aux_screen)
             self.manager = launch_stim_server(aux_screen)
 
         self.manager.black_corner_square()

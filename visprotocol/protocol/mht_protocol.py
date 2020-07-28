@@ -1189,22 +1189,22 @@ class RealWalkThroughFakeForest(BaseProtocol):
 
         # load walk trajectory
         trajectory_dir = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'walking_trajectories')
-        file_name = 'walking_traj_20200312.npy'
+        file_name = 'walking_traj_20200728.npy'
         snippets = np.load(os.path.join(trajectory_dir, file_name), allow_pickle=True)
         snippet = snippets[current_trajectory_index]
         t = snippet['t']
         x = snippet['x']
         y = snippet['y']
-        heading = snippet['a']
+        heading = snippet['a']-90 # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
 
         fly_x_trajectory = Trajectory(list(zip(t, x))).to_dict()
         fly_y_trajectory = Trajectory(list(zip(t, y))).to_dict()
         fly_theta_trajectory = Trajectory(list(zip(t, heading))).to_dict()
 
-        z_level = 0.1
+        z_level = -0.1
         tree_locations = []
         for tree in range(int(self.protocol_parameters['n_trees'])):
-            tree_locations.append([np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), z_level-self.protocol_parameters['tree_height']/2])
+            tree_locations.append([np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), z_level+self.protocol_parameters['tree_height']/2])
 
         self.epoch_parameters = {'name': 'Composite',
                                  'tree_height': self.protocol_parameters['tree_height'],
