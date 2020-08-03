@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from flystim.screen import Screen
+from flystim.screen import Screen, SubScreen
 from flystim.draw import draw_screens
 from flystim.stim_server import StimServer
 from flystim.dlpc350 import make_dlpc350_objects
@@ -22,27 +22,20 @@ def main():
     y_forward = +7.17e-2
     y_back = -0.8e-2
 
-    # LEFT SCREEN
-    left_pa = ((-0.55, -1.0), (x_left, y_back, z_bottom))
-    left_pb = ((+0.65, -1.0), (0, y_forward, z_bottom))
-    left_pc = ((-0.55, +1.0), (x_left, y_back, 0))
-    left_p4 = ((+0.65, +1.0), (0, y_forward, 0))
+    def getBrukerLeft():
+        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.55, -1.0), viewport_width=1.1, viewport_height=2)
 
-    left_tri = Screen.quad_to_tri_list(left_pa, left_pb, left_pc, left_p4)
+    def getBrukerRight():
+        return SubScreen(pa=(0, y_forward, z_bottom), pb=(x_right, y_back, z_bottom), pc=(0, y_forward, 0), viewport_ll=(-0.57, -1.0), viewport_width=1.03, viewport_height=1.96)
 
-    bruker_left_screen = Screen(tri_list=left_tri, id=0, fullscreen=False, vsync=True, square_size=(0.18, 0.25), square_loc=(0.78, -0.86), name='Left', horizontal_flip=True)
+    def getAux():
+        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0))
 
-    # RIGHT SCREEN
-    right_pa = ((-0.57, -1.0), (0, y_forward, z_bottom))
-    right_pb = ((+0.60, -1.0), (x_right, y_back, z_bottom))
-    right_pc = ((-0.54, +0.96), (0, y_forward, 0))
-    right_p4 = ((+0.62, +0.94), (x_right, y_back, 0))
+    bruker_left_screen = Screen(subscreens=[getBrukerLeft()], id=1, fullscreen=True, vsync=True, square_size=(0.18, 0.25), square_loc=(0.78, -0.86), name='Left', horizontal_flip=True)
 
-    right_tri = Screen.quad_to_tri_list(right_pa, right_pb, right_pc, right_p4)
+    bruker_right_screen = Screen(subscreens=[getBrukerRight()], id=2, fullscreen=True, vsync=True, square_size=(0.18, 0.25), square_loc=(-0.88, -0.92), name='Right', horizontal_flip=True)
 
-    bruker_right_screen = Screen(tri_list=right_tri, id=0, fullscreen=False, vsync=True, square_size=(0.18, 0.25), square_loc=(-0.88, -0.92), name='Right', horizontal_flip=True)
-
-    aux_screen = Screen(tri_list=left_tri, id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
+    aux_screen = Screen(subscreens=[getBrukerRight()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
     draw_screens([bruker_left_screen, bruker_right_screen])
     plt.show()
