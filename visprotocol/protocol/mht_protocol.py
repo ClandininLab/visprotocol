@@ -1201,7 +1201,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
         fly_y_trajectory = Trajectory(list(zip(t, y))).to_dict()
         fly_theta_trajectory = Trajectory(list(zip(t, heading))).to_dict()
 
-        z_level = -0.1
+        z_level = -0.20
         tree_locations = []
         for tree in range(int(self.protocol_parameters['n_trees'])):
             tree_locations.append([np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), z_level+self.protocol_parameters['tree_height']/2])
