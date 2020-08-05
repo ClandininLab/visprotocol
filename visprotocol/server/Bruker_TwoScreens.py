@@ -11,6 +11,7 @@ def main():
     # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
+         dlpc350_object.set_current(red=0, green = 0, blue = 1.0)
          dlpc350_object.pattern_mode(fps=120)
          dlpc350_object.pattern_mode(fps=120)
 
