@@ -1203,6 +1203,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
 
         z_level = -0.20
         tree_locations = []
+        np.random.seed(int(self.protocol_parameters['rand_seed']))
         for tree in range(int(self.protocol_parameters['n_trees'])):
             tree_locations.append([np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), z_level+self.protocol_parameters['tree_height']/2])
 
