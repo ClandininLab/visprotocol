@@ -295,24 +295,26 @@ class ExpandingMovingSpot(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_diameter, current_intensity = self.selectParametersFromLists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_diameter, current_intensity, current_speed = self.selectParametersFromLists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity'], self.protocol_parameters['speed']), randomize_order=self.protocol_parameters['randomize_order'])
 
         self.epoch_parameters = self.getMovingSpotParameters(radius=current_diameter/2,
-                                                             color=current_intensity)
+                                                             color=current_intensity,
+                                                             speed=current_speed)
 
         self.convenience_parameters = {'current_diameter': current_diameter,
-                                       'current_intensity': current_intensity}
+                                       'current_intensity': current_intensity,
+                                       'current_speed': current_speed}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'diameter': [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
                                     'intensity': [0.0, 1.0],
                                     'center': [0, 0],
-                                    'speed': 80.0,
+                                    'speed': [80.0],
                                     'angle': 0.0,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'ExpandingMovingSquare',
+        self.run_parameters = {'protocol_ID': 'ExpandingMovingSpot',
                                'num_epochs': 70,
                                'pre_time': 0.5,
                                'stim_time': 2.0,
@@ -1284,9 +1286,9 @@ class PanGlomSuite(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         self.cfg = cfg
-        self.stim_list = ['FlickeringPatch', 'UniformFlash', 'DriftingSquareGrating', 'LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
+        self.stim_list = ['FlickeringPatch', 'DriftingSquareGrating', 'LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
                           'MovingRectangle']
-        n = [3, 2, 2, 2, 6, 4, 4]  # weight each stim draw by how many trial types it has
+        n = [2, 2, 2, 24, 4, 4]  # weight each stim draw by how many trial types it has
         self.stim_p = n / np.sum(n)
 
         self.getRunParameterDefaults()
@@ -1320,10 +1322,10 @@ class PanGlomSuite(BaseProtocol):
 
         elif stim_type == 'ExpandingMovingSpot':
             self.component_class = ExpandingMovingSpot(self.cfg)
-            self.component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
-                                                        'intensity': [0.0, 1.0],
+            self.component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
+                                                        'intensity': [0.0, 0.25, 0.75, 1.0],
                                                         'center': [0, 0],
-                                                        'speed': 80.0,
+                                                        'speed': [-80.0, 80.0],
                                                         'angle': 0.0,
                                                         'randomize_order': True}
 
@@ -1342,7 +1344,7 @@ class PanGlomSuite(BaseProtocol):
                                                         'center': [0, 0],
                                                         'contrast': 1.0,
                                                         'mean': 0.5,
-                                                        'temporal_frequency': [1.0, 4.0, 8.0],
+                                                        'temporal_frequency': [1.0, 8.0],
                                                         'randomize_order': True}
         elif stim_type == 'MovingSpotOnDriftingGrating':
             self.component_class = MovingSpotOnDriftingGrating(self.cfg)
@@ -1385,7 +1387,7 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 165, #165 = 23 * 5 averages each
+                               'num_epochs': 190, #190 = 38 * 5 averages each
                                'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 2.0,
@@ -1415,113 +1417,3 @@ def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
     angular_size = angular_size / 2
 
     return time_steps, angular_size
-# %%
-
-# TODO update
-# class SequentialOrRandomMotion(BaseProtocol):
-#     def __init__(self, cfg):
-#         super().__init__(cfg)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         stimulus_ID = 'MovingPatch'
-#
-#         #adjust to screen center...
-#         adj_az = [x + self.screen_center[0] for x in self.protocol_parameters['azimuth_boundaries']]
-#         adj_el = self.screen_center[1] + self.protocol_parameters['elevation']
-#
-#         stim_time = self.run_parameters['stim_time']
-#         no_steps = self.protocol_parameters['no_steps']
-#
-#         time_steps = np.linspace(0,stim_time,no_steps)
-#         x_steps = np.linspace(adj_az[0],adj_az[1],no_steps)
-#         y_steps = np.linspace(adj_el,adj_el,no_steps)
-#
-#         #switch back and forth between sequential and random
-#         randomized_order = bool(np.mod(self.num_epochs_completed,2))
-#         if randomized_order:
-#             x_steps = np.random.permutation(x_steps)
-#
-#         # time-modulated trajectories
-#         x = Trajectory(list(zip(time_steps,x_steps)), kind = 'previous') #note interp kind is previous
-#         y = Trajectory(list(zip(time_steps,y_steps)), kind = 'previous')
-#         # constant trajectories:
-#         w = Trajectory(self.protocol_parameters['square_width'])
-#         h = Trajectory(self.protocol_parameters['square_width'])
-#         angle = Trajectory(0)
-#         color = Trajectory(self.protocol_parameters['color'])
-#         trajectory = {'x': x.to_dict(), 'y': y.to_dict(), 'w': w.to_dict(), 'h': h.to_dict(),
-#             'angle': angle.to_dict(), 'color': color.to_dict()}
-#
-#         self.epoch_parameters = {'name':stimulus_ID,
-#                             'background':self.run_parameters['idle_color'],
-#                             'trajectory':trajectory}
-#         self.convenience_parameters = {'randomized_order': randomized_order,
-#                                        'x_steps': x_steps}
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'square_width':5.0,
-#                        'color':0.0,
-#                        'elevation': 0.0,
-#                        'azimuth_boundaries': [-15.0, 15.0],
-#                        'no_steps': 8}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID':'SequentialOrRandomMotion',
-#               'num_epochs':20,
-#               'pre_time':0.5,
-#               'stim_time':0.5,
-#               'tail_time':1.0,
-#               'idle_color':0.5}
-
-# %%
-
-
-
-# %%
-
-# TODO update
-# class SparseNoise(BaseProtocol):
-#     def __init__(self, cfg):
-#         super().__init__(cfg)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         stimulus_ID = 'RandomGrid'
-#
-#         start_seed = int(np.random.choice(range(int(1e6))))
-#
-#         distribution_data = {'name':'SparseBinary',
-#                                  'args':[],
-#                                  'kwargs':{'rand_min':self.protocol_parameters['rand_min'],
-#                                            'rand_max':self.protocol_parameters['rand_max'],
-#                                            'sparseness':self.protocol_parameters['sparseness']}}
-#
-#         self.epoch_parameters = {'name': stimulus_ID,
-#                             'theta_period': self.protocol_parameters['checker_width'],
-#                             'phi_period': self.protocol_parameters['checker_width'],
-#                             'start_seed': start_seed,
-#                             'update_rate': self.protocol_parameters['update_rate'],
-#                             'distribution_data': distribution_data}
-#
-#         self.convenience_parameters = {'distribution_name': 'SparseBinary',
-#                                        'start_seed': start_seed}
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'checker_width':5.0,
-#                                'update_rate':8.0,
-#                                'rand_min': 0.0,
-#                                'rand_max':1.0,
-#                                'sparseness':0.95}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID':'SparseNoise',
-#               'num_epochs':10,
-#               'pre_time':1.0,
-#               'stim_time':30.0,
-#               'tail_time':1.0,
-#               'idle_color':0.5}
