@@ -1288,7 +1288,7 @@ class PanGlomSuite(BaseProtocol):
         self.cfg = cfg
         self.stim_list = ['FlickeringPatch', 'DriftingSquareGrating', 'LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
                           'MovingRectangle']
-        n = [2, 2, 2, 24, 4, 4]  # weight each stim draw by how many trial types it has
+        n = [2, 2, 2, 12, 4, 2]  # weight each stim draw by how many trial types it has
         self.stim_p = n / np.sum(n)
 
         self.getRunParameterDefaults()
@@ -1323,7 +1323,7 @@ class PanGlomSuite(BaseProtocol):
         elif stim_type == 'ExpandingMovingSpot':
             self.component_class = ExpandingMovingSpot(self.cfg)
             self.component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
-                                                        'intensity': [0.0, 0.25, 0.75, 1.0],
+                                                        'intensity': [0.0, 1.0],
                                                         'center': [0, 0],
                                                         'speed': [-80.0, 80.0],
                                                         'angle': 0.0,
@@ -1365,7 +1365,7 @@ class PanGlomSuite(BaseProtocol):
                                                         'intensity': 0.0,
                                                         'center': [0, 0],
                                                         'speed': 80.0,
-                                                        'angle': [0.0, 90.0, 180.0, 270.0],
+                                                        'angle': [0.0, 180.0],
                                                         'randomize_order': True}
 
 
@@ -1387,7 +1387,7 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 190, #190 = 38 * 5 averages each
+                               'num_epochs': 240, #240 = 24 * 10 averages each
                                'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 2.0,

@@ -10,16 +10,25 @@ suite_10x:
 ? ''
 : run_parameters:
     protocol_ID: PanGlomSuite
-    num_epochs: 190.0
+    num_epochs: 240.0
     pre_time: 2.0
     stim_time: 3.0
-    tail_time: 1.0
+    tail_time: 2.0
     idle_color: 0.5
   protocol_parameters: {}
 pg_incl_7x:
   run_parameters:
     protocol_ID: PanGlomSuite
     num_epochs: 161.0
+    pre_time: 2.0
+    stim_time: 3.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters: {}
+GC6S_10x:
+  run_parameters:
+    protocol_ID: PanGlomSuite
+    num_epochs: 240.0
     pre_time: 2.0
     stim_time: 3.0
     tail_time: 2.0
