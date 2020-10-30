@@ -1289,91 +1289,103 @@ class PanGlomSuite(BaseProtocol):
         self.stim_list = ['FlickeringPatch', 'DriftingSquareGrating', 'LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
                           'MovingRectangle']
         n = [2, 2, 2, 12, 4, 2]  # weight each stim draw by how many trial types it has
-        self.stim_p = n / np.sum(n)
+        avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
+        all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
+
+        self.stim_order = np.random.permutation(np.hstack(all_stims))
+
+        # initialize each component class
+        self.initComponentClasses()
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
 
+    def initComponentClasses(self):
+        # pre-populate dict of component classes. Each with its own num_epochs_completed counter etc
+        self.component_classes = {}
+        for stim_type in self.stim_list:
+            if stim_type == 'LoomingSpot':
+                new_component_class = LoomingSpot(self.cfg)
+                new_component_class.protocol_parameters = {'intensity': 0.0,
+                                                            'center': [0, 0],
+                                                            'start_size': 2.5,
+                                                            'end_size': 80.0,
+                                                            'rv_ratio': [20.0, 100.0],
+                                                            'randomize_order': True,
+                                                            'include_reversed_loom': False,
+                                                            'include_randomized_loom': False}
+
+            elif stim_type == 'DriftingSquareGrating':
+                new_component_class = DriftingSquareGrating(self.cfg)
+                new_component_class.protocol_parameters = {'period': 20.0,
+                                                            'rate': 20.0,
+                                                            'contrast': 1.0,
+                                                            'mean': 0.5,
+                                                            'angle': [0.0, 180.0],
+                                                            'center': [0, 0],
+                                                            'center_size': 180.0,
+                                                            'randomize_order': True}
+
+            elif stim_type == 'ExpandingMovingSpot':
+                new_component_class = ExpandingMovingSpot(self.cfg)
+                new_component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
+                                                            'intensity': [0.0, 1.0],
+                                                            'center': [0, 0],
+                                                            'speed': [-80.0, 80.0],
+                                                            'angle': 0.0,
+                                                            'randomize_order': True}
+
+            elif stim_type == 'UniformFlash':
+                new_component_class = UniformFlash(self.cfg)
+                new_component_class.protocol_parameters = {'height': 240.0,
+                                                            'width': 240.0,
+                                                            'center': [0, 0],
+                                                            'intensity': [1.0, 0.0],
+                                                            'randomize_order': True}
+
+            elif stim_type == 'FlickeringPatch':
+                new_component_class = FlickeringPatch(self.cfg)
+                new_component_class.protocol_parameters = {'height': 30.0,
+                                                            'width': 30.0,
+                                                            'center': [0, 0],
+                                                            'contrast': 1.0,
+                                                            'mean': 0.5,
+                                                            'temporal_frequency': [1.0, 8.0],
+                                                            'randomize_order': True}
+            elif stim_type == 'MovingSpotOnDriftingGrating':
+                new_component_class = MovingSpotOnDriftingGrating(self.cfg)
+                new_component_class.protocol_parameters = {'center': [0, 0],
+                                                            'spot_radius': 7.5,
+                                                            'spot_color': 0.0,
+                                                            'spot_speed': 60.0,
+                                                            'grate_period': 20.0,
+                                                            'grate_rate': [-120.0, -30.0, 30.0, 120.0],
+                                                            'grate_contrast': 0.5,
+                                                            'angle': 0.0,
+                                                            'randomize_order': True}
+
+            elif stim_type == 'MovingRectangle':
+                self.component_class = MovingRectangle(self.cfg)
+                self.component_class.protocol_parameters = {'width': 20.0,
+                                                            'height': 120.0,
+                                                            'intensity': 0.0,
+                                                            'center': [0, 0],
+                                                            'speed': 80.0,
+                                                            'angle': [0.0, 180.0],
+                                                            'randomize_order': True}
+
+            # Lock component stim timing run params to suite run params
+            new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
+            new_component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
+            new_component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
+            new_component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
+
+            self.component_classes[stim_type] = new_component_class
+
     def getEpochParameters(self):
-        stim_type = str(np.random.choice(self.stim_list, p=self.stim_p))
-
+        stim_type = str(self.stim_order[self.num_epochs_completed]) # note this num_epochs_completed is for the whole suite, not component stim!
         self.convenience_parameters = {'component_stim_type': stim_type}
-        if stim_type == 'LoomingSpot':
-            self.component_class = LoomingSpot(self.cfg)
-            self.component_class.protocol_parameters = {'intensity': 0.0,
-                                                        'center': [0, 0],
-                                                        'start_size': 2.5,
-                                                        'end_size': 80.0,
-                                                        'rv_ratio': [20.0, 100.0],
-                                                        'randomize_order': True,
-                                                        'include_reversed_loom': False,
-                                                        'include_randomized_loom': False}
-
-        elif stim_type == 'DriftingSquareGrating':
-            self.component_class = DriftingSquareGrating(self.cfg)
-            self.component_class.protocol_parameters = {'period': 20.0,
-                                                        'rate': 20.0,
-                                                        'contrast': 1.0,
-                                                        'mean': 0.5,
-                                                        'angle': [0.0, 180.0],
-                                                        'center': [0, 0],
-                                                        'center_size': 180.0,
-                                                        'randomize_order': True}
-
-        elif stim_type == 'ExpandingMovingSpot':
-            self.component_class = ExpandingMovingSpot(self.cfg)
-            self.component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
-                                                        'intensity': [0.0, 1.0],
-                                                        'center': [0, 0],
-                                                        'speed': [-80.0, 80.0],
-                                                        'angle': 0.0,
-                                                        'randomize_order': True}
-
-        elif stim_type == 'UniformFlash':
-            self.component_class = UniformFlash(self.cfg)
-            self.component_class.protocol_parameters = {'height': 240.0,
-                                                        'width': 240.0,
-                                                        'center': [0, 0],
-                                                        'intensity': [1.0, 0.0],
-                                                        'randomize_order': True}
-
-        elif stim_type == 'FlickeringPatch':
-            self.component_class = FlickeringPatch(self.cfg)
-            self.component_class.protocol_parameters = {'height': 30.0,
-                                                        'width': 30.0,
-                                                        'center': [0, 0],
-                                                        'contrast': 1.0,
-                                                        'mean': 0.5,
-                                                        'temporal_frequency': [1.0, 8.0],
-                                                        'randomize_order': True}
-        elif stim_type == 'MovingSpotOnDriftingGrating':
-            self.component_class = MovingSpotOnDriftingGrating(self.cfg)
-            self.component_class.protocol_parameters = {'center': [0, 0],
-                                                        'spot_radius': 7.5,
-                                                        'spot_color': 0.0,
-                                                        'spot_speed': 60.0,
-                                                        'grate_period': 20.0,
-                                                        'grate_rate': [-120.0, -30.0, 30.0, 120.0],
-                                                        'grate_contrast': 0.5,
-                                                        'angle': 0.0,
-                                                        'randomize_order': True}
-
-        elif stim_type == 'MovingRectangle':
-            self.component_class = MovingRectangle(self.cfg)
-            self.component_class.protocol_parameters = {'width': 20.0,
-                                                        'height': 120.0,
-                                                        'intensity': 0.0,
-                                                        'center': [0, 0],
-                                                        'speed': 80.0,
-                                                        'angle': [0.0, 180.0],
-                                                        'randomize_order': True}
-
-
-        # Lock component stim timing run params to suite run params
-        self.component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
-        self.component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
-        self.component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
-        self.component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
+        self.component_class = self.component_classes[stim_type]
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
@@ -1381,6 +1393,7 @@ class PanGlomSuite(BaseProtocol):
 
     def loadStimuli(self, client):
         self.component_class.loadStimuli(client)
+        self.component_class.advanceEpochCounter() # up the component class epoch counter
 
     def getParameterDefaults(self):
         self.protocol_parameters = {}
