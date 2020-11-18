@@ -1365,9 +1365,9 @@ class PanGlomSuite(BaseProtocol):
                                                             'randomize_order': True}
 
             elif stim_type == 'MovingRectangle':
-                self.component_class = MovingRectangle(self.cfg)
-                self.component_class.protocol_parameters = {'width': 20.0,
-                                                            'height': 120.0,
+                new_component_class = MovingRectangle(self.cfg)
+                new_component_class.protocol_parameters = {'width': 20.0,
+                                                           'height': 120.0,
                                                             'intensity': 0.0,
                                                             'center': [0, 0],
                                                             'speed': 80.0,
@@ -1401,7 +1401,7 @@ class PanGlomSuite(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
                                'num_epochs': 240, #240 = 24 * 10 averages each
-                               'pre_time': 2.0,
+                               'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 2.0,
                                'idle_color': 0.5}
