@@ -27,12 +27,13 @@ class HemifieldDriftingGrating(BaseProtocol):
         current_left_rate = float(current_left_rate)
         current_right_rate = float(current_right_rate)
 
-        right_alpha = [int(x < (self.protocol_parameters['split_center'] - self.protocol_parameters['split_halfwidth'])) for x in range(36)]
+        rr = np.roll(range(36), np.int(self.protocol_parameters['split_center']+self.protocol_parameters['split_halfwidth'])) + self.protocol_parameters['split_halfwidth'] < 18
+        rr = [int(x) for x in rr]
         right_grate = {'name': 'RotatingGrating',
                       'period': self.protocol_parameters['period'],
                       'rate': current_right_rate,
                       'color': [1, 1, 1, 1],
-                      'alpha_by_face': right_alpha,
+                      'alpha_by_face': rr,
                       'mean': self.protocol_parameters['mean'],
                       'contrast': self.protocol_parameters['contrast'],
                       'angle': 0,
@@ -42,12 +43,13 @@ class HemifieldDriftingGrating(BaseProtocol):
                       'profile': 'square',
                       'theta': self.screen_center[0]}
 
-        left_alpha = [int(x >= (self.protocol_parameters['split_center'] + self.protocol_parameters['split_halfwidth'])) for x in range(36)]
+        ll = np.roll(range(36), np.int(self.protocol_parameters['split_center']-self.protocol_parameters['split_halfwidth'])) - self.protocol_parameters['split_halfwidth'] >= 18
+        ll = [int(x) for x in ll]
         left_grate = {'name': 'RotatingGrating',
                        'period': self.protocol_parameters['period'],
                        'rate': current_left_rate,
                        'color': [1, 1, 1, 1],
-                       'alpha_by_face': left_alpha,
+                       'alpha_by_face': ll,
                        'mean': self.protocol_parameters['mean'],
                        'contrast': self.protocol_parameters['contrast'],
                        'angle': 0,
@@ -89,8 +91,8 @@ class HemifieldDriftingGrating(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'period': 20.0,
                                     'rate': 20.0,
-                                    'split_center': 25,
-                                    'split_halfwidth': 3,
+                                    'split_center': 27,
+                                    'split_halfwidth': 1,
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'randomize_order': True}
