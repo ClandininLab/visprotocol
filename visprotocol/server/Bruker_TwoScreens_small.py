@@ -21,7 +21,7 @@ def main():
     x_left = -7.99e-2
     x_right = +7.99e-2
     y_forward = +7.17e-2
-    y_back = -0.8e-2
+    y_back = 1.0e-2
 
     def getBrukerLeft():
         return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.60, -1.0), viewport_width=1.0, viewport_height=2)
