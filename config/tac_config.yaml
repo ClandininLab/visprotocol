@@ -1,0 +1,11 @@
+experimenter: TAC
+prep_choices: [Whole brain, optic lobes, adkgasld]
+driver_choices: [TM9, TM3]
+indicator_choices: [GCaMP6f, TdTomato]
+
+rig_config:
+
+  Bruker_TwoScreens:
+    data_directory: E:/Tim/FlystimData
+    screen_center: [0, -30]
+    rig: Bruker
