@@ -1,6 +1,6 @@
 experimenter: TAC
-prep_choices: [Whole brain, optic lobes, adkgasld]
-driver_choices: [TM9, TM3]
+prep_choices: [Medulla]
+driver_choices: [nsyb]
 indicator_choices: [GCaMP6f, TdTomato]
 
 rig_config:
