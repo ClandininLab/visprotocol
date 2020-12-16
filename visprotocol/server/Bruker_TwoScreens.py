@@ -36,7 +36,7 @@ def main():
 
     bruker_right_screen = Screen(subscreens=[getBrukerRight()], id=2, fullscreen=True, vsync=True, square_size=(0.18, 0.25), square_loc=(-0.88, -0.92), name='Right', horizontal_flip=True)
 
-    aux_screen = Screen(subscreens=[getBrukerRight()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
+    aux_screen = Screen(subscreens=[getBrukerLeft()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
     draw_screens([bruker_left_screen, bruker_right_screen])
     plt.show()
