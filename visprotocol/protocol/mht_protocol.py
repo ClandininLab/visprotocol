@@ -660,10 +660,10 @@ class PeriodicVelocityNoise(BaseProtocol):
                                        'position': position}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 10.0,
+        self.protocol_parameters = {'height': 120.0,
                                     'width': 5.0,
                                     'period': 40.0, # deg spacing between bars
-                                    'z_offset': 0.35, #meters, offset of cylinder
+                                    'z_offset': 0, #meters, offset of cylinder
                                     'velocity_std': 80, # deg/sec
                                     'velocity_update_rate': 8, # Hz
                                     'start_seed': -1,
