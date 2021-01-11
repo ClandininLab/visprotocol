@@ -1287,8 +1287,8 @@ class PanGlomSuite(BaseProtocol):
         super().__init__(cfg)
         self.cfg = cfg
         self.stim_list = ['FlickeringPatch', 'DriftingSquareGrating', 'LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
-                          'MovingRectangle']
-        n = [2, 2, 2, 12, 4, 2]  # weight each stim draw by how many trial types it has
+                          'MovingRectangle', 'UniformFlash']
+        n = [2, 2, 2, 6, 4, 2, 2]  # weight each stim draw by how many trial types it has. Total = 20
         avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
         all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
 
@@ -1331,7 +1331,7 @@ class PanGlomSuite(BaseProtocol):
                 new_component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
                                                             'intensity': [0.0, 1.0],
                                                             'center': [0, 0],
-                                                            'speed': [-80.0, 80.0],
+                                                            'speed': 80.0,
                                                             'angle': 0.0,
                                                             'randomize_order': True}
 
@@ -1350,7 +1350,7 @@ class PanGlomSuite(BaseProtocol):
                                                             'center': [0, 0],
                                                             'contrast': 1.0,
                                                             'mean': 0.5,
-                                                            'temporal_frequency': [1.0, 8.0],
+                                                            'temporal_frequency': [1.0, 2.0, 8.0],
                                                             'randomize_order': True}
             elif stim_type == 'MovingSpotOnDriftingGrating':
                 new_component_class = MovingSpotOnDriftingGrating(self.cfg)
@@ -1400,10 +1400,10 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 240, #240 = 24 * 10 averages each
+                               'num_epochs': 200, #200 = 20 * 10 averages each
                                'pre_time': 1.0,
                                'stim_time': 3.0,
-                               'tail_time': 2.0,
+                               'tail_time': 1.0,
                                'idle_color': 0.5}
 
 # %%
