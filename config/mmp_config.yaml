@@ -14,5 +14,5 @@ rig_config:
 
   Bruker_LeftScreen:
     data_directory: E:/Michelle
-    screen_center: [225,-30]
+    screen_center: [0,-30]
     rig: Bruker
