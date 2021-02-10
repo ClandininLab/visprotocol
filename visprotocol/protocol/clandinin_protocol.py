@@ -91,18 +91,18 @@ class BaseProtocol():
         multicall.load_stim(**passedParameters, hold=True)
         multicall()
 
-    def startStimuli(self, client):
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         sleep(self.run_parameters['pre_time'])
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         #stim time
-        multicall.start_stim()
+        multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
         multicall()
         sleep(self.run_parameters['stim_time'])
 
         #tail time
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.stop_stim(print_profile=True)
+        multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
         multicall()
         sleep(self.run_parameters['tail_time'])

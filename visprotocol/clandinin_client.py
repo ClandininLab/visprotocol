@@ -44,3 +44,21 @@ class Client():
 
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
+
+
+class Client_Stim_Regeneration():
+    def __init__(self, cfg, screen):
+        self.user_name = cfg.get('user_name')
+        self.rig_name = cfg.get('rig_name')
+        self.cfg = cfg
+
+        self.server_options = {'host': '0.0.0.0',
+                               'port': 60629,
+                               'use_server': False}
+        self.NI_USB_name = ''
+        self.send_ttl = False
+
+        # # # Start the stim manager # # #
+        self.manager = launch_stim_server(screen)
+
+        self.manager.set_idle_background(0)
