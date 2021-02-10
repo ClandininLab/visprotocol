@@ -1401,9 +1401,9 @@ class PanGlomSuite(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
                                'num_epochs': 200, #200 = 20 * 10 averages each
-                               'pre_time': 1.0,
+                               'pre_time': 1.5,
                                'stim_time': 3.0,
-                               'tail_time': 1.0,
+                               'tail_time': 1.5,
                                'idle_color': 0.5}
 
 # %%
