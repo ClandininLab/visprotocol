@@ -65,8 +65,12 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
             x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
 
-        x_trajectory = Trajectory(x, kind='linear').to_dict()
-        y_trajectory = Trajectory(y, kind='linear').to_dict()
+        x_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': x,
+                        'kind': 'linear'}
+        y_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': y,
+                        'kind': 'linear'}
 
         patch_parameters = {'name': 'MovingPatch',
                             'width': width,
@@ -122,8 +126,12 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
             x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
 
-        x_trajectory = Trajectory(x, kind='linear').to_dict()
-        y_trajectory = Trajectory(y, kind='linear').to_dict()
+        x_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': x,
+                        'kind': 'linear'}
+        y_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': y,
+                        'kind': 'linear'}
 
         spot_parameters = {'name': 'MovingSpot',
                            'radius': radius,
@@ -194,10 +202,10 @@ class ContrastReversingGrating(BaseProtocol):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
 
         # Make the contrast trajectory
-        t = np.arange(0, self.run_parameters['stim_time'], 0.001)
-        c = self.protocol_parameters['contrast'] * np.sin(2*np.pi*current_temporal_frequency*t)
-        tv_pairs = list(zip(t, c))
-        contrast_traj = Trajectory(tv_pairs, kind='linear').to_dict()
+        contrast_traj = {'name': 'Sinusoid',
+                         'temporal_frequency': current_temporal_frequency,
+                         'amplitude': self.protocol_parameters['contrast'],
+                         'offset': 0}
 
         self.epoch_parameters = {'name': 'CylindricalGrating',
                                  'period': self.protocol_parameters['spatial_period'],
@@ -337,11 +345,10 @@ class FlickeringPatch(BaseProtocol):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
 
         # make color trajectory
-        t = np.arange(0, self.run_parameters['stim_time'], 0.001)
-        contrast = self.protocol_parameters['contrast'] * np.sin(2*np.pi*current_temporal_frequency*t)
-        col = self.protocol_parameters['mean'] + self.protocol_parameters['mean'] * contrast
-        tv_pairs = list(zip(t, col))
-        color_traj = Trajectory(tv_pairs, kind='linear').to_dict()
+        color_traj = {'name': 'Sinusoid',
+                      'temporal_frequency': current_temporal_frequency,
+                      'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
+                      'offset': self.protocol_parameters['mean']}
 
         self.epoch_parameters = {'name': 'MovingPatch',
                                  'width': self.protocol_parameters['width'],
@@ -388,34 +395,16 @@ class LoomingSpot(BaseProtocol):
 
         # adjust center to screen center
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
         rv_ratio = self.protocol_parameters['rv_ratio']  # msec
-        trajectory_code = [0]  # 0 = expanding, 1 = reversed (shrinking), 2 = randomized
-        if self.protocol_parameters['include_reversed_loom']:
-            trajectory_code.append(1)
-        if self.protocol_parameters['include_randomized_loom']:
-            trajectory_code.append(2)
+        current_rv_ratio = self.selectParametersFromLists(rv_ratio, randomize_order=self.protocol_parameters['randomize_order'])
 
-        current_rv_ratio, current_trajectory_code = self.selectParametersFromLists((rv_ratio, trajectory_code),
-                                                                                             all_combinations=True,
-                                                                                             randomize_order=self.protocol_parameters['randomize_order'])
         current_rv_ratio = current_rv_ratio / 1e3  # msec -> sec
-        time_steps, angular_size = getLoomTrajectory(current_rv_ratio, stim_time, start_size, end_size)
-
-        # Get the correct trajectory type
-        if current_trajectory_code == 0:
-            current_trajectory_type = 'expanding'
-            angular_size = angular_size  # initial trajectory
-
-        elif current_trajectory_code == 1:
-            current_trajectory_type = 'contracting'
-            angular_size = np.flip(angular_size, axis=0)  # reverse in time
-
-        elif current_trajectory_code == 2:
-            current_trajectory_type = 'randomized'
-            angular_size = np.random.permutation(angular_size)  # randomize in time
-
-        # time-modulated trajectory
-        r_traj = Trajectory(list(zip(time_steps, angular_size)), kind='previous').to_dict()
+        r_traj = {'name': 'Loom',
+                  'rv_ratio': current_rv_ratio,
+                  'stim_time': stim_time,
+                  'start_size': start_size,
+                  'end_size': end_size}
 
         self.epoch_parameters = {'name': 'MovingSpot',
                                  'radius': r_traj,
@@ -424,10 +413,7 @@ class LoomingSpot(BaseProtocol):
                                  'theta': adj_center[0],
                                  'phi': adj_center[1]}
 
-        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio,
-                                       'time_steps': time_steps,
-                                       'angular_size': angular_size,
-                                       'current_trajectory_type': current_trajectory_type}
+        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'intensity': 0.0,
@@ -435,9 +421,7 @@ class LoomingSpot(BaseProtocol):
                                     'start_size': 2.5,
                                     'end_size': 80.0,
                                     'rv_ratio': [5.0, 10.0, 20.0, 40.0, 80.0],
-                                    'randomize_order': True,
-                                    'include_reversed_loom': False,
-                                    'include_randomized_loom': False}
+                                    'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'LoomingSpot',
@@ -635,9 +619,11 @@ class PeriodicVelocityNoise(BaseProtocol):
 
         time_steps = np.linspace(0, self.run_parameters['stim_time'], n_updates)  # time steps of update trajectory
 
-        position = np.cumsum(velocity) #position at each update time point, according to new velocity value
+        position = np.cumsum(velocity) # position at each update time point, according to new velocity value
 
-        theta_traj = Trajectory(list(zip(time_steps, position)), kind='linear').to_dict()
+        theta_traj = {'name': 'tv_pairs',
+                      'tv_pairs': list(zip(time_steps, position)),
+                      'kind': 'linear'}
 
         distribution_data = {'name': 'Binary',
                              'args': [],
@@ -713,7 +699,9 @@ class VelocityNoise(BaseProtocol):
 
         position = adj_center[0] + np.cumsum(velocity) #position at each update time point, according to new velocity value
 
-        theta_traj = Trajectory(list(zip(time_steps, position)), kind='linear').to_dict()
+        theta_traj = {'name': 'tv_pairs',
+                      'tv_pairs': list(zip(time_steps, position)),
+                      'kind': 'linear'}
 
         self.epoch_parameters = {'name': 'MovingPatch',
                                  'width': self.protocol_parameters['width'],
@@ -846,332 +834,6 @@ class SpotPair(BaseProtocol):
 
 
 # %%
-class CoherentDotFieldPair(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        current_num_dots, current_frac_dark = self.selectParametersFromLists((self.protocol_parameters['num_dots'], self.protocol_parameters['fraction_dark']), randomize_order=self.protocol_parameters['randomize_order'])
-
-        num_dark_dots = current_frac_dark * current_num_dots
-        num_bright_dots = (1-current_frac_dark) * current_num_dots
-        # dark dot field
-        dark_location_seed = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
-        np.random.seed(int(dark_location_seed))
-        theta_ctr = np.random.uniform(low=-180, high=180, size=int(num_dark_dots))
-        phi_ctr = np.random.uniform(low=-50, high=30, size=int(num_dark_dots))
-        dark_theta = [x + self.screen_center[0] for x in theta_ctr]
-        dark_phi = [y + self.screen_center[1] for y in phi_ctr]
-
-        # bright dot field
-        bright_location_seed = self.protocol_parameters['dot_location_start_seed'] + 10*self.num_epochs_completed + 1
-        np.random.seed(int(bright_location_seed))
-        theta_ctr = np.random.uniform(low=-180, high=180, size=int(num_bright_dots))
-        phi_ctr = np.random.uniform(low=-50, high=30, size=int(num_bright_dots))
-        bright_theta = [x + self.screen_center[0] for x in theta_ctr]
-        bright_phi = [y + self.screen_center[1] for y in phi_ctr]
-
-        # motion trajectory: applied to both dot field
-        distance_to_travel = self.protocol_parameters['global_motion_speed'] * self.run_parameters['stim_time']
-        startX = (0, -distance_to_travel/2)
-        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
-        startY = (0, 0)
-        endY = (self.run_parameters['stim_time'], 0)
-        theta_traj = Trajectory([startX, endX], kind='linear').to_dict()
-        phi_traj = Trajectory([startY, endY], kind='linear').to_dict()
-
-        dark_parameters =  {'name': 'CoherentMotionDotField',
-                            'point_size': self.protocol_parameters['point_size'],
-                            'sphere_radius': 1.0,
-                            'color': 0,
-                            'theta_locations': dark_theta,
-                            'phi_locations': dark_phi,
-                            'theta_trajectory': theta_traj,
-                            'phi_trajectory': phi_traj}
-
-        bright_parameters = {'name': 'CoherentMotionDotField',
-                               'point_size': self.protocol_parameters['point_size'],
-                               'sphere_radius': 1.0,
-                               'color': 1,
-                               'theta_locations': bright_theta,
-                               'phi_locations': bright_phi,
-                               'theta_trajectory': theta_traj,
-                               'phi_trajectory': phi_traj}
-
-        if current_frac_dark == 1:
-            self.meta_parameters = {'stim_type': 'dark_only'}
-        elif current_frac_dark == 0:
-            self.meta_parameters = {'stim_type': 'bright_only'}
-        else:
-            self.meta_parameters = {'stim_type': 'dark_and_bright'}
-
-        self.epoch_parameters = (dark_parameters, bright_parameters)
-
-        self.convenience_parameters = {'current_num_dots': current_num_dots,
-                                       'current_frac_dark': current_frac_dark}
-
-        print('Num dots = {}; frac_dark = {}'.format(current_num_dots, current_frac_dark))
-
-    def loadStimuli(self, client):
-        dark_parameters = self.epoch_parameters[0].copy()
-        bright_parameters = self.epoch_parameters[1].copy()
-
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        bg = self.run_parameters.get('idle_color')
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-
-        if self.meta_parameters['stim_type'] == 'dark_only':
-            multicall.load_stim(**dark_parameters, hold=True)
-        elif self.meta_parameters['stim_type'] == 'bright_only':
-            multicall.load_stim(**bright_parameters, hold=True)
-        elif self.meta_parameters['stim_type'] == 'dark_and_bright':
-            multicall.load_stim(**dark_parameters, hold=True)
-            multicall.load_stim(**bright_parameters, hold=True)
-
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'point_size': 30.0,
-                                    'num_dots': [50, 100, 200, 400, 800],
-                                    'dot_location_start_seed': 1,
-                                    'global_motion_speed': 90.0,
-                                    'fraction_dark': [1.0, 0.75, 0.5, 0.25, 0.0],
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'CoherentDotFieldPair',
-                               'num_epochs': 125,
-                               'pre_time': 1.0,
-                               'stim_time': 4.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
-class BallisticDotFieldWithMotionPopout(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        stim_codes = [0, 1]
-        current_global_motion_speed, current_popout_motion_speed, current_stim_code = self.selectParametersFromLists((self.protocol_parameters['global_motion_speed'], self.protocol_parameters['popout_motion_speed'], stim_codes), randomize_order=self.protocol_parameters['randomize_order'])
-        if current_stim_code == 0:
-            current_stim_type = 'popout_only'
-        elif current_stim_code == 1:
-            current_stim_type = 'popout_plus_global'
-
-
-        # dot field grid: random dot placement. Advance random seed each trial
-        current_location_seed = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
-        np.random.seed(int(current_location_seed))
-        theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots']))
-        phi_ctr = np.random.uniform(low=-50, high=20, size=int(self.protocol_parameters['n_global_dots']))
-        global_theta = [x + self.screen_center[0] for x in theta_ctr]
-        global_phi = [y + self.screen_center[1] for y in phi_ctr]
-
-        # put the pop out at screen center
-        popout_theta = [self.screen_center[0]]
-        popout_phi = [self.screen_center[1]]
-
-        # global motion trajectory
-        distance_to_travel = current_global_motion_speed * self.run_parameters['stim_time']
-        startX = (0, -distance_to_travel/2)
-        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
-        startY = (0, 0)
-        endY = (self.run_parameters['stim_time'], 0)
-
-        global_theta_traj = Trajectory([startX, endX], kind='linear').to_dict()
-        global_phi_traj = Trajectory([startY, endY], kind='linear').to_dict()
-
-        # Pop out motion trajectory
-        distance_to_travel = 140
-        travel_time = distance_to_travel / np.abs(current_popout_motion_speed)
-        if travel_time > self.run_parameters['stim_time']:
-            print('Warning: stim_time is too short to show whole trajectory at this speed!')
-            hang_time = 0
-        else:
-            hang_time = (self.run_parameters['stim_time'] - travel_time)/2
-
-        # split up hang time in pre and post such that trajectory always hits (0, 0) at stim_time/2
-        x_1 = (0, -(current_popout_motion_speed * travel_time)/2)
-        x_2 = (hang_time, -(current_popout_motion_speed * travel_time)/2)
-        x_3 = (hang_time+travel_time, (current_popout_motion_speed * travel_time)/2)
-        x_4 = (hang_time+travel_time+hang_time, (current_popout_motion_speed * travel_time)/2)
-
-        popout_theta_traj = Trajectory([x_1, x_2, x_3, x_4], kind='linear').to_dict()
-        popout_phi_traj = Trajectory([(0, 0), (self.run_parameters['stim_time'], 0)], kind='linear').to_dict()
-
-
-        global_parameters = {'name': 'CoherentMotionDotField',
-                            'point_size': self.protocol_parameters['point_size'],
-                            'sphere_radius': 1.0,
-                            'color': self.protocol_parameters['dot_color'],
-                            'theta_locations': global_theta,
-                            'phi_locations': global_phi,
-                            'theta_trajectory': global_theta_traj,
-                            'phi_trajectory': global_phi_traj}
-
-        popout_parameters = {'name': 'CoherentMotionDotField',
-                            'point_size': self.protocol_parameters['point_size'],
-                            'sphere_radius': 1.0,
-                            'color': self.protocol_parameters['dot_color'],
-                            'theta_locations': popout_theta,
-                            'phi_locations': popout_phi,
-                            'theta_trajectory': popout_theta_traj,
-                            'phi_trajectory': popout_phi_traj}
-
-        self.meta_parameters = {'current_stim_type': current_stim_type}
-
-        self.epoch_parameters = (global_parameters, popout_parameters)
-        self.convenience_parameters = {'current_popout_motion_speed': current_popout_motion_speed,
-                                       'current_global_motion_speed': current_global_motion_speed,
-                                       'current_stim_type': current_stim_type,
-                                       'current_lotation_seed': current_location_seed}
-
-    def loadStimuli(self, client):
-        global_parameters = self.epoch_parameters[0].copy()
-        popout_parameters = self.epoch_parameters[1].copy()
-
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        bg = self.run_parameters.get('idle_color')
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-        if self.meta_parameters.get('current_stim_type') == 'popout_plus_global':
-            multicall.load_stim(**global_parameters, hold=True)
-
-        multicall.load_stim(**popout_parameters, hold=True)
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'point_size': 30.0,
-                                    'n_global_dots': 100,
-                                    'dot_location_start_seed': 1,
-                                    'global_motion_speed': 60.0,
-                                    'popout_motion_speed': [-90.0, -60.0, -30.0, 30.0, 60.0, 90.0],
-                                    'dot_color': 0.25,
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'BallisticDotFieldWithMotionPopout',
-                               'num_epochs': 120, # n popout speeds x 2 x n_averages
-                               'pre_time': 1.0,
-                               'stim_time': 5.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
-
-class SeparableMovingDotFields(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        stim_codes = [0, 1]
-        current_global_motion_speed_1, current_global_motion_speed_2, current_stim_code = self.selectParametersFromLists((self.protocol_parameters['global_motion_speed_1'], self.protocol_parameters['global_motion_speed_2'], stim_codes), randomize_order=self.protocol_parameters['randomize_order'])
-        if current_stim_code == 0:
-            current_stim_type = 'global_2'
-        elif current_stim_code == 1:
-            current_stim_type = 'global_1_2'
-
-        # dot field grid: random dot placement. Advance random seed each trial
-        current_location_seed_1 = self.protocol_parameters['dot_location_start_seed'] + self.num_epochs_completed
-        np.random.seed(int(current_location_seed_1))
-        theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots_each']))
-        phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots_each']))
-        global_theta_1 = [x + self.screen_center[0] for x in theta_ctr]
-        global_phi_1 = [y + self.screen_center[1] for y in phi_ctr]
-
-        current_location_seed_2 = self.protocol_parameters['dot_location_start_seed'] + 10*self.num_epochs_completed + 1
-        np.random.seed(int(current_location_seed_2))
-        theta_ctr = np.random.uniform(low=-180, high=180, size=int(self.protocol_parameters['n_global_dots_each']))
-        phi_ctr = np.random.uniform(low=-50, high=30, size=int(self.protocol_parameters['n_global_dots_each']))
-        global_theta_2 = [x + self.screen_center[0] for x in theta_ctr]
-        global_phi_2 = [y + self.screen_center[1] for y in phi_ctr]
-
-        # motion trajectory
-        distance_to_travel = current_global_motion_speed_1 * self.run_parameters['stim_time']
-        startX = (0, -distance_to_travel/2)
-        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
-        startY = (0, 0)
-        endY = (self.run_parameters['stim_time'], 0)
-        global_theta_traj_1 = Trajectory([startX, endX], kind='linear').to_dict()
-        global_phi_traj_1 = Trajectory([startY, endY], kind='linear').to_dict()
-
-        distance_to_travel = current_global_motion_speed_2 * self.run_parameters['stim_time']
-        startX = (0, -distance_to_travel/2)
-        endX = (self.run_parameters['stim_time'], distance_to_travel/2)
-        startY = (0, 0)
-        endY = (self.run_parameters['stim_time'], 0)
-        global_theta_traj_2 = Trajectory([startX, endX], kind='linear').to_dict()
-        global_phi_traj_2 = Trajectory([startY, endY], kind='linear').to_dict()
-
-        global_parameters_1 = {'name': 'CoherentMotionDotField',
-                               'point_size': self.protocol_parameters['point_size'],
-                               'sphere_radius': 1.0,
-                               'color': self.protocol_parameters['dot_color'],
-                               'theta_locations': global_theta_1,
-                               'phi_locations': global_phi_1,
-                               'theta_trajectory': global_theta_traj_1,
-                               'phi_trajectory': global_phi_traj_1}
-
-        global_parameters_2 = {'name': 'CoherentMotionDotField',
-                               'point_size': self.protocol_parameters['point_size'],
-                               'sphere_radius': 1.0,
-                               'color': self.protocol_parameters['dot_color'],
-                               'theta_locations': global_theta_2,
-                               'phi_locations': global_phi_2,
-                               'theta_trajectory': global_theta_traj_2,
-                               'phi_trajectory': global_phi_traj_2}
-
-        self.meta_parameters = {'current_stim_type': current_stim_type}
-
-        self.epoch_parameters = (global_parameters_1, global_parameters_2)
-        self.convenience_parameters = {'current_global_motion_speed_1': current_global_motion_speed_1,
-                                       'current_global_motion_speed_2': current_global_motion_speed_2,
-                                       'current_stim_type': current_stim_type,
-                                       'current_lotation_seed_1': current_location_seed_1,
-                                       'current_lotation_seed_2': current_location_seed_2}
-
-    def loadStimuli(self, client):
-        global_parameters_1 = self.epoch_parameters[0].copy()
-        global_parameters_2 = self.epoch_parameters[1].copy()
-
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        bg = self.run_parameters.get('idle_color')
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-        if self.meta_parameters.get('current_stim_type') == 'global_2':
-            multicall.load_stim(**global_parameters_2, hold=True)
-        elif self.meta_parameters.get('current_stim_type') == 'global_1_2':
-            multicall.load_stim(**global_parameters_1, hold=True)
-            multicall.load_stim(**global_parameters_2, hold=True)
-
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'point_size': 30.0,
-                                    'n_global_dots_each': 60,
-                                    'dot_location_start_seed': 1,
-                                    'global_motion_speed_1': 60.0,
-                                    'global_motion_speed_2': [-90.0, -60.0, -30.0, 30.0, 60.0, 90.0],
-                                    'dot_color': 0.25,
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'SeparableMovingDotFields',
-                               'num_epochs': 120,
-                               'pre_time': 1.0,
-                               'stim_time': 4.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
 
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -1199,9 +861,15 @@ class RealWalkThroughFakeForest(BaseProtocol):
         y = snippet['y']
         heading = snippet['a']-90 # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
 
-        fly_x_trajectory = Trajectory(list(zip(t, x))).to_dict()
-        fly_y_trajectory = Trajectory(list(zip(t, y))).to_dict()
-        fly_theta_trajectory = Trajectory(list(zip(t, heading))).to_dict()
+        fly_x_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(t, x)),
+                            'kind': 'linear'}
+        fly_y_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(t, y)),
+                            'kind': 'linear'}
+        fly_theta_trajectory = {'name': 'tv_pairs',
+                                'tv_pairs': list(zip(t, heading)),
+                                'kind': 'linear'}
 
         z_level = -0.20
         tree_locations = []
@@ -1405,28 +1073,28 @@ class PanGlomSuite(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.5,
                                'idle_color': 0.5}
-
-# %%
-"""
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # SHARED FUNCTIONS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-"""
-
-def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
-    # rv_ratio in sec
-    time_steps = np.arange(0, stim_time-0.001, 0.001)  # time steps of trajectory
-    # calculate angular size at each time step for this rv ratio
-    angular_size = 2 * np.rad2deg(np.arctan(rv_ratio * (1 / (stim_time - time_steps))))
-
-    # shift curve vertically so it starts at start_size
-    min_size = angular_size[0]
-    size_adjust = min_size - start_size
-    angular_size = angular_size - size_adjust
-    # Cap the curve at end_size and have it just hang there
-    max_size_ind = np.where(angular_size > end_size)[0][0]
-    angular_size[max_size_ind:] = end_size
-    # divide by  2 to get spot radius
-    angular_size = angular_size / 2
-
-    return time_steps, angular_size
+#
+# # %%
+# """
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # SHARED FUNCTIONS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# """
+#
+# def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
+#     # rv_ratio in sec
+#     time_steps = np.arange(0, stim_time-0.001, 0.001)  # time steps of trajectory
+#     # calculate angular size at each time step for this rv ratio
+#     angular_size = 2 * np.rad2deg(np.arctan(rv_ratio * (1 / (stim_time - time_steps))))
+#
+#     # shift curve vertically so it starts at start_size
+#     min_size = angular_size[0]
+#     size_adjust = min_size - start_size
+#     angular_size = angular_size - size_adjust
+#     # Cap the curve at end_size and have it just hang there
+#     max_size_ind = np.where(angular_size > end_size)[0][0]
+#     angular_size[max_size_ind:] = end_size
+#     # divide by  2 to get spot radius
+#     angular_size = angular_size / 2
+#
+#     return time_steps, angular_size
