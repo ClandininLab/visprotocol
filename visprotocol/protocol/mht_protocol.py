@@ -442,7 +442,7 @@ class MovingSpotOnDriftingGrating(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_spot_speed, current_grate_rate = self.selectParametersFromLists((self.protocol_parameters['spot_speed'],self.protocol_parameters['grate_rate']),
+        current_spot_speed, current_grate_rate = self.selectParametersFromLists((self.protocol_parameters['spot_speed'], self.protocol_parameters['grate_rate']),
                                                                                  all_combinations = True,
                                                                                  randomize_order = self.protocol_parameters['randomize_order'])
 
@@ -491,12 +491,12 @@ class MovingSpotOnDriftingGrating(BaseProtocol):
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'MovingSpotOnDriftingGrating',
-                               'num_epochs':165,
-                               'pre_time':1.0,
-                               'stim_time':6.0,
-                               'tail_time':1.0,
-                               'idle_color':0.5}
+        self.run_parameters = {'protocol_ID': 'MovingSpotOnDriftingGrating',
+                               'num_epochs': 165,
+                               'pre_time': 1.0,
+                               'stim_time': 6.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
 
 # %%
 
@@ -975,72 +975,70 @@ class PanGlomSuite(BaseProtocol):
             if stim_type == 'LoomingSpot':
                 new_component_class = LoomingSpot(self.cfg)
                 new_component_class.protocol_parameters = {'intensity': 0.0,
-                                                            'center': [0, 0],
-                                                            'start_size': 2.5,
-                                                            'end_size': 80.0,
-                                                            'rv_ratio': [20.0, 100.0],
-                                                            'randomize_order': True,
-                                                            'include_reversed_loom': False,
-                                                            'include_randomized_loom': False}
+                                                           'center': [0, 0],
+                                                           'start_size': 2.5,
+                                                           'end_size': 80.0,
+                                                           'rv_ratio': [20.0, 100.0],
+                                                           'randomize_order': True}
 
             elif stim_type == 'DriftingSquareGrating':
                 new_component_class = DriftingSquareGrating(self.cfg)
                 new_component_class.protocol_parameters = {'period': 20.0,
-                                                            'rate': 20.0,
-                                                            'contrast': 1.0,
-                                                            'mean': 0.5,
-                                                            'angle': [0.0, 180.0],
-                                                            'center': [0, 0],
-                                                            'center_size': 180.0,
-                                                            'randomize_order': True}
+                                                           'rate': 20.0,
+                                                           'contrast': 1.0,
+                                                           'mean': 0.5,
+                                                           'angle': [0.0, 180.0],
+                                                           'center': [0, 0],
+                                                           'center_size': 180.0,
+                                                           'randomize_order': True}
 
             elif stim_type == 'ExpandingMovingSpot':
                 new_component_class = ExpandingMovingSpot(self.cfg)
                 new_component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
-                                                            'intensity': [0.0, 1.0],
-                                                            'center': [0, 0],
-                                                            'speed': 80.0,
-                                                            'angle': 0.0,
-                                                            'randomize_order': True}
+                                                           'intensity': [0.0, 1.0],
+                                                           'center': [0, 0],
+                                                           'speed': 80.0,
+                                                           'angle': 0.0,
+                                                           'randomize_order': True}
 
             elif stim_type == 'UniformFlash':
                 new_component_class = UniformFlash(self.cfg)
                 new_component_class.protocol_parameters = {'height': 240.0,
-                                                            'width': 240.0,
-                                                            'center': [0, 0],
-                                                            'intensity': [1.0, 0.0],
-                                                            'randomize_order': True}
+                                                           'width': 240.0,
+                                                           'center': [0, 0],
+                                                           'intensity': [1.0, 0.0],
+                                                           'randomize_order': True}
 
             elif stim_type == 'FlickeringPatch':
                 new_component_class = FlickeringPatch(self.cfg)
                 new_component_class.protocol_parameters = {'height': 30.0,
-                                                            'width': 30.0,
-                                                            'center': [0, 0],
-                                                            'contrast': 1.0,
-                                                            'mean': 0.5,
-                                                            'temporal_frequency': [1.0, 2.0, 8.0],
-                                                            'randomize_order': True}
+                                                           'width': 30.0,
+                                                           'center': [0, 0],
+                                                           'contrast': 1.0,
+                                                           'mean': 0.5,
+                                                           'temporal_frequency': [1.0, 2.0, 8.0],
+                                                           'randomize_order': True}
             elif stim_type == 'MovingSpotOnDriftingGrating':
                 new_component_class = MovingSpotOnDriftingGrating(self.cfg)
                 new_component_class.protocol_parameters = {'center': [0, 0],
-                                                            'spot_radius': 7.5,
-                                                            'spot_color': 0.0,
-                                                            'spot_speed': 60.0,
-                                                            'grate_period': 20.0,
-                                                            'grate_rate': [-120.0, -30.0, 30.0, 120.0],
-                                                            'grate_contrast': 0.5,
-                                                            'angle': 0.0,
-                                                            'randomize_order': True}
+                                                           'spot_radius': 7.5,
+                                                           'spot_color': 0.0,
+                                                           'spot_speed': 60.0,
+                                                           'grate_period': 20.0,
+                                                           'grate_rate': [-120.0, -30.0, 30.0, 120.0],
+                                                           'grate_contrast': 0.5,
+                                                           'angle': 0.0,
+                                                           'randomize_order': True}
 
             elif stim_type == 'MovingRectangle':
                 new_component_class = MovingRectangle(self.cfg)
                 new_component_class.protocol_parameters = {'width': 20.0,
                                                            'height': 120.0,
-                                                            'intensity': 0.0,
-                                                            'center': [0, 0],
-                                                            'speed': 80.0,
-                                                            'angle': [0.0, 180.0],
-                                                            'randomize_order': True}
+                                                           'intensity': 0.0,
+                                                           'center': [0, 0],
+                                                           'speed': 80.0,
+                                                           'angle': [0.0, 180.0],
+                                                           'randomize_order': True}
 
             # Lock component stim timing run params to suite run params
             new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
@@ -1073,28 +1071,3 @@ class PanGlomSuite(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.5,
                                'idle_color': 0.5}
-#
-# # %%
-# """
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # SHARED FUNCTIONS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# """
-#
-# def getLoomTrajectory(rv_ratio, stim_time, start_size, end_size):
-#     # rv_ratio in sec
-#     time_steps = np.arange(0, stim_time-0.001, 0.001)  # time steps of trajectory
-#     # calculate angular size at each time step for this rv ratio
-#     angular_size = 2 * np.rad2deg(np.arctan(rv_ratio * (1 / (stim_time - time_steps))))
-#
-#     # shift curve vertically so it starts at start_size
-#     min_size = angular_size[0]
-#     size_adjust = min_size - start_size
-#     angular_size = angular_size - size_adjust
-#     # Cap the curve at end_size and have it just hang there
-#     max_size_ind = np.where(angular_size > end_size)[0][0]
-#     angular_size[max_size_ind:] = end_size
-#     # divide by  2 to get spot radius
-#     angular_size = angular_size / 2
-#
-#     return time_steps, angular_size
