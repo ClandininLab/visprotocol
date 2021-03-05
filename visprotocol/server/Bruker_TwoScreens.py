@@ -24,17 +24,17 @@ def main():
     y_back = -0.8e-2
 
     def getBrukerLeft():
-        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.60, -1.0), viewport_width=1.3, viewport_height=2)
+        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.62, -1.0), viewport_width=1.35, viewport_height=2)
 
     def getBrukerRight():
-        return SubScreen(pa=(0, y_forward, z_bottom), pb=(x_right, y_back, z_bottom), pc=(0, y_forward, 0), viewport_ll=(-0.60, -1.0), viewport_width=1.3, viewport_height=2)
+        return SubScreen(pa=(0, y_forward, z_bottom), pb=(x_right, y_back, z_bottom), pc=(0, y_forward, 0), viewport_ll=(-0.60, -1.0), viewport_width=1.38, viewport_height=2)
 
     def getAux():
         return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0))
 
-    bruker_left_screen = Screen(subscreens=[getBrukerLeft()], id=1, fullscreen=True, vsync=True, square_size=(0.18, 0.25), square_loc=(0.78, -0.86), name='Left', horizontal_flip=True)
+    bruker_left_screen = Screen(subscreens=[getBrukerLeft()], id=1, fullscreen=True, vsync=True, square_size=(0.11, 0.23), square_loc=(0.89, -1.00), name='Left', horizontal_flip=True)
 
-    bruker_right_screen = Screen(subscreens=[getBrukerRight()], id=2, fullscreen=True, vsync=True, square_size=(0.18, 0.25), square_loc=(-0.88, -0.92), name='Right', horizontal_flip=True)
+    bruker_right_screen = Screen(subscreens=[getBrukerRight()], id=2, fullscreen=True, vsync=True, square_size=(0.14, 0.22), square_loc=(-0.85, -0.94), name='Right', horizontal_flip=True)
 
     aux_screen = Screen(subscreens=[getBrukerLeft()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
