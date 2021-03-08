@@ -24,10 +24,10 @@ def main():
     y_back = -0.8e-2
 
     def getBrukerLeft():
-        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.62, -1.0), viewport_width=1.35, viewport_height=2)
+        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.63, -1.0), viewport_width=1.37, viewport_height=2)
 
     def getBrukerRight():
-        return SubScreen(pa=(0, y_forward, z_bottom), pb=(x_right, y_back, z_bottom), pc=(0, y_forward, 0), viewport_ll=(-0.60, -1.0), viewport_width=1.38, viewport_height=2)
+        return SubScreen(pa=(0, y_forward, z_bottom), pb=(x_right, y_back, z_bottom), pc=(0, y_forward, 0), viewport_ll=(-0.61, -1.0), viewport_width=1.36, viewport_height=2)
 
     def getAux():
         return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0))
