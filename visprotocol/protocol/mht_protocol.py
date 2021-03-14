@@ -141,51 +141,58 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         return spot_parameters
 
 # %%
+
+
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # FLY-CENTERED STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
-# TODO update
-# class CheckerboardWhiteNoise(BaseProtocol):
-#     def __init__(self, cfg):
-#         super().__init__(cfg)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         stimulus_ID  = 'RandomGrid'
-#
-#         start_seed = int(np.random.choice(range(int(1e6))))
-#
-#
-#         distribution_data = {'name':'Gaussian',
-#                                  'args':[],
-#                                  'kwargs':{'rand_mean':self.protocol_parameters['rand_mean'],
-#                                            'rand_stdev':self.protocol_parameters['rand_stdev']}}
-#
-#         self.epoch_parameters = {'name':stimulus_ID,
-#                             'theta_period':self.protocol_parameters['checker_width'],
-#                             'phi_period':self.protocol_parameters['checker_width'],
-#                             'start_seed':start_seed,
-#                             'update_rate':self.protocol_parameters['update_rate'],
-#                             'distribution_data':distribution_data}
-#         self.convenience_parameters = {'start_seed': start_seed}
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'checker_width':5.0,
-#                        'update_rate':0.5,
-#                        'rand_mean': 0.5,
-#                        'rand_stdev':0.15}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID':'CheckerboardWhiteNoise',
-#               'num_epochs':10,
-#               'pre_time':1.0,
-#               'stim_time':30.0,
-#               'tail_time':1.0,
-#               'idle_color':0.5}
+
+
+class SphericalCheckerboardWhiteNoise(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stimulus_ID = 'RandomGridOnSphericalPatch'
+
+        start_seed = int(np.random.choice(range(int(1e6))))
+
+        distribution_data = {'name': 'Ternary',
+                             'args': [],
+                             'kwargs': {'rand_min': self.protocol_parameters['rand_min'],
+                                        'rand_max': self.protocol_parameters['rand_max']}}
+
+        self.epoch_parameters = {'name': stimulus_ID,
+                                 'patch_width': self.protocol_parameters['patch_size'],
+                                 'patch_height': self.protocol_parameters['patch_size'],
+                                 'width': self.protocol_parameters['grid_width'],
+                                 'height': self.protocol_parameters['grid_height'],
+                                 'start_seed': start_seed,
+                                 'update_rate': self.protocol_parameters['update_rate'],
+                                 'distribution_data': distribution_data}
+
+        self.convenience_parameters = {'start_seed': start_seed}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'patch_size': 5.0,
+                                    'update_rate': 20.0,
+                                    'rand_min': 0.0,
+                                    'rand_max': 1.0,
+                                    'grid_width': 60,
+                                    'grid_height': 60}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SphericalCheckerboardWhiteNoise',
+                               'num_epochs': 10,
+                               'pre_time': 2.0,
+                               'stim_time': 30.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
 
 # %%
 
