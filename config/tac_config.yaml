@@ -7,5 +7,5 @@ rig_config:
 
   Bruker_TwoScreens:
     data_directory: E:/Tim/FlystimData
-    screen_center: [0, -30]
+    screen_center: [50, -30]
     rig: Bruker

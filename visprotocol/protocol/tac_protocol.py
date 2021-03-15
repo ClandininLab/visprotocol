@@ -8,7 +8,9 @@ Last update 2021 Mar 14
 """
 
 from visprotocol.protocol import clandinin_protocol
+import numpy as np
 
+from flystim.trajectory import Trajectory
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self, cfg):
