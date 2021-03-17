@@ -162,31 +162,28 @@ class BaseProtocol():
 
         return current_parameters
 
-
-    def getMovingPatchParameters(self, center = None, angle = None, speed = None, width = None, height = None, color = None, background = None, distance_to_travel = None):
+    def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
         if width is None: width = self.protocol_parameters['width']
         if height is None: height = self.protocol_parameters['height']
         if color is None: color = self.protocol_parameters['color']
-        if background is None: background = self.run_parameters['idle_color']
-
 
         centerX = center[0]
         centerY = center[1]
         stim_time = self.run_parameters['stim_time']
-        if distance_to_travel is None: #distance_to_travel is set by speed and stim_time
+        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
             distance_to_travel = speed * stim_time
-            #trajectory just has two points, at time=0 and time=stim_time
-            startX = (0,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            # trajectory just has two points, at time=0 and time=stim_time
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
             endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            startY = (0,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
             endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
             x = [startX, endX]
             y = [startY, endY]
 
-        else: #distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
+        else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
             travel_time = distance_to_travel / speed
             if travel_time > stim_time:
                 print('Warning: stim_time is too short to show whole trajectory at this speed!')
@@ -195,27 +192,89 @@ class BaseProtocol():
                 hang_time = (stim_time - travel_time)/2
 
             # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
-            x_1 = (0,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_2 = (hang_time,centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
             x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
             x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
 
-            y_1 = (0,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_2 = (hang_time,centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
             y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
             y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
 
-            x = [x_1,x_2,x_3,x_4]
+            x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
 
-        trajectory = RectangleTrajectory(x=x,
-                                         y=y,
-                                         angle=angle,
-                                         h = height,
-                                         w = width,
-                                         color = color).to_dict()
+        x_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': x,
+                        'kind': 'linear'}
+        y_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': y,
+                        'kind': 'linear'}
 
-        patch_parameters = {'name':'MovingPatch',
-                                'background':background,
-                                'trajectory':trajectory}
+        patch_parameters = {'name': 'MovingPatch',
+                            'width': width,
+                            'height': height,
+                            'color': color,
+                            'theta': x_trajectory,
+                            'phi': y_trajectory,
+                            'angle': angle}
         return patch_parameters
+
+    def getMovingSpotParameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
+        if center is None: center = self.protocol_parameters['center']
+        if angle is None: angle = self.protocol_parameters['angle']
+        if speed is None: speed = self.protocol_parameters['speed']
+        if radius is None: radius = self.protocol_parameters['radius']
+        if color is None: color = self.protocol_parameters['color']
+
+        center = self.adjustCenter(center)
+
+        centerX = center[0]
+        centerY = center[1]
+        stim_time = self.run_parameters['stim_time']
+        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
+            distance_to_travel = speed * stim_time
+            # trajectory just has two points, at time=0 and time=stim_time
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            x = [startX, endX]
+            y = [startY, endY]
+
+        else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
+            travel_time = distance_to_travel / speed
+            if travel_time > stim_time:
+                print('Warning: stim_time is too short to show whole trajectory at this speed!')
+                hang_time = 0
+            else:
+                hang_time = (stim_time - travel_time)/2
+
+            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
+            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+
+            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+
+            x = [x_1, x_2, x_3, x_4]
+            y = [y_1, y_2, y_3, y_4]
+
+        x_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': x,
+                        'kind': 'linear'}
+        y_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': y,
+                        'kind': 'linear'}
+
+        spot_parameters = {'name': 'MovingSpot',
+                           'radius': radius,
+                           'color': color,
+                           'theta': x_trajectory,
+                           'phi': y_trajectory}
+        return spot_parameters

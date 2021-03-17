@@ -15,8 +15,8 @@ from flystim.trajectory import Trajectory
 class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)  # call the parent class init method
-        
-        
+
+
 
 # %%
 
@@ -56,8 +56,8 @@ class SearchStimulus(BaseProtocol):
                                'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-  # %%      
-        
+  # %%
+
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -106,7 +106,7 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
                                'tail_time': 2.0,
                                'idle_color': 0.5}
 
-        
+
         # %%
 
 class UniformFlash(BaseProtocol):
@@ -145,7 +145,7 @@ class UniformFlash(BaseProtocol):
                                'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-        
+
         # %%
 
 
@@ -179,7 +179,7 @@ class MovingRectangle(BaseProtocol):
                                'stim_time': 2.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-        
+
         # %%
 
 
@@ -228,7 +228,7 @@ class FlickeringPatch(BaseProtocol):
                                'stim_time': 4.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-        
+
         # %%
 
 
@@ -278,8 +278,8 @@ class DriftingSquareGrating(BaseProtocol):
                                'stim_time': 4.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-        
-        
+
+
         # %%
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -291,8 +291,8 @@ class MedullaSuite(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         self.cfg = cfg
-        self.stim_list = ['FlickeringPatch','DriftingSquareGrating','MovingRectangle', 'UniformFlash']
-        n = [2, 2, 2, 6, 4, 2, 2]  # weight each stim draw by how many trial types it has. Total = 20
+        self.stim_list = ['FlickeringPatch', 'DriftingSquareGrating', 'MovingRectangle', 'UniformFlash']
+        n = [3, 2, 2, 2]  # weight each stim draw by how many trial types it has
         avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
         all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
 
@@ -379,6 +379,3 @@ class MedullaSuite(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.5,
                                'idle_color': 0.5}
-
-
-
