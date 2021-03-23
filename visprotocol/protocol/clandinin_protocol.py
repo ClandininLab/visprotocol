@@ -37,7 +37,7 @@ class BaseProtocol():
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'parameter_presets')
 
         # Rig-specific screen center
-        self.screen_center = self.cfg.get('rig_config').get(self.rig_name).get('screen_center', [0,0])
+        self.screen_center = self.cfg.get('rig_config').get(self.rig_name).get('screen_center', [0, 0])
         self.rig = self.cfg.get('rig_config').get(self.rig_name).get('rig', '(rig)')
 
     def adjustCenter(self, relative_center):
@@ -45,12 +45,12 @@ class BaseProtocol():
         return absolute_center
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID':'',
-              'num_epochs':5,
-              'pre_time':1.0,
-              'stim_time':4.0,
-              'tail_time':1.0,
-              'idle_color':0.5}
+        self.run_parameters = {'protocol_ID': '',
+                               'num_epochs': 5,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {}
@@ -94,21 +94,22 @@ class BaseProtocol():
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         sleep(self.run_parameters['pre_time'])
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        #stim time
+        # stim time
         multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
         multicall()
         sleep(self.run_parameters['stim_time'])
 
-        #tail time
+        # tail time
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
         multicall()
+
         sleep(self.run_parameters['tail_time'])
 
     # Convenience functions shared across protocols...
-    def selectParametersFromLists(self, parameter_list, all_combinations = True, randomize_order = False):
+    def selectParametersFromLists(self, parameter_list, all_combinations=True, randomize_order=False):
         """
         inputs
         parameter_list can be:
@@ -121,10 +122,10 @@ class BaseProtocol():
         """
 
         # parameter_list is a tuple of lists or a single list
-        if type(parameter_list) is list: #single protocol parameter list, choose one from this list
+        if type(parameter_list) is list: # single protocol parameter list, choose one from this list
             parameter_sequence = parameter_list
 
-        elif type(parameter_list) is tuple: #multiple lists of protocol parameters
+        elif type(parameter_list) is tuple: # multiple lists of protocol parameters
             if all_combinations:
                 parameter_list_new = []
 
@@ -137,26 +138,25 @@ class BaseProtocol():
                 parameter_list = tuple(parameter_list_new)
 
                 # parameter_sequence is num_combinations by num params
-                parameter_sequence = np.array(np.meshgrid(*parameter_list)).T.reshape(np.prod(list(len(x) for x in parameter_list)),len(parameter_list))
+                parameter_sequence = np.array(np.meshgrid(*parameter_list)).T.reshape(np.prod(list(len(x) for x in parameter_list)), len(parameter_list))
             else:
-                #keep params in lists associated with one another
-                #requires param lists of equal length
+                # keep params in lists associated with one another
+                # requires param lists of equal length
                 parameter_sequence = np.vstack(parameter_list).T
 
-        else: #user probably entered a single value (int or float), convert to list
+        else: # user probably entered a single value (int or float), convert to list
             parameter_sequence = [parameter_list]
 
+        if self.num_epochs_completed == 0: # new run: initialize persistent sequences
+            self.persistent_parameters = {'parameter_sequence': parameter_sequence}
 
-        if self.num_epochs_completed == 0: #new run: initialize persistent sequences
-                self.persistent_parameters = {'parameter_sequence':parameter_sequence}
-
-        draw_ind = np.mod(self.num_epochs_completed,len(self.persistent_parameters['parameter_sequence']))
-        if draw_ind == 0 and randomize_order: #randomize sequence
+        draw_ind = np.mod(self.num_epochs_completed, len(self.persistent_parameters['parameter_sequence']))
+        if draw_ind == 0 and randomize_order: # randomize sequence
             rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
             if len(np.shape(self.persistent_parameters['parameter_sequence'])) == 1:
                 self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds])
             else:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds,:])
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds, :])
 
         current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
 
