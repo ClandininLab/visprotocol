@@ -16,3 +16,20 @@ test:
     - 1.0
     - 0.0
     randomize_order: true
+wholescreen_test:
+  run_parameters:
+    protocol_ID: SearchStimulus
+    num_epochs: 10.0
+    pre_time: 1.0
+    stim_time: 0.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 100.0
+    width: 100.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: false
