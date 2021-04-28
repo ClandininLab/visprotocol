@@ -1,0 +1,16 @@
+experimenter: Avery
+prep_choices: [Left optic lobe, Right optic lobe, Whole brain, Optic glomeruli]
+driver_choices: [LC11-Gal4, nSyb-Gal4, ChAT-T2A-Gal4]
+indicator_choices: [TdTomato, GCaMP7f, GCaMP6f, Syt1GCaMP6f]
+
+rig_config:
+
+  Bruker_TwoScreens:
+    data_directory: E:/Avery
+    screen_center: [0, -30]
+    rig: Bruker
+
+  Laptop:
+    data_directory: /path/to/data
+    screen_center: [0, 0]
+    rig: (testing)

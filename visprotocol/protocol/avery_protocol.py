@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 21 10:20:02 2018
 
-@author: mhturner
 """
 import numpy as np
 import os
@@ -604,143 +602,8 @@ class MovingSquareMapping(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
-
 # %%
 
-class PeriodicVelocityNoise(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        if self.protocol_parameters['start_seed'] == -1:
-            current_seed = np.random.randint(0, 10000)
-        else:
-            current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
-
-        np.random.seed(int(current_seed))
-        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate']))
-        velocity = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # deg/sec -> deg/update
-
-        time_steps = np.linspace(0, self.run_parameters['stim_time'], n_updates)  # time steps of update trajectory
-
-        position = np.cumsum(velocity) # position at each update time point, according to new velocity value
-
-        theta_traj = {'name': 'tv_pairs',
-                      'tv_pairs': list(zip(time_steps, position)),
-                      'kind': 'linear'}
-
-        distribution_data = {'name': 'Binary',
-                             'args': [],
-                             'kwargs': {'rand_min': self.protocol_parameters['intensity'],
-                                        'rand_max': self.protocol_parameters['intensity']}}
-
-        self.epoch_parameters = {'name': 'RandomBars',
-                                 'distribution_data': distribution_data,
-                                 'period': self.protocol_parameters['period'],
-                                 'width': self.protocol_parameters['width'],
-                                 'vert_extent': self.protocol_parameters['height'],
-                                 'background': 0.5,
-                                 'color': [1, 1, 1, 1],
-                                 'theta': theta_traj,
-                                 'cylinder_location': (0, 0, self.protocol_parameters['z_offset'])}
-
-        self.convenience_parameters = {'current_seed': current_seed,
-                                       'time_steps': time_steps,
-                                       'velocity': velocity,
-                                       'position': position}
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 120.0,
-                                    'width': 5.0,
-                                    'period': 40.0, # deg spacing between bars
-                                    'z_offset': 0.0, #meters, offset of cylinder
-                                    'velocity_std': 80.0, # deg/sec
-                                    'velocity_update_rate': 8, # Hz
-                                    'start_seed': -1,
-                                    'intensity': 0.0}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'PeriodicVelocityNoise',
-                               'num_epochs': 40,
-                               'pre_time': 1.0,
-                               'stim_time': 30.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
-
-class VelocityNoise(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        adj_center = self.adjustCenter(self.protocol_parameters['center'])
-
-        if self.protocol_parameters['start_seed'] == -1:
-            current_seed = np.random.randint(0, 10000)
-        else:
-            current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
-
-        # partition velocity trace up into splits, and follow each split with a reversed version of itself:
-        #   ensures that position keeps coming back to center
-        np.random.seed(int(current_seed))
-        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate'])/2)
-        out = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # deg/sec -> deg/update
-        back = -out
-
-        split_size = 6 #sec
-        splits = int(self.run_parameters['stim_time'] / split_size)
-
-        out = np.reshape(out, [splits, -1])
-        back = np.reshape(back, [splits, -1])
-        v_comb = np.concatenate([out, back], axis=1)
-        velocity = np.ravel(v_comb)
-
-        time_steps = np.linspace(0, self.run_parameters['stim_time'], len(velocity))  # time steps of update trajectory
-
-        position = adj_center[0] + np.cumsum(velocity) #position at each update time point, according to new velocity value
-
-        theta_traj = {'name': 'tv_pairs',
-                      'tv_pairs': list(zip(time_steps, position)),
-                      'kind': 'linear'}
-
-        self.epoch_parameters = {'name': 'MovingPatch',
-                                 'width': self.protocol_parameters['width'],
-                                 'height': self.protocol_parameters['height'],
-                                 'sphere_radius': 1,
-                                 'color': self.protocol_parameters['intensity'],
-                                 'theta': theta_traj,
-                                 'phi': adj_center[1],
-                                 'angle': 0}
-        self.convenience_parameters = {'current_seed': current_seed,
-                                       'time_steps': time_steps,
-                                       'velocity': velocity,
-                                       'position': position}
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 10.0,
-                                    'width': 5.0,
-                                    'center': [0, 0],
-                                    'velocity_std': 80, # deg/sec
-                                    'velocity_update_rate': 8, # Hz
-                                    'start_seed': -1,
-                                    'intensity': 0.0}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'VelocityNoise',
-                               'num_epochs': 20,
-                               'pre_time': 1.0,
-                               'stim_time': 36.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
 
 class UniformFlash(BaseProtocol):
     def __init__(self, cfg):
@@ -781,67 +644,6 @@ class UniformFlash(BaseProtocol):
 
 
 # %%
-class SpotPair(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        current_speed_2 = self.selectParametersFromLists(self.protocol_parameters['speed_2'], randomize_order=self.protocol_parameters['randomize_order'])
-
-        center = self.protocol_parameters['center']
-        center_1 = [center[0], center[1] + self.protocol_parameters['y_separation']/2]
-        spot_1_parameters =  self.getMovingSpotParameters(color=self.protocol_parameters['intensity'][0],
-                                                          radius=self.protocol_parameters['diameter'][0]/2,
-                                                          center=center_1,
-                                                          speed=self.protocol_parameters['speed_1'],
-                                                          angle=0)
-        center_2 = [center[0], center[1] - self.protocol_parameters['y_separation']/2]
-        spot_2_parameters =  self.getMovingSpotParameters(color=self.protocol_parameters['intensity'][1],
-                                                          radius=self.protocol_parameters['diameter'][1]/2,
-                                                          center=center_2,
-                                                          speed=current_speed_2,
-                                                          angle=0)
-
-
-        self.epoch_parameters = (spot_1_parameters, spot_2_parameters)
-
-        self.convenience_parameters = {'current_speed_2': current_speed_2}
-
-    def loadStimuli(self, client):
-        spot_1_parameters = self.epoch_parameters[0].copy()
-        spot_2_parameters = self.epoch_parameters[1].copy()
-
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        bg = self.run_parameters.get('idle_color')
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-        multicall.load_stim(**spot_1_parameters, hold=True)
-        multicall.load_stim(**spot_2_parameters, hold=True)
-
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'diameter': [5.0, 5.0],
-                                    'intensity': [0.0, 0.0],
-                                    'center': [0, 0],
-                                    'y_separation': 7.0,
-                                    'speed_1': 80.0,
-                                    'speed_2': [-80.0, -40.0, 0.0, 40.0, 80.0],
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'SpotPair',
-                               'num_epochs': 40,
-                               'pre_time': 0.5,
-                               'stim_time': 4.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-
-# %%
-
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # VR WORLD STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
