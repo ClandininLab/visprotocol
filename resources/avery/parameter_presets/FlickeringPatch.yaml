@@ -1,0 +1,25 @@
+temporal_tuning_OL:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 35.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 20.0
+    width: 20.0
+    center:
+    - 30.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 0.5
+    - 1.0
+    - 2.0
+    - 4.0
+    - 8.0
+    - 16.0
+    - 32.0
+    randomize_order: true
