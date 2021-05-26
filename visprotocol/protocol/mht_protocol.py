@@ -1040,17 +1040,31 @@ class ApproachTuning(BaseProtocol):
         velocity = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # m/sec -> m/update
 
         time_steps = np.linspace(0, self.run_parameters['stim_time'], len(velocity))  # time steps of update trajectory
-        position = np.cumsum(velocity) # position at each update time point, according to new velocity value. Centered around 0
+        # distance away from fly
+        distance = np.cumsum(velocity) # position at each update time point, according to new velocity value. Centered around 0
+
+        position_x = np.sin(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * distance
+        position_y = np.cos(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * distance
+
+        fly_x_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(time_steps, position_x)),
+                            'kind': 'linear'}
 
         fly_y_trajectory = {'name': 'tv_pairs',
-                            'tv_pairs': list(zip(time_steps, position)),
+                            'tv_pairs': list(zip(time_steps, position_y)),
                             'kind': 'linear'}
+
+        # tower location: along azimuth line
+        tower_location = [np.sin(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * self.protocol_parameters['tower_distance'],
+                          np.cos(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * self.protocol_parameters['tower_distance'],
+                          0]
 
         self.epoch_parameters = {'name': 'Composite',
                                  'tower_height': self.protocol_parameters['tower_height'],
                                  'tower_diameter': self.protocol_parameters['tower_diameter'],
                                  'tower_color': self.protocol_parameters['tower_color'],
-                                 'tower_location': self.protocol_parameters['tower_position'],
+                                 'tower_location': tower_location,
+                                 'fly_x_trajectory': fly_x_trajectory,
                                  'fly_y_trajectory': fly_y_trajectory}
 
         self.convenience_parameters = {'current_seed': current_seed}
@@ -1059,7 +1073,7 @@ class ApproachTuning(BaseProtocol):
         passedParameters = self.epoch_parameters.copy()
 
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.set_fly_trajectory(0, passedParameters['fly_y_trajectory'], 0)
+        multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'], passedParameters['fly_y_trajectory'], 0)
 
         bg = self.run_parameters.get('idle_color')
         multicall.load_stim(name='ConstantBackground',
@@ -1083,7 +1097,8 @@ class ApproachTuning(BaseProtocol):
                                     'tower_color': 0,
                                     'tower_height': 1.0,
                                     'tower_diameter': 0.01,
-                                    'tower_position': [0, 0.05, 0]}
+                                    'tower_distance': 0.05,
+                                    'tower_azimuth': 45}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'ApproachTuning',
@@ -1122,7 +1137,7 @@ class TowerPath(BaseProtocol):
         fly_y_trajectory = {'name': 'tv_pairs',
                             'tv_pairs': list(zip(t, y)),
                             'kind': 'linear'}
-        fly_theta_Clienttrajectory = {'name': 'tv_pairs',
+        fly_theta_trajectory = {'name': 'tv_pairs',
                                 'tv_pairs': list(zip(t, heading)),
                                 'kind': 'linear'}
 
