@@ -965,7 +965,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                  'z_level': z_level}
 
         self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
-                                        'current_trajectory_library': file_name}
+                                       'current_trajectory_library': file_name}
 
     def loadStimuli(self, client):
         passedParameters = self.epoch_parameters.copy()
@@ -992,7 +992,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
                             hold=True)
 
         multicall.load_stim(name='Forest',
-                            color = [0, 0, 0, 1],
+                            color=passedParameters['tree_color'],
                             cylinder_height=passedParameters['tree_height'],
                             cylinder_radius=0.01,
                             cylinder_locations=passedParameters['tree_locations'],
@@ -1013,6 +1013,195 @@ class RealWalkThroughFakeForest(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'ForestRandomWalk',
+                               'num_epochs': 25,
+                               'pre_time': 2.0,
+                               'stim_time': 20.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
+# %%
+
+
+class ApproachTuning(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        if self.protocol_parameters['start_seed'] == -1:
+            current_seed = np.random.randint(0, 10000)
+        else:
+            current_seed = self.protocol_parameters['start_seed'] + self.num_epochs_completed
+
+        np.random.seed(int(current_seed))
+
+        n_updates = int(np.ceil(self.run_parameters['stim_time'] * self.protocol_parameters['velocity_update_rate'])/2)
+        velocity = np.random.normal(size=n_updates, scale=self.protocol_parameters['velocity_std']) / self.protocol_parameters['velocity_update_rate'] # m/sec -> m/update
+
+        time_steps = np.linspace(0, self.run_parameters['stim_time'], len(velocity))  # time steps of update trajectory
+        position = np.cumsum(velocity) # position at each update time point, according to new velocity value. Centered around 0
+
+        fly_y_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(time_steps, position)),
+                            'kind': 'linear'}
+
+        self.epoch_parameters = {'name': 'Composite',
+                                 'tower_height': self.protocol_parameters['tower_height'],
+                                 'tower_diameter': self.protocol_parameters['tower_diameter'],
+                                 'tower_color': self.protocol_parameters['tower_color'],
+                                 'tower_location': self.protocol_parameters['tower_position'],
+                                 'fly_y_trajectory': fly_y_trajectory}
+
+        self.convenience_parameters = {'current_seed': current_seed}
+
+    def loadStimuli(self, client):
+        passedParameters = self.epoch_parameters.copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.set_fly_trajectory(0, passedParameters['fly_y_trajectory'], 0)
+
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim(name='ConstantBackground',
+                            color=[bg, bg, bg, 1.0],
+                            hold=True)
+
+        multicall.load_stim(name='Tower',
+                            color=passedParameters['tower_color'],
+                            cylinder_height=passedParameters['tower_height'],
+                            cylinder_radius=passedParameters['tower_diameter']/2,
+                            cylinder_location=passedParameters['tower_location'],
+                            n_faces=4,
+                            hold=True)
+
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'start_seed': -1,
+                                    'velocity_update_rate': 10,
+                                    'velocity_std': 0.03,
+                                    'tower_color': 0,
+                                    'tower_height': 1.0,
+                                    'tower_diameter': 0.01,
+                                    'tower_position': [0, 0.05, 0]}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'ApproachTuning',
+                               'num_epochs': 25,
+                               'pre_time': 2.0,
+                               'stim_time': 20.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
+
+
+# %%
+
+class TowerPath(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_forward_velocity = self.selectParametersFromLists(self.protocol_parameters['forward_velocity'], randomize_order=True)
+
+        # make walk trajectory
+        t = np.arange(0, self.run_parameters.get('stim_time'), 0.01) # sec
+
+        velocity_x = 0.0 # meters per sec
+        velocity_y = current_forward_velocity # meters per sec
+
+        x = velocity_x * t
+        y = velocity_y * t
+        heading = 0 * t
+
+        fly_x_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(t, x)),
+                            'kind': 'linear'}
+        fly_y_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(t, y)),
+                            'kind': 'linear'}
+        fly_theta_Clienttrajectory = {'name': 'tv_pairs',
+                                'tv_pairs': list(zip(t, heading)),
+                                'kind': 'linear'}
+
+        z_level = -0.01
+        tower_locations = []
+        for tree in range(int(self.protocol_parameters['n_towers'])):
+            tower_locations.append([-self.protocol_parameters['tower_xoffset'], # left
+                                   self.protocol_parameters['left_yoffset'] + tree * self.protocol_parameters['tower_spacing'],
+                                   z_level+self.protocol_parameters['tower_height']/2])
+
+            tower_locations.append([+self.protocol_parameters['tower_xoffset'], # right
+                                   self.protocol_parameters['right_yoffset'] + tree * self.protocol_parameters['tower_spacing'],
+                                   z_level+self.protocol_parameters['tower_height']/2])
+
+        self.epoch_parameters = {'name': 'Composite',
+                                 'tower_height': self.protocol_parameters['tower_height'],
+                                 'tower_diameter': self.protocol_parameters['tower_diameter'],
+                                 'floor_color': self.protocol_parameters['floor_color'],
+                                 'sky_color': self.protocol_parameters['sky_color'],
+                                 'tower_color': self.protocol_parameters['tower_color'],
+                                 'fly_x_trajectory': fly_x_trajectory,
+                                 'fly_y_trajectory': fly_y_trajectory,
+                                 'fly_theta_trajectory': fly_theta_trajectory,
+                                 'tower_locations': tower_locations,
+                                 'z_level': z_level}
+
+        self.convenience_parameters = {'current_forward_velocity': current_forward_velocity}
+
+
+    def loadStimuli(self, client):
+        passedParameters = self.epoch_parameters.copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+
+        multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
+                                     passedParameters['fly_y_trajectory'],
+                                     passedParameters['fly_theta_trajectory'])
+
+        sc = passedParameters['sky_color']
+        multicall.load_stim(name='ConstantBackground',
+                            color=[sc, sc, sc, 1.0])
+
+        # base_dir = '/home/mhturner/GitHub/visprotocol/resources/mht/images/VH_NatImages'
+        # fn = 'imk00125.iml'
+        # multicall.load_stim(name='HorizonCylinder',
+        #                     image_path=os.path.join(base_dir, fn))
+
+        fc = passedParameters['floor_color']
+        multicall.load_stim(name='TexturedGround',
+                            color=[fc, fc, fc, 1.0],
+                            z_level=passedParameters['z_level'],
+                            hold=True)
+
+        multicall.load_stim(name='Forest',
+                            color=passedParameters['tower_color'],
+                            cylinder_height=passedParameters['tower_height'],
+                            cylinder_radius=passedParameters['tower_diameter']/2,
+                            cylinder_locations=passedParameters['tower_locations'],
+                            n_faces=4,
+                            hold=True)
+
+        multicall()
+
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'forward_velocity': [0.01, 0.02, 0.04, 0.08],
+                                    'n_towers': 40,
+                                    'tower_height': 1.0,
+                                    'tower_diameter': 0.01,
+                                    'tower_spacing': 0.03,
+                                    'tower_xoffset': 0.01,
+                                    'left_yoffset': 0.0,
+                                    'right_yoffset': 0.0,
+                                    'tower_color': 0.0,
+                                    'floor_color': 0.40,
+                                    'sky_color': 0.75}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'TowerPath',
                                'num_epochs': 25,
                                'pre_time': 2.0,
                                'stim_time': 20.0,
