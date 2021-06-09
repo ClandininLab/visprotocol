@@ -1111,7 +1111,7 @@ class ApproachTuning(BaseProtocol):
 
 # %%
 
-class TowerPath(BaseProtocol):
+class TowerDistanceWalk(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -1119,7 +1119,9 @@ class TowerPath(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_forward_velocity = self.selectParametersFromLists(self.protocol_parameters['forward_velocity'], randomize_order=True)
+        current_forward_velocity, current_tower_diameter, current_tower_xoffset = self.selectParametersFromLists((self.protocol_parameters['forward_velocity'],
+                                                                                                                  self.protocol_parameters['tower_diameter'],
+                                                                                                                  self.protocol_parameters['tower_xoffset']), randomize_order=True)
 
         # make walk trajectory
         t = np.arange(0, self.run_parameters.get('stim_time'), 0.01) # sec
@@ -1144,17 +1146,13 @@ class TowerPath(BaseProtocol):
         z_level = -0.01
         tower_locations = []
         for tree in range(int(self.protocol_parameters['n_towers'])):
-            tower_locations.append([-self.protocol_parameters['tower_xoffset'], # left
-                                   self.protocol_parameters['left_yoffset'] + tree * self.protocol_parameters['tower_spacing'],
-                                   z_level+self.protocol_parameters['tower_height']/2])
-
-            tower_locations.append([+self.protocol_parameters['tower_xoffset'], # right
-                                   self.protocol_parameters['right_yoffset'] + tree * self.protocol_parameters['tower_spacing'],
-                                   z_level+self.protocol_parameters['tower_height']/2])
+            tower_locations.append([current_tower_xoffset, # x
+                                   (tree+1) * self.protocol_parameters['tower_spacing'], # y
+                                   z_level+self.protocol_parameters['tower_height']/2]) # z
 
         self.epoch_parameters = {'name': 'Composite',
                                  'tower_height': self.protocol_parameters['tower_height'],
-                                 'tower_diameter': self.protocol_parameters['tower_diameter'],
+                                 'tower_diameter': current_tower_diameter,
                                  'floor_color': self.protocol_parameters['floor_color'],
                                  'sky_color': self.protocol_parameters['sky_color'],
                                  'tower_color': self.protocol_parameters['tower_color'],
@@ -1164,7 +1162,9 @@ class TowerPath(BaseProtocol):
                                  'tower_locations': tower_locations,
                                  'z_level': z_level}
 
-        self.convenience_parameters = {'current_forward_velocity': current_forward_velocity}
+        self.convenience_parameters = {'current_forward_velocity': current_forward_velocity,
+                                       'current_tower_diameter': current_tower_diameter,
+                                       'current_tower_xoffset': current_tower_xoffset}
 
 
     def loadStimuli(self, client):
@@ -1180,11 +1180,6 @@ class TowerPath(BaseProtocol):
         multicall.load_stim(name='ConstantBackground',
                             color=[sc, sc, sc, 1.0])
 
-        # base_dir = '/home/mhturner/GitHub/visprotocol/resources/mht/images/VH_NatImages'
-        # fn = 'imk00125.iml'
-        # multicall.load_stim(name='HorizonCylinder',
-        #                     image_path=os.path.join(base_dir, fn))
-
         fc = passedParameters['floor_color']
         multicall.load_stim(name='TexturedGround',
                             color=[fc, fc, fc, 1.0],
@@ -1196,27 +1191,25 @@ class TowerPath(BaseProtocol):
                             cylinder_height=passedParameters['tower_height'],
                             cylinder_radius=passedParameters['tower_diameter']/2,
                             cylinder_locations=passedParameters['tower_locations'],
-                            n_faces=4,
+                            n_faces=8,
                             hold=True)
 
         multicall()
 
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'forward_velocity': [0.01, 0.02, 0.04, 0.08],
+        self.protocol_parameters = {'forward_velocity': [0.02],
                                     'n_towers': 40,
                                     'tower_height': 1.0,
-                                    'tower_diameter': 0.01,
+                                    'tower_diameter': [0.01, 0.02, 0.04, 0.08],
                                     'tower_spacing': 0.03,
-                                    'tower_xoffset': 0.01,
-                                    'left_yoffset': 0.0,
-                                    'right_yoffset': 0.0,
+                                    'tower_xoffset': [-0.01, -0.02, -0.04, -0.08, -0.10],
                                     'tower_color': 0.0,
                                     'floor_color': 0.40,
                                     'sky_color': 0.75}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'TowerPath',
+        self.run_parameters = {'protocol_ID': 'TowerDistanceWalk',
                                'num_epochs': 25,
                                'pre_time': 2.0,
                                'stim_time': 20.0,
