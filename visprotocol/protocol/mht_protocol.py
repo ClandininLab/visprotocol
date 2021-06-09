@@ -1143,7 +1143,7 @@ class TowerDistanceWalk(BaseProtocol):
                                 'tv_pairs': list(zip(t, heading)),
                                 'kind': 'linear'}
 
-        z_level = -0.01
+        z_level = -0.05
         tower_locations = []
         for tree in range(int(self.protocol_parameters['n_towers'])):
             tower_locations.append([current_tower_xoffset, # x
@@ -1199,18 +1199,18 @@ class TowerDistanceWalk(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'forward_velocity': [0.02],
-                                    'n_towers': 40,
+                                    'n_towers': 5,
                                     'tower_height': 1.0,
-                                    'tower_diameter': [0.01, 0.02, 0.04, 0.08],
-                                    'tower_spacing': 0.03,
-                                    'tower_xoffset': [-0.01, -0.02, -0.04, -0.08, -0.10],
+                                    'tower_diameter': [0.01, 0.02, 0.03],
+                                    'tower_spacing': 0.08,
+                                    'tower_xoffset': [-0.01, -0.02, -0.04, -0.06],
                                     'tower_color': 0.0,
                                     'floor_color': 0.40,
                                     'sky_color': 0.75}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'TowerDistanceWalk',
-                               'num_epochs': 25,
+                               'num_epochs': 40,
                                'pre_time': 2.0,
                                'stim_time': 20.0,
                                'tail_time': 2.0,
