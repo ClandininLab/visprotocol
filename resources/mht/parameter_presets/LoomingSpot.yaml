@@ -1,7 +1,7 @@
 R65B05:
   run_parameters:
     protocol_ID: LoomingSpot
-    num_epochs: 30.0
+    num_epochs: 40.0
     pre_time: 2.0
     stim_time: 3.0
     tail_time: 2.0
@@ -14,8 +14,35 @@ R65B05:
     start_size: 2.5
     end_size: 80.0
     rv_ratio:
+    - 5.0
     - 10.0
     - 20.0
+    - 30.0
+    - 40.0
+    - 80.0
+    - 160.0
+    - 320.0
+    randomize_order: true
+R65B05_Left:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 40.0
+    pre_time: 2.0
+    stim_time: 3.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity: 0.0
+    center:
+    - 30.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    - 30.0
     - 40.0
     - 80.0
     - 160.0
