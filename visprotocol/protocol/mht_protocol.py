@@ -1353,7 +1353,7 @@ class PanGlomSuite(BaseProtocol):
         self.cfg = cfg
         self.stim_list = ['FlickeringPatch', 'DriftingSquareGrating', 'LoomingSpot', 'ExpandingMovingSpot', 'MovingSpotOnDriftingGrating',
                           'MovingRectangle', 'UniformFlash']
-        n = [2, 2, 2, 6, 4, 2, 2]  # weight each stim draw by how many trial types it has. Total = 20
+        n = [3, 2, 3, 12, 6, 4, 2]  # weight each stim draw by how many trial types it has. Total = 32
         avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
         all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
 
@@ -1375,7 +1375,7 @@ class PanGlomSuite(BaseProtocol):
                                                            'center': [0, 0],
                                                            'start_size': 2.5,
                                                            'end_size': 80.0,
-                                                           'rv_ratio': [20.0, 100.0],
+                                                           'rv_ratio': [5.0, 20.0, 100.0],
                                                            'randomize_order': True}
 
             elif stim_type == 'DriftingSquareGrating':
@@ -1391,10 +1391,10 @@ class PanGlomSuite(BaseProtocol):
 
             elif stim_type == 'ExpandingMovingSpot':
                 new_component_class = ExpandingMovingSpot(self.cfg)
-                new_component_class.protocol_parameters = {'diameter': [5.0, 20.0, 50.0],
+                new_component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
                                                            'intensity': [0.0, 1.0],
                                                            'center': [0, 0],
-                                                           'speed': 80.0,
+                                                           'speed': [-80.0, 80.0],
                                                            'angle': 0.0,
                                                            'randomize_order': True}
 
@@ -1422,16 +1422,16 @@ class PanGlomSuite(BaseProtocol):
                                                            'spot_color': 0.0,
                                                            'spot_speed': 60.0,
                                                            'grate_period': 20.0,
-                                                           'grate_rate': [-120.0, -30.0, 30.0, 120.0],
+                                                           'grate_rate': [-120.0, -90.0, -30.0, 30.0, 90.0, 120.0],
                                                            'grate_contrast': 0.5,
                                                            'angle': 0.0,
                                                            'randomize_order': True}
 
             elif stim_type == 'MovingRectangle':
                 new_component_class = MovingRectangle(self.cfg)
-                new_component_class.protocol_parameters = {'width': 20.0,
+                new_component_class.protocol_parameters = {'width': 10.0,
                                                            'height': 120.0,
-                                                           'intensity': 0.0,
+                                                           'intensity': [0.0, 1.0],
                                                            'center': [0, 0],
                                                            'speed': 80.0,
                                                            'angle': [0.0, 180.0],
@@ -1463,7 +1463,7 @@ class PanGlomSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'PanGlomSuite',
-                               'num_epochs': 200, #200 = 20 * 10 averages each
+                               'num_epochs': 160, # 160 = 32 * 5 averages each
                                'pre_time': 1.5,
                                'stim_time': 3.0,
                                'tail_time': 1.5,
