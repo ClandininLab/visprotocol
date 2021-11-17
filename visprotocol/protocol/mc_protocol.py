@@ -139,7 +139,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 # %%
 
     def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_color=None, bar_speed=None, occluder_height=None, occluder_color=None, background_color=None, 
-                                        preprime_duration=None, prime_duration=None, occlusion_duration=None, pause_duration=None, probe_duration=None):
+                                        preprime_duration=None, prime_duration=None, occlusion_duration=None, pause_duration=None, probe_duration=None, render_on_cylinder=None, bar_surface_radius=None, occluder_surface_radius=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if start_theta is None: start_theta = self.protocol_parameters['start_theta'] #negative value starts from the opposite side of bar direction
         if bar_width is None: bar_width = self.protocol_parameters['bar_width']
@@ -153,6 +153,9 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         if occlusion_duration is None: occlusion_duration = self.protocol_parameters['occlusion_duration']
         if pause_duration is None: pause_duration = self.protocol_parameters['pause_duration']
         if probe_duration is None: probe_duration = self.protocol_parameters['probe_duration']
+        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder']
+        if bar_surface_radius is None: bar_surface_radius = self.protocol_parameters['bar_surface_radius']
+        if occluder_surface_radius is None: occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
 
         centerX = center[0]
 
@@ -201,22 +204,41 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         bar_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())),                   'kind': 'linear'}
         occluder_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
 
-        bar_parameters = {'name': 'MovingPatchOnCylinder',
-                            'width': bar_width,
-                            'height': bar_height,
-                            'color': bar_color,
-                            'theta': bar_traj,
-                            'phi': 0,
-                            'angle': 0,
-                            'cylinder_radius': 2}
-        occluder_parameters = {'name': 'MovingPatchOnCylinder',
-                            'width': occluder_width,
-                            'height': occluder_height,
-                            'color': occluder_color,
-                            'theta': occluder_traj,
-                            'phi': 0,
-                            'angle': 0,
-                            'cylinder_radius': 1}
+        if render_on_cylinder:
+            bar_parameters = {'name': 'MovingPatchOnCylinder',
+                                'width': bar_width,
+                                'height': bar_height,
+                                'color': bar_color,
+                                'theta': bar_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'cylinder_radius': bar_surface_radius}
+            occluder_parameters = {'name': 'MovingPatchOnCylinder',
+                                'width': occluder_width,
+                                'height': occluder_height,
+                                'color': occluder_color,
+                                'theta': occluder_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'cylinder_radius': occluder_surface_radius}
+        else:
+            bar_parameters = {'name': 'MovingPatch',
+                                'width': bar_width,
+                                'height': bar_height,
+                                'color': bar_color,
+                                'theta': bar_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'sphere_radius': bar_surface_radius}
+            occluder_parameters = {'name': 'MovingPatch',
+                                'width': occluder_width,
+                                'height': occluder_height,
+                                'color': occluder_color,
+                                'theta': occluder_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'sphere_radius': occluder_surface_radius}
+
         return bar_parameters, occluder_parameters, stim_duration
 
 # %%
@@ -740,26 +762,29 @@ class OcclusionWithPause(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'center': [0, 0],
-                                    'start_theta': -60.0,
+                                    'start_theta': -90.0,
                                     'bar_width': 15.0,
                                     'bar_height': 150.0,
                                     'bar_color': 1.0,
-                                    'bar_speed': [-60.0, 60.0],
+                                    'bar_speed': [-35.0, -25.0, -15.0, 15.0, 25.0, 35.0],
                                     'occluder_height': 170.0,
                                     'occluder_color': self.run_parameters.get('idle_color'),
-                                    'preprime_duration': 2.0,
+                                    'preprime_duration': 0.0,
                                     'prime_duration': 2.0,
-                                    'occlusion_duration': 0.5,
+                                    'occlusion_duration': 2.0,
                                     'pause_duration': [0.0, 1.0],
-                                    'probe_duration': 1.0,
-                                    'randomize_order': True}
+                                    'probe_duration': 1.5,
+                                    'render_on_cylinder': False,
+                                    'bar_surface_radius': 3.0,
+                                    'occluder_surface_radius': 2.0,
+                                    'randomize_order': True,}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'MovingRectangleOnCylinder',
-                               'num_epochs': 200, # 4 x 50 each
-                               'pre_time': 2.0,
+        self.run_parameters = {'protocol_ID': 'OcclusionWithPause',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
                                'tail_time': 1.0,
-                               'idle_color': 0.0}
+                               'idle_color': 0.0,}
 # %%
 
 

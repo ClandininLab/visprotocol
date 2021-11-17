@@ -1,0 +1,32 @@
+bruker_test:
+  run_parameters:
+    protocol_ID: OcclusionWithPause
+    num_epochs: 1.0
+    pre_time: 0.0
+    tail_time: 1.0
+    idle_color: 0.0
+    stim_time: 4.0
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    start_theta: -60.0
+    bar_width: 15.0
+    bar_height: 150.0
+    bar_color: 1.0
+    bar_speed:
+    - -40.0
+    - 40.0
+    occluder_height: 170.0
+    occluder_color: 0.5
+    preprime_duration: 2.0
+    prime_duration: 2.0
+    occlusion_duration: 0.5
+    pause_duration:
+    - 0.0
+    - 1.0
+    probe_duration: 1.0
+    render_on_cylinder: false
+    bar_surface_radius: 2.0
+    occluder_surface_radius: 1.0
+    randomize_order: true
