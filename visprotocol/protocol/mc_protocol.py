@@ -263,9 +263,9 @@ class OcclusionWithPause(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'], self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_occlusion_duration, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'], self.protocol_parameters['occlusion_duration'], self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionWithPauseParameters(bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionWithPauseParameters(bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, occlusion_duration=current_occlusion_duration, pause_duration=current_pause_duration)
         self.epoch_parameters = (bar_parameters, occluder_parameters)
 
         self.convenience_parameters = {'current_bar_width': current_bar_width,
@@ -273,13 +273,15 @@ class OcclusionWithPause(BaseProtocol):
                                        'current_bar_probe_color': current_bar_probe_color,
                                        'current_bar_speed': current_bar_speed,
                                        'current_occluder_color': current_occluder_color,
+                                       'current_occlusion_duration': current_occlusion_duration,
                                        'current_pause_duration': current_pause_duration,
                                        'current_stim_duration': stim_duration}
 
     def loadStimuli(self, client):
         bar_parameters = self.epoch_parameters[0].copy()
         occluder_parameters = self.epoch_parameters[1].copy()
-
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+    
         bg = self.run_parameters.get('idle_color')
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
@@ -316,7 +318,7 @@ class OcclusionWithPause(BaseProtocol):
                                     'occluder_color': self.run_parameters.get('idle_color'),
                                     'preprime_duration': 0.0,
                                     'prime_duration': 2.0,
-                                    'occlusion_duration': 2.0,
+                                    'occlusion_duration': [0.5, 2.0],
                                     'pause_duration': [0.0, 1.0],
                                     'probe_duration': 1.5,
                                     'render_on_cylinder': False,
@@ -329,7 +331,8 @@ class OcclusionWithPause(BaseProtocol):
                                'num_epochs': 240, # 12 x 20 each
                                'pre_time': 1.0,
                                'tail_time': 1.0,
-                               'idle_color': 0.0,}
+                               'idle_color': 0.0,
+                               'stim_time': 5.5}
 
 # %%
 
