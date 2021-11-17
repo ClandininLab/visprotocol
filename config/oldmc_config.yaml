@@ -1,0 +1,11 @@
+experimenter: MC_old
+prep_choices: [Left optic lobe, Right optic lobe, Whole brain]
+driver_choices: [Tm3 (R13E12-Gal4), Tm3 (R13E12-LexA), nSyb-Gal4]
+indicator_choices: [UAS-GCaMP6f, UAS-TNT, LexAOp-GCaMP6f, LexAOp-TNT, UAS-TdTomato]
+
+
+rig_config:
+  Bruker_LeftScreen:
+    data_directory: E:/Minseung
+    screen_center: [130,120]
+    rig: Bruker
