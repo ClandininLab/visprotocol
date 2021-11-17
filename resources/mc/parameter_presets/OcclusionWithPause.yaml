@@ -64,3 +64,40 @@ laptop_test:
     bar_surface_radius: 3.0
     occluder_surface_radius: 2.0
     randomize_order: true
+laptop_prime_probe:
+  run_parameters:
+    protocol_ID: OcclusionWithPause
+    num_epochs: 4.0
+    pre_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.0
+    stim_time: 5.5
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    start_theta: -20.0
+    bar_width: 5.0
+    bar_height: 150.0
+    bar_prime_color:
+    - 1.0
+    - 0.0
+    bar_probe_color: 1.0
+    bar_speed:
+    - -10.0
+    - 10.0
+    occluder_height: 170.0
+    occluder_color: 0.0
+    preprime_duration: 0.0
+    prime_duration: 2.0
+    occlusion_duration:
+    - 0.2
+    - 0.5
+    - 3.0
+    pause_duration:
+    - 0.0
+    probe_duration: 1.5
+    render_on_cylinder: false
+    bar_surface_radius: 3.0
+    occluder_surface_radius: 2.0
+    randomize_order: true
