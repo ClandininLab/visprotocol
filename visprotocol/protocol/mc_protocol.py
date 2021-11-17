@@ -138,13 +138,14 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
 # %%
 
-    def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_color=None, bar_speed=None, occluder_height=None, occluder_color=None, background_color=None, 
+    def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_prime_color=None, bar_probe_color=None, bar_speed=None, occluder_height=None, occluder_color=None, background_color=None, 
                                         preprime_duration=None, prime_duration=None, occlusion_duration=None, pause_duration=None, probe_duration=None, render_on_cylinder=None, bar_surface_radius=None, occluder_surface_radius=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if start_theta is None: start_theta = self.protocol_parameters['start_theta'] #negative value starts from the opposite side of bar direction
         if bar_width is None: bar_width = self.protocol_parameters['bar_width']
         if bar_height is None: bar_height = self.protocol_parameters['bar_height']
-        if bar_color is None: bar_color = self.protocol_parameters['bar_color']
+        if bar_prime_color is None: bar_prime_color = self.protocol_parameters['bar_prime_color']
+        if bar_probe_color is None: bar_probe_color = self.protocol_parameters['bar_probe_color']
         if bar_speed is None: bar_speed = self.protocol_parameters['bar_speed']
         if occluder_height is None: occluder_height = self.protocol_parameters['occluder_height']
         if occluder_color is None: occluder_color = self.protocol_parameters['occluder_color']
@@ -167,6 +168,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         start_theta *= np.sign(bar_speed)
         time = [0, preprime_duration]
         x = [start_theta, start_theta]
+        bar_color = [bar_prime_color, bar_prime_color]
 
         prime_movement = bar_speed * (prime_duration + occlusion_duration)
         prime_end_theta = start_theta + prime_movement
@@ -174,12 +176,14 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
         time.append(prime_end_time)
         x.append(prime_end_theta)
+        bar_color.append(bar_prime_color)
 
         pause_end_theta = prime_end_theta
         pause_end_time = prime_end_time + pause_duration
 
         time.append(pause_end_time)
         x.append(pause_end_theta)
+        bar_color.append(bar_probe_color)
 
         probe_movement = bar_speed * probe_duration
         probe_end_theta = pause_end_theta + probe_movement
@@ -187,6 +191,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
         time.append(probe_end_time)
         x.append(probe_end_theta)
+        bar_color.append(bar_probe_color)
 
         # Compute location and width of the occluder per specification
         occlusion_start_theta = start_theta + bar_speed * prime_duration
@@ -201,15 +206,16 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         # occluder_traj_l = list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist()))
 
         # Create flystim trajectory objects
-        bar_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())),                   'kind': 'linear'}
-        occluder_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
+        bar_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())),                   'kind': 'linear'}
+        bar_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, bar_color)), 'kind': 'linear'}
+        occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
 
         if render_on_cylinder:
             bar_parameters = {'name': 'MovingPatchOnCylinder',
                                 'width': bar_width,
                                 'height': bar_height,
-                                'color': bar_color,
-                                'theta': bar_traj,
+                                'color': bar_color_traj,
+                                'theta': bar_theta_traj,
                                 'phi': 0,
                                 'angle': 0,
                                 'cylinder_radius': bar_surface_radius}
@@ -217,7 +223,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                 'width': occluder_width,
                                 'height': occluder_height,
                                 'color': occluder_color,
-                                'theta': occluder_traj,
+                                'theta': occluder_theta_traj,
                                 'phi': 0,
                                 'angle': 0,
                                 'cylinder_radius': occluder_surface_radius}
@@ -225,8 +231,8 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
             bar_parameters = {'name': 'MovingPatch',
                                 'width': bar_width,
                                 'height': bar_height,
-                                'color': bar_color,
-                                'theta': bar_traj,
+                                'color': bar_color_traj,
+                                'theta': bar_theta_traj,
                                 'phi': 0,
                                 'angle': 0,
                                 'sphere_radius': bar_surface_radius}
@@ -234,7 +240,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                 'width': occluder_width,
                                 'height': occluder_height,
                                 'color': occluder_color,
-                                'theta': occluder_traj,
+                                'theta': occluder_theta_traj,
                                 'phi': 0,
                                 'angle': 0,
                                 'sphere_radius': occluder_surface_radius}
@@ -249,6 +255,83 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
+class OcclusionWithPause(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'], self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionWithPauseParameters(bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
+        self.epoch_parameters = (bar_parameters, occluder_parameters)
+
+        self.convenience_parameters = {'current_bar_width': current_bar_width,
+                                       'current_bar_prime_color': current_bar_prime_color,
+                                       'current_bar_probe_color': current_bar_probe_color,
+                                       'current_bar_speed': current_bar_speed,
+                                       'current_occluder_color': current_occluder_color,
+                                       'current_pause_duration': current_pause_duration,
+                                       'current_stim_duration': stim_duration}
+
+    def loadStimuli(self, client):
+        bar_parameters = self.epoch_parameters[0].copy()
+        occluder_parameters = self.epoch_parameters[1].copy()
+
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
+        multicall.load_stim(**bar_parameters, hold=True)
+        multicall.load_stim(**occluder_parameters, hold=True)
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.convenience_parameters['current_stim_duration'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'start_theta': -90.0,
+                                    'bar_width': 15.0,
+                                    'bar_height': 150.0,
+                                    'bar_prime_color': [1.0, 0.0],
+                                    'bar_probe_color': 1.0,
+                                    'bar_speed': [-35.0, -25.0, -15.0, 15.0, 25.0, 35.0],
+                                    'occluder_height': 170.0,
+                                    'occluder_color': self.run_parameters.get('idle_color'),
+                                    'preprime_duration': 0.0,
+                                    'prime_duration': 2.0,
+                                    'occlusion_duration': 2.0,
+                                    'pause_duration': [0.0, 1.0],
+                                    'probe_duration': 1.5,
+                                    'render_on_cylinder': False,
+                                    'bar_surface_radius': 3.0,
+                                    'occluder_surface_radius': 2.0,
+                                    'randomize_order': True,}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OcclusionWithPause',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0,}
+
+# %%
 
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
     def __init__(self, cfg):
@@ -711,80 +794,6 @@ class MovingRectangle(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-# %%
-
-class OcclusionWithPause(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        current_bar_width, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_width'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'], self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
-
-        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionWithPauseParameters(bar_width=current_bar_width, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
-        self.epoch_parameters = (bar_parameters, occluder_parameters)
-
-        self.convenience_parameters = {'current_bar_width': current_bar_width,
-                                       'current_bar_speed': current_bar_speed,
-                                       'current_occluder_color': current_occluder_color,
-                                       'current_pause_duration': current_pause_duration,
-                                       'current_stim_duration': stim_duration}
-
-    def loadStimuli(self, client):
-        bar_parameters = self.epoch_parameters[0].copy()
-        occluder_parameters = self.epoch_parameters[1].copy()
-
-        bg = self.run_parameters.get('idle_color')
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
-        multicall.load_stim(**bar_parameters, hold=True)
-        multicall.load_stim(**occluder_parameters, hold=True)
-        multicall()
-
-    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
-        sleep(self.run_parameters['pre_time'])
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        # stim time
-        multicall.start_stim(append_stim_frames=append_stim_frames)
-        multicall.start_corner_square()
-        multicall()
-        sleep(self.convenience_parameters['current_stim_duration'])
-
-        # tail time
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.stop_stim(print_profile=print_profile)
-        multicall.black_corner_square()
-        multicall()
-
-        sleep(self.run_parameters['tail_time'])
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'center': [0, 0],
-                                    'start_theta': -90.0,
-                                    'bar_width': 15.0,
-                                    'bar_height': 150.0,
-                                    'bar_color': 1.0,
-                                    'bar_speed': [-35.0, -25.0, -15.0, 15.0, 25.0, 35.0],
-                                    'occluder_height': 170.0,
-                                    'occluder_color': self.run_parameters.get('idle_color'),
-                                    'preprime_duration': 0.0,
-                                    'prime_duration': 2.0,
-                                    'occlusion_duration': 2.0,
-                                    'pause_duration': [0.0, 1.0],
-                                    'probe_duration': 1.5,
-                                    'render_on_cylinder': False,
-                                    'bar_surface_radius': 3.0,
-                                    'occluder_surface_radius': 2.0,
-                                    'randomize_order': True,}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'OcclusionWithPause',
-                               'num_epochs': 240, # 12 x 20 each
-                               'pre_time': 1.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.0,}
 # %%
 
 

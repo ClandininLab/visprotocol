@@ -11,7 +11,7 @@ rig_config:
 
   Bruker_TwoScreens:
     data_directory: E:/Minseung/FlystimData
-    screen_center: [0, 0]
+    screen_center: [0, -30]
     rig: Bruker
 
   Laptop:
