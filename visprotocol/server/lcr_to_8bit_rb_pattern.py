@@ -10,6 +10,15 @@ if res[0] is not lcr.ERROR.OK:
   # No connection
   exit()
 
+# Set LED enables (ON/OFF)
+# See method in lightcrafter pkg to use
+dev.setLEDEnabled([True, False, True], _enableSeqCtrl=True)
+
+# Set LED currents [r, g, b], on [0, 255]
+# Default=[104, 135, 130]
+# WARNING: don't set these too high for now...
+dev.setLEDCurrents([104, 0, 130])
+
 # Print report and video signal status
 dev.getFirmwareVersion()
 dev.getHardwareStatus()
