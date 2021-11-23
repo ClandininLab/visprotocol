@@ -9,6 +9,7 @@ Last update 2021 Mar 14
 
 from visprotocol.protocol import clandinin_protocol
 import numpy as np
+import flyrpc.multicall
 
 from flystim.trajectory import Trajectory
 
@@ -16,6 +17,145 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)  # call the parent class init method
 
+# %%
+
+class TwoColorNoise(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        start_seed_1 = int(np.random.choice(range(int(1e6))))
+        start_seed_2 = int(np.random.choice(range(int(1e6))))
+
+        distribution_data = {'name': 'Ternary',
+                             'args': [],
+                             'kwargs': {'rand_min': self.protocol_parameters['rand_min'],
+                                        'rand_max': self.protocol_parameters['rand_max']}}
+
+        grid_1_parameters = {'name': 'RandomGridOnSphericalPatch',
+                         'patch_width': 15,
+                         'patch_height': 15,
+                         'width': self.protocol_parameters['grid_width'],
+                         'height': self.protocol_parameters['grid_height'],
+                         'start_seed': start_seed_1,
+                         'update_rate': self.protocol_parameters['update_rate'],
+                         'distribution_data': distribution_data,
+                         'theta': adj_center[0]+20,
+                         'phi': adj_center[1],
+                         'color': [1, 0, 0, 1],
+                         'sphere_radius': 2}
+
+        grid_2_parameters = {'name': 'RandomGridOnSphericalPatch',
+                         'patch_width': 15,
+                         'patch_height': 15,
+                         'width': self.protocol_parameters['grid_width'],
+                         'height': self.protocol_parameters['grid_height'],
+                         'start_seed': start_seed_2,
+                         'update_rate': self.protocol_parameters['update_rate'],
+                         'distribution_data': distribution_data,
+                         'theta': adj_center[0]-20,
+                         'phi': adj_center[1],
+                         'color': [0, 0, 1, 1],
+                         'sphere_radius': 1}
+
+        self.epoch_parameters = (grid_1_parameters, grid_2_parameters)
+
+        self.convenience_parameters = {'start_seed_1': start_seed_1,
+                                    'start_seed_2': start_seed_2}
+
+    def loadStimuli(self, client):
+        grid_1_parameters = self.epoch_parameters[0].copy()
+        grid_2_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+        multicall.load_stim(**grid_1_parameters, hold=True)
+        multicall.load_stim(**grid_2_parameters, hold=True)
+
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'patch_size': 5.0,
+                                'update_rate': 20.0,
+                                'rand_min': 0.0,
+                                'rand_max': 1.0,
+                                'grid_width': 60,
+                                'grid_height': 60,
+                                'center': [0.0, 0.0]}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'TwoColorNoise',
+                           'num_epochs': 10,
+                           'pre_time': 2.0,
+                           'stim_time': 30.0,
+                           'tail_time': 2.0,
+                           'idle_color': 0.5}
+
+# %%
+
+class SpotPair(BaseProtocol):
+ def __init__(self, cfg):
+     super().__init__(cfg)
+
+     self.getRunParameterDefaults()
+     self.getParameterDefaults()
+
+ def getEpochParameters(self):
+     current_speed_2 = self.selectParametersFromLists(self.protocol_parameters['speed_2'], randomize_order=self.protocol_parameters['randomize_order'])
+
+     center = self.protocol_parameters['center']
+     center_1 = [center[0], center[1] + self.protocol_parameters['y_separation']/2]
+     spot_1_parameters =  self.getMovingSpotParameters(color=[1, 0, 0, 1],
+                                                       radius=self.protocol_parameters['diameter'][0]/2,
+                                                       center=center_1,
+                                                       speed=self.protocol_parameters['speed_1'],
+                                                       angle=0)
+     center_2 = [center[0], center[1] - self.protocol_parameters['y_separation']/2]
+     spot_2_parameters =  self.getMovingSpotParameters(color=[0, 0, 1, 1],
+                                                       radius=self.protocol_parameters['diameter'][1]/2,
+                                                       center=center_2,
+                                                       speed=current_speed_2,
+                                                       angle=0)
+
+
+     self.epoch_parameters = (spot_1_parameters, spot_2_parameters)
+
+     self.convenience_parameters = {'current_speed_2': current_speed_2}
+
+ def loadStimuli(self, client):
+     spot_1_parameters = self.epoch_parameters[0].copy()
+     spot_2_parameters = self.epoch_parameters[1].copy()
+
+     multicall = flyrpc.multicall.MyMultiCall(client.manager)
+     bg = self.run_parameters.get('idle_color')
+     multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+     multicall.load_stim(**spot_1_parameters, hold=True)
+     multicall.load_stim(**spot_2_parameters, hold=True)
+
+     multicall()
+
+ def getParameterDefaults(self):
+     self.protocol_parameters = {'diameter': [5.0, 5.0],
+                                 'intensity': [0.0, 0.0],
+                                 'center': [0, 0],
+                                 'y_separation': 7.0,
+                                 'speed_1': 80.0,
+                                 'speed_2': [-80.0, -40.0, 0.0, 40.0, 80.0],
+                                 'randomize_order': True}
+
+ def getRunParameterDefaults(self):
+     self.run_parameters = {'protocol_ID': 'SpotPair',
+                            'num_epochs': 40,
+                            'pre_time': 0.5,
+                            'stim_time': 4.0,
+                            'tail_time': 1.0,
+                            'idle_color': 0.5}
 
 
 # %%
