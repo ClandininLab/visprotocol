@@ -211,6 +211,11 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
 
         start_seed = int(np.random.choice(range(int(1e6))))
 
+        if self.protocol_parameters['rgb_texture']:
+            color = [1, 0, 1, 1]
+        else:  # Monochromatic
+            color = [1, 1, 1, 1]
+
         distribution_data = {'name': 'Ternary',
                              'args': [],
                              'kwargs': {'rand_min': self.protocol_parameters['rand_min'],
@@ -225,7 +230,9 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
                                  'update_rate': self.protocol_parameters['update_rate'],
                                  'distribution_data': distribution_data,
                                  'theta': adj_center[0],
-                                 'phi': adj_center[1]}
+                                 'phi': adj_center[1],
+                                 'color': color,
+                                 'rgb_texture': self.protocol_parameters['rgb_texture']}
 
         self.convenience_parameters = {'start_seed': start_seed}
 
@@ -236,7 +243,8 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
                                     'rand_max': 1.0,
                                     'grid_width': 60,
                                     'grid_height': 60,
-                                    'center': [0.0, 0.0]}
+                                    'center': [0.0, 0.0],
+                                    'rgb_texture': False}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'SphericalCheckerboardWhiteNoise',
