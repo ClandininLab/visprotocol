@@ -7,6 +7,7 @@ import numpy as np
 import os
 import flyrpc.multicall
 import inspect
+from time import sleep
 
 import visprotocol
 from visprotocol.protocol import clandinin_protocol
@@ -504,13 +505,47 @@ class MedullaTuningSuite(BaseProtocol):
         self.component_class.loadStimuli(client)
         self.component_class.advanceEpochCounter() # up the component class epoch counter
 
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        if self.run_parameters['opto_stim']:
+            client.niusb_device.outputStep(output_channel='ctr1',
+                                           low_time=0.001,
+                                           high_time=1.00,
+                                           initial_delay=0.0)
+            sleep(self.run_parameters['pre_time']-1.00)
+        else:
+            sleep(self.run_parameters['pre_time'])
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.run_parameters['stim_time'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        multicall()
+
+        if self.run_parameters['opto_stim']:
+            sleep(self.run_parameters['tail_time']-1.00)
+            client.niusb_device.outputStep(output_channel='ctr1',
+                                           low_time=0.001,
+                                           high_time=0.50,
+                                           initial_delay=0.50)
+        else:
+           sleep(self.run_parameters['tail_time'])
+
+
     def getParameterDefaults(self):
         self.protocol_parameters = {}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'MedullaTuningSuite',
                                'num_epochs': 87,  # 87 = 29 * 3 averages each
-                               'pre_time': 1.0,
+                               'pre_time': 1.5,
                                'stim_time': 3.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
+                               'tail_time': 1.5,
+                               'idle_color': 0.5,
+                               'opto_stim': False}

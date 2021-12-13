@@ -8,6 +8,7 @@ ni-usb device classes
 
 
 import nidaqmx
+from nidaqmx.types import CtrTime
 
 class NIUSB():
     def __init__(self):
@@ -27,14 +28,18 @@ class NIUSB6210(NIUSB):
             task.co_channels.add_co_pulse_chan_time('{}/{}'.format(self.dev, self.trigger_channel),
                                                     low_time=0.002,
                                                     high_time=0.001)
+            task.start()
 
-
-    def outputStep(self, output_channel='ctr1', low_time=0.001, high_time=0.100):
+    def outputStep(self, output_channel='ctr1', low_time=0.001, high_time=0.100, initial_delay=0.00):
         with nidaqmx.Task() as task:
             task.co_channels.add_co_pulse_chan_time('{}/{}'.format(self.dev, output_channel),
                                                     low_time=low_time,
-                                                    high_time=high_time)
+                                                    high_time=high_time,
+                                                    initial_delay=initial_delay)
+
             task.start()
+            task.wait_until_done()
+            task.stop()
 
 
 class NIUSB6001(NIUSB):

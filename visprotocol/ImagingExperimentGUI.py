@@ -516,15 +516,20 @@ class ImagingExperimentGUI(QWidget):
                 newLabel = QLabel(key + ':')
                 self.protocol_grid.addWidget(newLabel, 2 + self.run_params_ct, 0)
 
-                self.run_parameter_input[key] = QLineEdit()
-                if isinstance(value, int):
-                    validator = QtGui.QIntValidator()
-                    validator.setBottom(0)
-                elif isinstance(value, float):
-                    validator = QtGui.QDoubleValidator()
-                    validator.setBottom(0)
-                self.run_parameter_input[key].setValidator(validator)
-                self.run_parameter_input[key].setText(str(value))
+                if isinstance(value, bool):
+                    self.run_parameter_input[key] = QCheckBox()
+                    self.run_parameter_input[key].setChecked(value)
+                else:
+                    self.run_parameter_input[key] = QLineEdit()
+                    if isinstance(value, int):
+                        validator = QtGui.QIntValidator()
+                        validator.setBottom(0)
+                    elif isinstance(value, float):
+                        validator = QtGui.QDoubleValidator()
+                        validator.setBottom(0)
+                    self.run_parameter_input[key].setValidator(validator)
+                    self.run_parameter_input[key].setText(str(value))
+
                 self.protocol_grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
 
     def onEnteredSeriesCount(self):
@@ -590,7 +595,10 @@ class ImagingExperimentGUI(QWidget):
 
     def updateParametersFromFillableFields(self):
         for key, value in self.run_parameter_input.items():
-            self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
+            if isinstance(self.run_parameter_input[key], QCheckBox): #QCheckBox
+                self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
+            else: # QLineEdit
+                self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
 
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
