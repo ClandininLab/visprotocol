@@ -506,12 +506,12 @@ class MedullaTuningSuite(BaseProtocol):
         self.component_class.advanceEpochCounter() # up the component class epoch counter
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
-        if self.run_parameters['opto_stim']:
+        if self.protocol_parameters['opto_stim']:
             client.niusb_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
-                                           high_time=1.00,
+                                           high_time=self.protocol_parameters['opto_pre'],
                                            initial_delay=0.0)
-            sleep(self.run_parameters['pre_time']-1.00)
+            sleep(self.run_parameters['pre_time']-self.protocol_parameters['opto_pre'])
         else:
             sleep(self.run_parameters['pre_time'])
 
@@ -528,18 +528,20 @@ class MedullaTuningSuite(BaseProtocol):
         multicall.black_corner_square()
         multicall()
 
-        if self.run_parameters['opto_stim']:
-            sleep(self.run_parameters['tail_time']-1.00)
+        if self.protocol_parameters['opto_stim']:
+            sleep(self.run_parameters['tail_time']-self.protocol_parameters['opto_tail'])
             client.niusb_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
-                                           high_time=0.50,
-                                           initial_delay=0.50)
+                                           high_time=self.protocol_parameters['opto_tail'],
+                                           initial_delay=0.0)
         else:
            sleep(self.run_parameters['tail_time'])
 
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {}
+        self.protocol_parameters = {'opto_stim': False,
+                                    'opto_pre': 1.0,
+                                    'opto_tail': 1.0}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'MedullaTuningSuite',
@@ -547,5 +549,4 @@ class MedullaTuningSuite(BaseProtocol):
                                'pre_time': 1.5,
                                'stim_time': 3.0,
                                'tail_time': 1.5,
-                               'idle_color': 0.5,
-                               'opto_stim': False}
+                               'idle_color': 0.5}
