@@ -5,7 +5,6 @@ EpochRun object controls presentation of a sequence of epochs ("epoch run")
 """
 
 from PyQt5.QtWidgets import QApplication
-import nidaqmx
 
 
 class EpochRun():
@@ -62,18 +61,9 @@ class EpochRun():
         if save_metadata_flag:
             data.createEpoch(protocol_object)
 
-        if client.send_ttl:
-            # Send a TTL pulse through the NI-USB to trigger acquisition
-            with nidaqmx.Task() as task:
-                if client.NI_USB_name == 'NI USB-6210':
-                    task.co_channels.add_co_pulse_chan_time('Dev5/ctr0',
-                                                            low_time=0.002,
-                                                            high_time=0.001)
-                    task.start()
-                elif client.NI_USB_name == 'NI USB-6001':
-                    task.do_channels.add_do_chan('Dev1/port2/line0')
-                    task.start()
-                    task.write([True, False])
+        # Send triggering TTL through the NI-USB device (if device is set)
+        if client.niusb_device is not None:
+            client.niusb_device.sendTrigger()
 
         # Use the protocol object to send the stimulus to flystim
         protocol_object.loadStimuli(client)
