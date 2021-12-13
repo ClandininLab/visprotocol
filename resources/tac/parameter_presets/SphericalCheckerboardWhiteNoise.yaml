@@ -1,4 +1,4 @@
-medulla:
+MED_blue_only:
   run_parameters:
     protocol_ID: SphericalCheckerboardWhiteNoise
     num_epochs: 10.0
@@ -16,3 +16,23 @@ medulla:
     center:
     - 0.0
     - 0.0
+    rgb_texture: False
+MED_blueUV:
+  run_parameters:
+    protocol_ID: SphericalCheckerboardWhiteNoise
+    num_epochs: 10.0
+    pre_time: 2.0
+    stim_time: 30.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    patch_size: 5.0
+    update_rate: 20.0
+    rand_min: 0.0
+    rand_max: 1.0
+    grid_width: 80.0
+    grid_height: 80.0
+    center:
+    - 0.0
+    - 0.0
+    rgb_texture: True
