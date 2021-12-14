@@ -457,16 +457,6 @@ class MedullaTuningSuite(BaseProtocol):
                                                            'center_size': 180.0,
                                                            'randomize_order': True}
 
-
-            elif stim_type == 'ExpandingMovingSpot':
-                new_component_class = ExpandingMovingSpot(self.cfg)
-                new_component_class.protocol_parameters = {'diameter': [5.0, 10.0, 20.0, 30.0],
-                                                           'intensity': [0.0, 1.0],
-                                                           'center': [0, 0],
-                                                           'speed': 0.0,
-                                                           'angle': 0.0,
-                                                           'randomize_order': True}
-
             elif stim_type == 'FlickeringSpot':
                 new_component_class = FlickeringSpot(self.cfg)
                 new_component_class.protocol_parameters = {'diameter': [5.0, 10.0, 20.0, 30.0],
@@ -474,14 +464,6 @@ class MedullaTuningSuite(BaseProtocol):
                                                            'contrast': 1.0,
                                                            'mean': 0.5,
                                                            'temporal_frequency': [1.0, 2.0, 4.0, 8.0, 16.0],
-                                                           'randomize_order': True}
-
-            elif stim_type == 'UniformFlash':
-                new_component_class = UniformFlash(self.cfg)
-                new_component_class.protocol_parameters = {'height': 240.0,
-                                                           'width': 240.0,
-                                                           'center': [0, 0],
-                                                           'intensity': [1.0, 0.0],
                                                            'randomize_order': True}
 
             # Lock component stim timing run params to suite run params
@@ -503,15 +485,15 @@ class MedullaTuningSuite(BaseProtocol):
 
     def loadStimuli(self, client):
         self.component_class.loadStimuli(client)
-        self.component_class.advanceEpochCounter() # up the component class epoch counter
+        self.component_class.advanceEpochCounter()  # up the component class epoch counter
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         if self.protocol_parameters['opto_stim']:
             client.niusb_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
-                                           high_time=self.protocol_parameters['opto_pre'],
+                                           high_time=self.protocol_parameters['opto_time'],
                                            initial_delay=0.0)
-            sleep(self.run_parameters['pre_time']-self.protocol_parameters['opto_pre'])
+            sleep(self.run_parameters['pre_time']-self.protocol_parameters['opto_time'])
         else:
             sleep(self.run_parameters['pre_time'])
 
@@ -528,25 +510,16 @@ class MedullaTuningSuite(BaseProtocol):
         multicall.black_corner_square()
         multicall()
 
-        if self.protocol_parameters['opto_stim']:
-            sleep(self.run_parameters['tail_time']-self.protocol_parameters['opto_tail'])
-            client.niusb_device.outputStep(output_channel='ctr1',
-                                           low_time=0.001,
-                                           high_time=self.protocol_parameters['opto_tail'],
-                                           initial_delay=0.0)
-        else:
-           sleep(self.run_parameters['tail_time'])
-
+        sleep(self.run_parameters['tail_time'])
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'opto_stim': False,
-                                    'opto_pre': 1.0,
-                                    'opto_tail': 1.0}
+                                    'opto_time': 2.0}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'MedullaTuningSuite',
                                'num_epochs': 87,  # 87 = 29 * 3 averages each
-                               'pre_time': 1.5,
+                               'pre_time': 3.0,
                                'stim_time': 3.0,
-                               'tail_time': 1.5,
+                               'tail_time': 1.0,
                                'idle_color': 0.5}
