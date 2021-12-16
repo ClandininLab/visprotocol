@@ -157,7 +157,9 @@ class ContrastReversingGrating(BaseProtocol):
 
     def getEpochParameters(self):
         # TODO: center size with aperture (center and center_size): maybe parent class aperture method?
-        current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
+        current_temporal_frequency, current_spatial_period = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'],
+                                                                                             self.protocol_parameters['spatial_period']),
+                                                                                            randomize_order=self.protocol_parameters['randomize_order'])
 
         # Make the contrast trajectory
         contrast_traj = {'name': 'Sinusoid',
@@ -166,7 +168,7 @@ class ContrastReversingGrating(BaseProtocol):
                          'offset': 0}
 
         self.epoch_parameters = {'name': 'CylindricalGrating',
-                                 'period': self.protocol_parameters['spatial_period'],
+                                 'period': current_spatial_period,
                                  'color': [1, 1, 1, 1],
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': contrast_traj,
@@ -177,13 +179,14 @@ class ContrastReversingGrating(BaseProtocol):
                                  'profile': 'square',
                                  'theta': self.screen_center[0]}
 
-        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency,
+                                       'current_spatial_period': current_spatial_period}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'spatial_period': 20.0,
+        self.protocol_parameters = {'spatial_period': [10.0, 20.0],
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
@@ -429,8 +432,8 @@ class MedullaTuningSuite(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
         self.cfg = cfg
-        self.stim_list = ['DriftingSineGrating', 'FlickeringSpot']
-        n = [9, 20]  # weight each stim draw by how many trial types it has. Total = 29
+        self.stim_list = ['ContrastReversingGrating']
+        n = [16]  # weight each stim draw by how many trial types it has. Total = 16
         avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
         all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
 
@@ -450,6 +453,17 @@ class MedullaTuningSuite(BaseProtocol):
                 new_component_class = DriftingSineGrating(self.cfg)
                 new_component_class.protocol_parameters = {'period': [5.0, 10.0, 20.0],  # spatial period, degrees
                                                            'rate': [10.0, 20.0, 40.0],  # drift speed, degrees/second
+                                                           'contrast': 1.0,
+                                                           'mean': 0.5,
+                                                           'angle': 0.0,
+                                                           'center': [0, 0],
+                                                           'center_size': 180.0,
+                                                           'randomize_order': True}
+
+            elif stim_type == 'ContrastReversingGrating':
+                new_component_class = ContrastReversingGrating(self.cfg)
+                new_component_class.protocol_parameters = {'spatial_period': [10.0, 20.0, 40.0, 80.0],  # spatial period, degrees
+                                                           'temporal_frequency': [0.5, 1.0, 2.0, 4.0],  # Hz
                                                            'contrast': 1.0,
                                                            'mean': 0.5,
                                                            'angle': 0.0,
@@ -514,12 +528,12 @@ class MedullaTuningSuite(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'opto_stim': False,
-                                    'opto_time': 2.0}
+                                    'opto_time': 1.0}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'MedullaTuningSuite',
-                               'num_epochs': 87,  # 87 = 29 * 3 averages each
-                               'pre_time': 3.0,
+                               'num_epochs': 48,  # 87 = 16 * 3 averages each
+                               'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
