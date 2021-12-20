@@ -491,6 +491,22 @@ class MedullaTuningSuite(BaseProtocol):
     def getEpochParameters(self):
         stim_type = str(self.stim_order[self.num_epochs_completed])  # note this num_epochs_completed is for the whole suite, not component stim!
         self.convenience_parameters = {'component_stim_type': stim_type}
+
+        if self.protocol_parameters['opto_mode'] == 'on':
+            self.convenience_parameters['opto_stim'] = True
+
+        elif self.protocol_parameters['opto_mode'] == 'off':
+            self.convenience_parameters['opto_stim'] = False
+            
+        elif self.protocol_parameters['opto_mode'] == 'alternating':
+            if np.mod(self.num_epochs_completed, 2) == 0:
+                self.convenience_parameters['opto_stim'] = False
+            else:
+                self.convenience_parameters['opto_stim'] = True
+        else:
+            print('Unrecognized opto_mode string. Allowable: [on, off, alternating]')
+
+
         self.component_class = self.component_classes[stim_type]
 
         self.component_class.getEpochParameters()
@@ -502,7 +518,7 @@ class MedullaTuningSuite(BaseProtocol):
         self.component_class.advanceEpochCounter()  # up the component class epoch counter
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
-        if self.protocol_parameters['opto_stim']:
+        if self.convenience_parameters['opto_stim']:
             client.niusb_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
                                            high_time=self.protocol_parameters['opto_time'],
@@ -527,7 +543,7 @@ class MedullaTuningSuite(BaseProtocol):
         sleep(self.run_parameters['tail_time'])
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'opto_stim': False,
+        self.protocol_parameters = {'opto_mode': 'alternating',  # 'on', 'off', 'alternating'
                                     'opto_time': 1.0}
 
     def getRunParameterDefaults(self):
