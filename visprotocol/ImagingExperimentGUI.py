@@ -215,6 +215,13 @@ class ImagingExperimentGUI(QWidget):
         for choiceID in self.data.indicatorChoices:
             self.fly_indicator_1.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_indicator_1)
+        # Effector1:
+        newLabel = QLabel('Effector_1:')
+        self.fly_effector_1 = QComboBox()
+        self.fly_effector_1.addItem("")
+        for choiceID in self.data.effectorChoices:
+            self.fly_effector_1.addItem(choiceID)
+        self.data_grid.addRow(newLabel, self.fly_effector_1)
         # Driver2:
         newLabel = QLabel('Driver_2:')
         self.fly_driver_2 = QComboBox()
@@ -229,6 +236,13 @@ class ImagingExperimentGUI(QWidget):
         for choiceID in self.data.indicatorChoices:
             self.fly_indicator_2.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_indicator_2)
+        # Effector2:
+        newLabel = QLabel('Effector_2:')
+        self.fly_effector_2 = QComboBox()
+        self.fly_effector_2.addItem("")
+        for choiceID in self.data.effectorChoices:
+            self.fly_effector_2.addItem(choiceID)
+        self.data_grid.addRow(newLabel, self.fly_effector_2)
         # Fly genotype:
         newLabel = QLabel('Genotype:')
         self.fly_genotype_input = QLineEdit()
@@ -425,8 +439,10 @@ class ImagingExperimentGUI(QWidget):
                         'prep': self.fly_prep_input.currentText(),
                         'driver_1': self.fly_driver_1.currentText(),
                         'indicator_1': self.fly_indicator_1.currentText(),
+                        'effector_1': self.fly_effector_1.currentText(),
                         'driver_2': self.fly_driver_2.currentText(),
                         'indicator_2': self.fly_indicator_2.currentText(),
+                        'effector_2': self.fly_effector_2.currentText(),
                         'genotype': self.fly_genotype_input.text()}
         self.data.createFly(fly_metadata)  # creates new fly and selects it as the current fly
         self.updateExistingFlyInput()
@@ -497,8 +513,10 @@ class ImagingExperimentGUI(QWidget):
         self.fly_age_input.setValue(fly_data_dict['age'])
         self.fly_driver_1.setCurrentText(fly_data_dict['driver_1'])
         self.fly_indicator_1.setCurrentText(fly_data_dict['indicator_1'])
+        self.fly_effector_1.setCurrentText(fly_data_dict['effector_1'])
         self.fly_driver_2.setCurrentText(fly_data_dict['driver_2'])
         self.fly_indicator_2.setCurrentText(fly_data_dict['indicator_2'])
+        self.fly_effector_1.setCurrentText(fly_data_dict['effector_2'])
         self.fly_genotype_input.setText(fly_data_dict['genotype'])
 
     def updateRunParamtersInput(self):

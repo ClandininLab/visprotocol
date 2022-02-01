@@ -28,7 +28,10 @@ class Client():
                                    'port': 60629,
                                    'use_server': True}
             self.niusb_device = niusb.NIUSB6210(dev='Dev5', trigger_channel='ctr0')
-
+        elif socket.gethostname() == 'clandinin-ballbehavior':  # 24HrFitness
+            self.server_options = {'host': '0.0.0.0',
+                                   'port': 60629,
+                                   'use_server': True}
         else:
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
