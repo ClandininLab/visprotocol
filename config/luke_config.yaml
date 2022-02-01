@@ -1,0 +1,20 @@
+experimenter: luke
+prep_choices: [Whole brain]
+driver_choices: [nSyb-Gal4]
+indicator_choices: [TdTomato, GCaMP6f, GCaMP8s]
+
+rig_config:
+  Bruker_LeftScreen:
+    data_directory: E:/luke/flystimdata
+    screen_center: [0,-30]
+    rig: Bruker
+
+  Bruker_TwoScreens:
+    data_directory: E:/luke/flystimdata
+    screen_center: [0, -30]
+    rig: Bruker
+
+  Laptop:
+    data_directory: /Volumes/GoogleDrive/My\ Drive/research/clandinin_lab/data/FlystimData
+    screen_center: [0, 0]
+    rig: (testing)
