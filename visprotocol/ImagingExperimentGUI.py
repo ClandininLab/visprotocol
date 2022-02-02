@@ -148,6 +148,17 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(self.status_label, 3, 3)
         self.status_label.setText('')
 
+        # Epoch count refresh button:
+        checkEpochCntButton = QPushButton("Check epochs:", self)
+        checkEpochCntButton.clicked.connect(self.onPressedButton)
+        self.protocol_grid.addWidget(checkEpochCntButton, 4, 2)
+
+        # Epoch count window:
+        self.epoch_count = QLabel()
+        self.epoch_count.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_grid.addWidget(self.epoch_count, 4, 3)
+        self.epoch_count.setText('')
+
         # Imaging type dropdown (if AODscope):
         if self.data.rig == 'AODscope':
             self.imagingTypeComboBox = QComboBox(self)
@@ -430,6 +441,9 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
                 self.updateExistingFlyInput()
                 self.populateGroups()
+                
+        elif sender.text() == 'Check epochs:':
+            self.epoch_count.setText(str(self.protocol_object.num_epochs_completed))
 
     def onCreatedFly(self):
         # Populate fly metadata from fly data fields
