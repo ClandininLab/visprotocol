@@ -25,10 +25,10 @@ def main():
 
     def getBrukerLeft():
         return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.63, -1.0), viewport_width=1.37, viewport_height=2)
-
+    
     def getBrukerRight():
         return SubScreen(pa=(0, y_forward, z_bottom), pb=(x_right, y_back, z_bottom), pc=(0, y_forward, 0), viewport_ll=(-0.61, -1.0), viewport_width=1.36, viewport_height=2)
-
+        
     def getAux():
         return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0))
 
@@ -37,6 +37,7 @@ def main():
     bruker_right_screen = Screen(subscreens=[getBrukerRight()], id=2, fullscreen=True, vsync=True, square_size=(0.14, 0.22), square_loc=(-0.85, -0.94), name='Right', horizontal_flip=True)
 
     aux_screen = Screen(subscreens=[getBrukerLeft()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
+
 
     draw_screens([bruker_left_screen, bruker_right_screen])
     plt.show()

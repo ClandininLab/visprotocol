@@ -10,26 +10,39 @@ import matplotlib.pyplot as plt
 def main():
     # LCR USB commands handled thru lightcrafter package script first
 
-# Define screen(s) for the rig. Units in meters
-    # Fly is at (0, 0, 0), fly looking down +y axis. Top of the screen is at z=0
-    z_bottom = -12.13e-2 #m
-    x_left = -7.99e-2
-    x_right = +7.99e-2
-    y_forward = +7.17e-2
-    y_back = -0.8e-2
+    def getBrukerRight():
+        # Define screen(s) for the rig. Units in meters
+        # Fly is at (0, 0, 0), fly looking down +y axis. Top of the screen is at z=0
+        scale_fact = 2.52
+        x_right = scale_fact*7.99e-2
+        # x_almost_center = +0.919e-2
+        y_back = scale_fact*-0.8e-2
+        # y_forward = +6.25e2
+        # z_top = +2.87e2
+        # z_bottom = -8.98e-2 #m
+        z_bottom = scale_fact*-12.13e-2
+        y_forward = scale_fact*7.17e-2
 
-    def getBrukerLeft():
-        return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0), viewport_ll=(-0.63, -1.0), viewport_width=1.37, viewport_height=2)
+        # set screen width and height
+
+        pb = (x_right, y_back, z_bottom)
+        pa = (0, y_forward, z_bottom)
+        pc = (0, y_forward, 0)
+        viewport_ll = (-0.54, -0.46)
+        viewport_height = 0.61 - (-0.46)
+        viewport_width = 0.23 - (-0.54)
+        
+        return SubScreen(pa, pb, pc, viewport_ll, viewport_width, viewport_height)
 
     def getAux():
         return SubScreen(pa=(x_left, y_back, z_bottom), pb=(0, y_forward, z_bottom), pc=(x_left, y_back, 0))
 
-    bruker_left_screen = Screen(subscreens=[getBrukerLeft()], id=1, fullscreen=True, vsync=True, square_size=(0.11, 0.23), square_loc=(0.89, -1.00), name='Left', horizontal_flip=True)
+    bruker_right_screen = Screen(subscreens=[getBrukerRight()], id=3, fullscreen=True, vsync=True, square_size=(0.11, 0.23), square_loc=(0.89, -1.00), name='Left', horizontal_flip=True)
 
-    aux_screen = Screen(subscreens=[getBrukerLeft()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
+    aux_screen = Screen(subscreens=[getBrukerRight()], id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
     
     #screens = [bruker_left_screen, aux_screen]
-    screens = [bruker_left_screen, aux_screen]
+    screens = [bruker_right_screen, aux_screen]
     port = 60629
     host = ''
 
