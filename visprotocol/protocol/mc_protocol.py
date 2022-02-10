@@ -290,7 +290,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
         # Compute location and width of the occluder per specification
         occluder_width = np.abs(occluder_end_theta - occluder_start_theta)
-        occluder_loc = np.sign(bar_start_theta) * (occluder_end_theta + np.sign(bar_speed) * occluder_width/2)
+        occluder_loc = np.sign(bar_start_theta) * (occluder_end_theta + occluder_width/2)
         occluder_time = [0, stim_duration]
         occluder_x = [occluder_loc, occluder_loc]
 
