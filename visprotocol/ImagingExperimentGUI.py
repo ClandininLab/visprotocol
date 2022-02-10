@@ -148,6 +148,17 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(self.status_label, 3, 3)
         self.status_label.setText('')
 
+        # Epoch count refresh button:
+        checkEpochCntButton = QPushButton("Check epochs:", self)
+        checkEpochCntButton.clicked.connect(self.onPressedButton)
+        self.protocol_grid.addWidget(checkEpochCntButton, 4, 2)
+
+        # Epoch count window:
+        self.epoch_count = QLabel()
+        self.epoch_count.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_grid.addWidget(self.epoch_count, 4, 3)
+        self.epoch_count.setText('')
+
         # Imaging type dropdown (if AODscope):
         if self.data.rig == 'AODscope':
             self.imagingTypeComboBox = QComboBox(self)
@@ -215,6 +226,13 @@ class ImagingExperimentGUI(QWidget):
         for choiceID in self.data.indicatorChoices:
             self.fly_indicator_1.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_indicator_1)
+        # Effector1:
+        newLabel = QLabel('Effector_1:')
+        self.fly_effector_1 = QComboBox()
+        self.fly_effector_1.addItem("")
+        for choiceID in self.data.effectorChoices:
+            self.fly_effector_1.addItem(choiceID)
+        self.data_grid.addRow(newLabel, self.fly_effector_1)
         # Driver2:
         newLabel = QLabel('Driver_2:')
         self.fly_driver_2 = QComboBox()
@@ -229,6 +247,13 @@ class ImagingExperimentGUI(QWidget):
         for choiceID in self.data.indicatorChoices:
             self.fly_indicator_2.addItem(choiceID)
         self.data_grid.addRow(newLabel, self.fly_indicator_2)
+        # Effector2:
+        newLabel = QLabel('Effector_2:')
+        self.fly_effector_2 = QComboBox()
+        self.fly_effector_2.addItem("")
+        for choiceID in self.data.effectorChoices:
+            self.fly_effector_2.addItem(choiceID)
+        self.data_grid.addRow(newLabel, self.fly_effector_2)
         # Fly genotype:
         newLabel = QLabel('Genotype:')
         self.fly_genotype_input = QLineEdit()
@@ -416,6 +441,9 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
                 self.updateExistingFlyInput()
                 self.populateGroups()
+                
+        elif sender.text() == 'Check epochs:':
+            self.epoch_count.setText(str(self.protocol_object.num_epochs_completed))
 
     def onCreatedFly(self):
         # Populate fly metadata from fly data fields
@@ -425,8 +453,10 @@ class ImagingExperimentGUI(QWidget):
                         'prep': self.fly_prep_input.currentText(),
                         'driver_1': self.fly_driver_1.currentText(),
                         'indicator_1': self.fly_indicator_1.currentText(),
+                        'effector_1': self.fly_effector_1.currentText(),
                         'driver_2': self.fly_driver_2.currentText(),
                         'indicator_2': self.fly_indicator_2.currentText(),
+                        'effector_2': self.fly_effector_2.currentText(),
                         'genotype': self.fly_genotype_input.text()}
         self.data.createFly(fly_metadata)  # creates new fly and selects it as the current fly
         self.updateExistingFlyInput()
@@ -497,8 +527,10 @@ class ImagingExperimentGUI(QWidget):
         self.fly_age_input.setValue(fly_data_dict['age'])
         self.fly_driver_1.setCurrentText(fly_data_dict['driver_1'])
         self.fly_indicator_1.setCurrentText(fly_data_dict['indicator_1'])
+        self.fly_effector_1.setCurrentText(fly_data_dict['effector_1'])
         self.fly_driver_2.setCurrentText(fly_data_dict['driver_2'])
         self.fly_indicator_2.setCurrentText(fly_data_dict['indicator_2'])
+        self.fly_effector_1.setCurrentText(fly_data_dict['effector_2'])
         self.fly_genotype_input.setText(fly_data_dict['genotype'])
 
     def updateRunParamtersInput(self):
@@ -516,15 +548,20 @@ class ImagingExperimentGUI(QWidget):
                 newLabel = QLabel(key + ':')
                 self.protocol_grid.addWidget(newLabel, 2 + self.run_params_ct, 0)
 
-                self.run_parameter_input[key] = QLineEdit()
-                if isinstance(value, int):
-                    validator = QtGui.QIntValidator()
-                    validator.setBottom(0)
-                elif isinstance(value, float):
-                    validator = QtGui.QDoubleValidator()
-                    validator.setBottom(0)
-                self.run_parameter_input[key].setValidator(validator)
-                self.run_parameter_input[key].setText(str(value))
+                if isinstance(value, bool):
+                    self.run_parameter_input[key] = QCheckBox()
+                    self.run_parameter_input[key].setChecked(value)
+                else:
+                    self.run_parameter_input[key] = QLineEdit()
+                    if isinstance(value, int):
+                        validator = QtGui.QIntValidator()
+                        validator.setBottom(0)
+                    elif isinstance(value, float):
+                        validator = QtGui.QDoubleValidator()
+                        validator.setBottom(0)
+                    self.run_parameter_input[key].setValidator(validator)
+                    self.run_parameter_input[key].setText(str(value))
+
                 self.protocol_grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
 
     def onEnteredSeriesCount(self):
@@ -590,7 +627,10 @@ class ImagingExperimentGUI(QWidget):
 
     def updateParametersFromFillableFields(self):
         for key, value in self.run_parameter_input.items():
-            self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
+            if isinstance(self.run_parameter_input[key], QCheckBox): #QCheckBox
+                self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
+            else: # QLineEdit
+                self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
 
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox

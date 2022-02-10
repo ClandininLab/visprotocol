@@ -45,6 +45,7 @@ class Data():
         self.prepChoices = self.cfg.get('prep_choices', [])
         self.driverChoices = self.cfg.get('driver_choices', [])
         self.indicatorChoices = self.cfg.get('indicator_choices', [])
+        self.effectorChoices = self.cfg.get('effector_choices', [])
 
         # load rig-specific metadata things
         self.data_directory = self.cfg.get('rig_config').get(self.rig_name).get('data_directory', os.getcwd())

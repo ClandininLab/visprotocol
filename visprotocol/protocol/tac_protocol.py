@@ -205,6 +205,18 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
 
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'patch_size': 5.0,
+                                    'update_rate': 20.0,
+                                    'rand_min': 0.0,
+                                    'rand_max': 1.0,
+                                    'grid_width': 60,
+                                    'grid_height': 60,
+                                    'center': [0.0, 0.0],
+                                    'rgb_texture': False}
+
+
+
     def getEpochParameters(self):
         stimulus_ID = 'RandomGridOnSphericalPatch'
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
@@ -235,16 +247,6 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
                                  'rgb_texture': self.protocol_parameters['rgb_texture']}
 
         self.convenience_parameters = {'start_seed': start_seed}
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'patch_size': 5.0,
-                                    'update_rate': 20.0,
-                                    'rand_min': 0.0,
-                                    'rand_max': 1.0,
-                                    'grid_width': 60,
-                                    'grid_height': 60,
-                                    'center': [0.0, 0.0],
-                                    'rgb_texture': False}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'SphericalCheckerboardWhiteNoise',
