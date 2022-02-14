@@ -1544,3 +1544,54 @@ class PanGlomSuite(BaseProtocol):
                                    'stim_time': 3.0,
                                    'tail_time': 1.5,
                                    'idle_color': 0.5}
+
+
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # DOTS STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
+
+
+class CoherentDots(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_coherence = self.selectParametersFromLists(self.protocol_parameters['coherence'],
+                                                           randomize_order=self.protocol_parameters['randomize_order'])
+
+        current_seed = np.random.randint(0, 10000)
+
+        self.epoch_parameters = {'name': 'MovingDotField',
+                                 'n_points': int(self.protocol_parameters['n_points']),
+                                 'point_size': int(self.protocol_parameters['point_size']),
+                                 'sphere_radius': 1.0,
+                                 'color': self.protocol_parameters['intensity'],
+                                 'speed': self.protocol_parameters['speed'],
+                                 'signal_direction': self.protocol_parameters['signal_direction'],
+                                 'coherence': current_coherence,
+                                 'random_seed': current_seed}
+
+        self.convenience_parameters = {'current_coherence': current_coherence,
+                                       'current_seed': current_seed}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'n_points': 400,
+                                    'point_size': 30,
+                                    'intensity': 0.0,
+                                    'speed': 80.0,
+                                    'signal_direction': 0.0,
+                                    'coherence': [0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'CoherentDots',
+                               'num_epochs': 70,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.5,
+                               'idle_color': 0.5}
