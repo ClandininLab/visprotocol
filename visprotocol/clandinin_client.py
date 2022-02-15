@@ -13,6 +13,7 @@ class Client():
     def __init__(self, cfg):
         self.user_name = cfg.get('user_name')
         self.rig_name = cfg.get('rig_name')
+        self.draw_screens = cfg.get('draw_screens')
         self.cfg = cfg
         self.niusb_device = None
 
@@ -42,7 +43,8 @@ class Client():
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
             aux_screen = Screen(id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
-            draw_screens(aux_screen)
+            if self.draw_screens:
+              draw_screens(aux_screen)
             self.manager = launch_stim_server(aux_screen)
 
         self.manager.black_corner_square()

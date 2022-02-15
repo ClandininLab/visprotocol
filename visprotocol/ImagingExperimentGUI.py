@@ -43,6 +43,7 @@ class ImagingExperimentGUI(QWidget):
         self.cfg = self.user_configuration.copy()
         self.cfg['user_name'] = self.user_name
         self.cfg['rig_name'] = self.rig_name
+        self.cfg['draw_screens'] = self.draw_screens
 
         # start a client
         self.client = Client(self.cfg)
@@ -789,6 +790,7 @@ class InitializeRigGUI(QWidget):
         self.parent = parent
         self.experimentGuiObject = experimentGuiObject
         self.user_name = None
+        self.draw_screens = False
         self.available_rig_configs = []
 
         self.layout = QFormLayout()
@@ -806,6 +808,12 @@ class InitializeRigGUI(QWidget):
         self.RigComboBox.activated[str].connect(self.onSelectedRig)
         self.layout.addRow(label_RigName, self.RigComboBox)
         self.updateAvailableRigs()
+
+        label_DrawScreens = QLabel('Draw Screens:')
+        self.DrawScreensBox = QCheckBox()
+        self.DrawScreensBox.setChecked(False)
+        self.DrawScreensBox.stateChanged.connect(lambda x: self.should_draw_screens())
+        self.layout.addRow(label_DrawScreens, self.DrawScreensBox)
 
         self.setLayout(self.layout)
         self.show()
@@ -825,8 +833,15 @@ class InitializeRigGUI(QWidget):
         self.rig_name = text
         self.experimentGuiObject.user_name = self.user_name
         self.experimentGuiObject.rig_name = self.rig_name
+        self.experimentGuiObject.draw_screens = self.draw_screens
         self.close()
         self.parent.close()
+
+    def should_draw_screens(self):
+        if self.DrawScreensBox.isChecked():
+            self.draw_screens = True
+        else:
+            self.draw_screens = False
 
 
 class runSeriesThread(QThread):
