@@ -15,6 +15,6 @@ rig_config:
     rig: Bruker
 
   Laptop:
-    data_directory: /Volumes/GoogleDrive/My\ Drive/research/clandinin_lab/data/FlystimData
+    data_directory: /Users/luke/Documents/flystim_data
     screen_center: [0, 0]
     rig: (testing)
