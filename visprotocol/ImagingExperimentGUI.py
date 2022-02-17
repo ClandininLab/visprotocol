@@ -442,7 +442,7 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
                 self.updateExistingFlyInput()
                 self.populateGroups()
-                
+
         elif sender.text() == 'Check epochs:':
             self.epoch_count.setText(str(self.protocol_object.num_epochs_completed))
 

@@ -1006,18 +1006,18 @@ class RealWalkThroughFakeForest(BaseProtocol):
         multicall()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'n_trees': [10, 20, 40, 80],
+        self.protocol_parameters = {'n_trees': 40,
                                     'tree_height': 1.0,
                                     'floor_color': 0.40,
                                     'sky_color': 0.5,
                                     'tree_color': 0.0,
                                     'rand_seed': 1,
-                                    'trajectory_range': [0, 1, 4],
+                                    'trajectory_range': [0, 1, 2],
                                     'include_ground': [0, 1]}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'RealWalkThroughFakeForest',
-                               'num_epochs': 25,
+                               'num_epochs': 30,
                                'pre_time': 2.0,
                                'stim_time': 20.0,
                                'tail_time': 2.0,
@@ -1078,7 +1078,9 @@ class HorizonWalk(BaseProtocol):
                                  'high_sigma': self.protocol_parameters['high_sigma']}
 
         self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
-                                       'current_trajectory_library': file_name}
+                                       'current_trajectory_library': file_name,
+                                       'current_filter_flag': current_filter_flag,
+                                       'current_image': current_image}
 
     def loadStimuli(self, client):
         passedParameters = self.epoch_parameters.copy()
@@ -1120,7 +1122,7 @@ class HorizonWalk(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {
-                                    'trajectory_range': [0, 1, 4],
+                                    'trajectory_range': [0, 1, 2],
                                     'image_index': [0, 1, 2, 3, 4],
                                     'filter_flag': [0, 1],
                                     'low_sigma': 3,  # degrees
