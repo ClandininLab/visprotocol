@@ -917,6 +917,7 @@ class UniformFlash(BaseProtocol):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
+
 class RealWalkThroughFakeForest(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -925,17 +926,22 @@ class RealWalkThroughFakeForest(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_trajectory_index = int(self.selectParametersFromLists(self.protocol_parameters['trajectory_range'], randomize_order=True))
+        current_params = self.selectParametersFromLists((self.protocol_parameters['trajectory_range'],
+                                                         self.protocol_parameters['n_trees'],
+                                                         self.protocol_parameters['include_ground']
+                                                         ), randomize_order=True)
+
+        current_trajectory_index, current_n_trees, current_include_ground = current_params
 
         # load walk trajectory
         trajectory_dir = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'walking_trajectories')
         file_name = 'walking_traj_20200728.npy'
         snippets = np.load(os.path.join(trajectory_dir, file_name), allow_pickle=True)
-        snippet = snippets[current_trajectory_index]
+        snippet = snippets[int(current_trajectory_index)]
         t = snippet['t']
         x = snippet['x']
         y = snippet['y']
-        heading = snippet['a']-90 # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
+        heading = snippet['a']-90  # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
 
         fly_x_trajectory = {'name': 'tv_pairs',
                             'tv_pairs': list(zip(t, x)),
@@ -950,7 +956,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
         z_level = -0.20
         tree_locations = []
         np.random.seed(int(self.protocol_parameters['rand_seed']))
-        for tree in range(int(self.protocol_parameters['n_trees'])):
+        for tree in range(int(current_n_trees)):
             tree_locations.append([np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), z_level+self.protocol_parameters['tree_height']/2])
 
         self.epoch_parameters = {'name': 'Composite',
@@ -965,7 +971,9 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                  'z_level': z_level}
 
         self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
-                                       'current_trajectory_library': file_name}
+                                       'current_trajectory_library': file_name,
+                                       'current_n_trees': current_n_trees,
+                                       'current_include_ground': current_include_ground}
 
     def loadStimuli(self, client):
         passedParameters = self.epoch_parameters.copy()
@@ -980,16 +988,12 @@ class RealWalkThroughFakeForest(BaseProtocol):
         multicall.load_stim(name='ConstantBackground',
                             color=[sc, sc, sc, 1.0])
 
-        # base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
-        # fn = 'imk00125.iml'
-        # multicall.load_stim(name='HorizonCylinder',
-        #                     image_path=os.path.join(base_dir, fn))
-
-        fc = passedParameters['floor_color']
-        multicall.load_stim(name='TexturedGround',
-                            color=[fc, fc, fc, 1.0],
-                            z_level=passedParameters['z_level'],
-                            hold=True)
+        if self.convenience_parameters['current_include_ground'] == 1:
+            fc = passedParameters['floor_color']
+            multicall.load_stim(name='TexturedGround',
+                                color=[fc, fc, fc, 1.0],
+                                z_level=passedParameters['z_level'],
+                                hold=True)
 
         multicall.load_stim(name='Forest',
                             color=passedParameters['tree_color'],
@@ -1001,7 +1005,6 @@ class RealWalkThroughFakeForest(BaseProtocol):
 
         multicall()
 
-
     def getParameterDefaults(self):
         self.protocol_parameters = {'n_trees': 40,
                                     'tree_height': 1.0,
@@ -1009,11 +1012,12 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                     'sky_color': 0.5,
                                     'tree_color': 0.0,
                                     'rand_seed': 1,
-                                    'trajectory_range': [0, 1, 2, 3, 4]}
+                                    'trajectory_range': [0, 1, 2],
+                                    'include_ground': [0, 1]}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'ForestRandomWalk',
-                               'num_epochs': 25,
+        self.run_parameters = {'protocol_ID': 'RealWalkThroughFakeForest',
+                               'num_epochs': 30,
                                'pre_time': 2.0,
                                'stim_time': 20.0,
                                'tail_time': 2.0,
@@ -1021,6 +1025,119 @@ class RealWalkThroughFakeForest(BaseProtocol):
 # %%
 
 
+class HorizonWalk(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_params = self.selectParametersFromLists((self.protocol_parameters['trajectory_range'],
+                                                         self.protocol_parameters['image_index'],
+                                                         self.protocol_parameters['filter_flag']
+                                                         ), randomize_order=True)
+
+        current_trajectory_index, current_image_index, current_filter_flag = current_params
+        print('Image index {}'.format(current_image_index))
+        image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
+                       'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
+                       'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
+                       'imk02733.tif', 'imk02999.tif', 'imk03093.tif', 'imk03347.tif',
+                       'imk03447.tif', 'imk03584.tif', 'imk03758.tif', 'imk03760.tif']
+
+        current_image = np.array(image_names)[int(current_image_index)]
+
+        # load walk trajectory
+        trajectory_dir = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'walking_trajectories')
+        file_name = 'walking_traj_20200728.npy'
+        snippets = np.load(os.path.join(trajectory_dir, file_name), allow_pickle=True)
+        snippet = snippets[int(current_trajectory_index)]
+        t = snippet['t']
+        x = snippet['x']
+        y = snippet['y']
+        heading = snippet['a']-90  # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
+
+        fly_x_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(t, x)),
+                            'kind': 'linear'}
+        fly_y_trajectory = {'name': 'tv_pairs',
+                            'tv_pairs': list(zip(t, y)),
+                            'kind': 'linear'}
+        fly_theta_trajectory = {'name': 'tv_pairs',
+                                'tv_pairs': list(zip(t, heading)),
+                                'kind': 'linear'}
+
+        self.epoch_parameters = {'name': 'Composite',
+                                 'fly_x_trajectory': fly_x_trajectory,
+                                 'fly_y_trajectory': fly_y_trajectory,
+                                 'fly_theta_trajectory': fly_theta_trajectory,
+                                 'current_image': current_image,
+                                 'current_filter_flag': current_filter_flag,
+                                 'low_sigma': self.protocol_parameters['low_sigma'],
+                                 'high_sigma': self.protocol_parameters['high_sigma']}
+
+        self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
+                                       'current_trajectory_library': file_name,
+                                       'current_filter_flag': current_filter_flag,
+                                       'current_image': current_image}
+
+    def loadStimuli(self, client):
+        passedParameters = self.epoch_parameters.copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+
+        multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
+                                     passedParameters['fly_y_trajectory'],
+                                     passedParameters['fly_theta_trajectory'])
+
+
+        # Sigmas are in degrees, need to be in image pixels
+        # scale = 1536 / 360 pixels per degree
+        pixels_per_degree = 1536 / 360
+        if passedParameters['current_filter_flag'] == 1:
+            filter_name = 'difference_of_gaussians'
+            filter_kwargs = {'low_sigma': passedParameters['low_sigma'] * pixels_per_degree,  # degrees -> pixels
+                             'high_sigma': passedParameters['high_sigma'] * pixels_per_degree}  # degrees -> pixels
+        else:
+            filter_name = None
+            filter_kwargs = {}
+
+        # VH images are trimmed to [512, 1536] pixels (3:1 aspect ratio)
+        # For w & h to have equal pixels_per_degree,
+        # cylinder needs to have radius = 1, height = 3.464
+        # Entire height subtends 120 deg (1/3 of the width)
+        # Set r = 1
+        # tan(60) = (h/2) / r = (h/2) / 1
+        # h = 3.464
+        multicall.load_stim(name='HorizonCylinder',
+                            image_name=passedParameters['current_image'],
+                            filter_name=filter_name,
+                            filter_kwargs=filter_kwargs,
+                            cylinder_radius=1.0,
+                            cylinder_height=3.464,
+                            hold=True)
+
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {
+                                    'trajectory_range': [0, 1, 2],
+                                    'image_index': [0, 1, 2, 3, 4],
+                                    'filter_flag': [0, 1],
+                                    'low_sigma': 3,  # degrees
+                                    'high_sigma': 6}  # degrees
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'HorizonWalk',
+                               'num_epochs': 25,
+                               'pre_time': 2.0,
+                               'stim_time': 10.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
+
+
+# %%
 class ApproachTuning(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -1195,7 +1312,6 @@ class TowerDistanceWalk(BaseProtocol):
                             hold=True)
 
         multicall()
-
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'forward_velocity': [0.02],
@@ -1544,3 +1660,54 @@ class PanGlomSuite(BaseProtocol):
                                    'stim_time': 3.0,
                                    'tail_time': 1.5,
                                    'idle_color': 0.5}
+
+
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # DOTS STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
+
+
+class CoherentDots(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_coherence = self.selectParametersFromLists(self.protocol_parameters['coherence'],
+                                                           randomize_order=self.protocol_parameters['randomize_order'])
+
+        current_seed = np.random.randint(0, 10000)
+
+        self.epoch_parameters = {'name': 'MovingDotField',
+                                 'n_points': int(self.protocol_parameters['n_points']),
+                                 'point_size': int(self.protocol_parameters['point_size']),
+                                 'sphere_radius': 1.0,
+                                 'color': self.protocol_parameters['intensity'],
+                                 'speed': self.protocol_parameters['speed'],
+                                 'signal_direction': self.protocol_parameters['signal_direction'],
+                                 'coherence': current_coherence,
+                                 'random_seed': current_seed}
+
+        self.convenience_parameters = {'current_coherence': current_coherence,
+                                       'current_seed': current_seed}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'n_points': 400,
+                                    'point_size': 30,
+                                    'intensity': 0.0,
+                                    'speed': 80.0,
+                                    'signal_direction': 0.0,
+                                    'coherence': [0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'CoherentDots',
+                               'num_epochs': 70,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.5,
+                               'idle_color': 0.5}
