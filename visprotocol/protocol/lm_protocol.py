@@ -95,28 +95,24 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
         # LM's original flickering cue
         # color Trajectory
-        cue_amplitude = cue_mean_color * cue_contrast
-        cue_max_color = cue_amplitude + cue_amplitude
-        cue_min_color = cue_amplitude - cue_amplitude
-        print(cue_period)
-        cue_timestamps = np.linspace(0, cue_period, int(np.ceil(cue_temporal_frequency*cue_period*2+1)))
-        #cue_timestamps = np.linspace(0.0, float(cue_period), cue_temporal_frequency*cue_period*2+1) + float(precue_period)
-        cue_colors = np.append(np.tile([cue_min_color,cue_max_color], int(np.ceil(cue_temporal_frequency*cue_period))), cue_min_color)
-        
-        tv_pairs = np.stack((cue_timestamps, cue_colors), axis=1)
+        # cue_amplitude = cue_mean_color * cue_contrast
+        # cue_max_color = cue_amplitude + cue_amplitude
+        # cue_min_color = cue_amplitude - cue_amplitude
+        # print(cue_period)
+        # cue_timestamps = np.linspace(0, cue_period, int(np.ceil(cue_temporal_frequency*cue_period*2+1)))
+        # cue_colors = np.append(np.tile([cue_min_color,cue_max_color], int(np.ceil(cue_temporal_frequency*cue_period))), cue_min_color)
+        # tv_pairs = np.stack((cue_timestamps, cue_colors), axis=1)
         # tv_pairs = np.insert(tv_pairs, 0, [0.0, float(bg)], axis=0)
         # tv_pairs = np.append(tv_pairs, [float(precue_period+cue_period), float(bg)], axis=0)
-        
-        
-        cue_color_traj = {'name':'tv_pairs','tv_pairs':tv_pairs.tolist(),'kind':'linear'}
+        # cue_color_traj = {'name':'tv_pairs','tv_pairs':tv_pairs.tolist(),'kind':'linear'}
         
         # Cue with sinusoidal color modulation
-        # cue_color_traj = {'name': 'SinusoidWithDelay',
-        #                     'temporal_frequency': cue_temporal_frequency,
-        #                     'amplitude': cue_mean_color * cue_contrast,
-        #                     'offset': cue_mean_color,
-        #                     'stim_start': precue_period,
-        #                     'stim_end': precue_period+cue_period}
+        cue_color_traj = {'name': 'SinusoidInTimeWindow',
+                            'temporal_frequency': cue_temporal_frequency,
+                            'amplitude': cue_mean_color * cue_contrast,
+                            'offset': cue_mean_color,
+                            'stim_start': precue_period,
+                            'stim_end': precue_period+cue_period}
 
         cue_parameters = {'name': 'MovingPatchOnCylinder',
                             'width': bar_width_degrees,
@@ -124,7 +120,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                             'color': cue_color_traj,
                             'theta': left_bar_start_position if cue_on_left==1 else right_bar_start_position,
                             'phi': 0,
-                            'cylinder_radius': 2}
+                            'cylinder_radius': 0.9}
         
         #####################
 
