@@ -48,9 +48,9 @@ class ConstantBackground(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'ConstantBackground',
                                'num_epochs': 10,
-                               'pre_time': 1.0,
-                               'stim_time': 4.0,
-                               'tail_time': 1.0,
+                               'pre_time': 0,
+                               'stim_time': 5.0,
+                               'tail_time': 0,
                                'idle_color': 0.5}
 
 class DriftingSquareGrating(BaseProtocol):
@@ -100,7 +100,7 @@ class DriftingSquareGrating(BaseProtocol):
         self.run_parameters = {'protocol_ID': 'DriftingSquareGrating',
                                'num_epochs': 10,
                                'pre_time': 1.0,
-                               'stim_time': 4.0,
+                               'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
@@ -166,7 +166,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
         self.run_parameters = {'protocol_ID': 'SplitDriftingSquareGrating',
                                'num_epochs': 40,
                                'pre_time': 0,
-                               'stim_time': 1.0,
+                               'stim_time': 0.5,
                                'tail_time': 0.1,
                                'idle_color': 0.5}
 
@@ -176,96 +176,128 @@ class OpticFlowExperiment(BaseProtocol):
     ### Concatenate multiple types of stimuli here ###
     ##################################################
 
-        def __init__(self, cfg):
-            super().__init__(cfg)
-            self.cfg = cfg
-            self.getRunParameterDefaults()
-            self.getParameterDefaults()
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.cfg = cfg
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
 
-            ####### SET THESE ########
-            # How long should a cluster of epochs be?
-            epoch_cluster_duration = 0.5 #in min
-            epoch_cluster_duration *= 60 # now in sec
+        ############################# SET THESE ##############################
+        # How long should a cluster of epochs be?
+        epoch_cluster_duration = 1 #in min
+        epoch_cluster_duration *= 60 # now in sec
 
-            # What stimuli and how to weight them?
-            self.stim_list = ['DriftingSquareGrating', 'SplitDriftingSquareGrating']#'SplitDriftingSquareGrating']
-            stim_weights = [2,1]
-            ##########################
+        # What stimuli and how to weight them?
+        self.stim_list = ['DriftingSquareGrating', 'SplitDriftingSquareGrating']#'SplitDriftingSquareGrating']
+        stim_weights = [2,1]
 
-            # calculate duration of an epoch (a single stim presentation)
-            epoch_duration = self.run_parameters['pre_time'] + \
-                             self.run_parameters['stim_time'] + \
-                             self.run_parameters['tail_time']
+        #################### FORM A SINGLE EPOCH CLUSTER ####################
+        # calculate duration of an epoch (a single stim presentation)
+        epoch_duration = self.run_parameters['pre_time'] + \
+                         self.run_parameters['stim_time'] + \
+                         self.run_parameters['tail_time']
 
-            # given the duration of a single epoch and a cluster of epochs, how many epochs to present?
-            num_epochs_in_cluster = int(epoch_cluster_duration / epoch_duration)
-            
-            # create a list that contains the correct number of each stim
-            stim_per_unit = int(num_epochs_in_cluster / np.sum(stim_weights))
-            all_stims = [[self.stim_list[i]] * stim_weights[i] * stim_per_unit for i in range(len(self.stim_list))]
-            self.stim_order = np.random.permutation(np.hstack(all_stims)) # Randomize list
+        # given the duration of a single epoch and a cluster of epochs, how many epochs to present?
+        num_epochs_in_cluster = int(epoch_cluster_duration / epoch_duration)
+        
+        # create a list that contains the correct number of each stim
+        stim_per_unit = int(num_epochs_in_cluster / np.sum(stim_weights))
+        all_stims = [[self.stim_list[i]] * stim_weights[i] * stim_per_unit for i in range(len(self.stim_list))]
+        self.stim_order = list(np.random.permutation(np.hstack(all_stims))) # Randomize list
 
-            #Update num epochs in cluster since could have decreased by a few due to rounding down
-            num_epochs_in_cluster = int(stim_per_unit * np.sum(stim_weights))
-            self.run_parameters['num_epochs'] = num_epochs_in_cluster
+        #Update num epochs in cluster since could have decreased by a few due to rounding down
+        num_epochs_in_cluster = int(stim_per_unit * np.sum(stim_weights))
+        print(num_epochs_in_cluster)
+        #self.run_parameters['num_epochs'] = num_epochs_in_cluster
+        #####################################################################
 
-            # initialize each component class
-            self.initComponentClasses()
+        self.stim_order.append('ConstantBackground')
 
-        def initComponentClasses(self):
-            # pre-populate dict of component classes. Each with its own num_epochs_completed counter etc
-            self.component_classes = {}
-            for stim_type in self.stim_list:
+        self.stim_order = self.stim_order + self.stim_order + self.stim_order
+        # so currently this should take 4.5 min
 
-                if stim_type == 'DriftingSquareGrating':
-                    new_component_class = DriftingSquareGrating(self.cfg)
+        self.run_parameters['num_epochs'] = len(self.stim_order)
 
-                    # COMMENTING THIS OUT. WILL GET SET IN THE CLASSES ABOVE
-                    # RESSURECT IF I WANT TO LOOP OVER SPEEDS OR SOMETHING LIKE THAT
+        # initialize each component class
+        self.initComponentClasses()
 
-                    # new_component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
-                    #                                            'intensity': [0.0, 1.0],
-                    #                                            'center': [0, 0],
-                    #                                            'speed': [-80.0, 80.0],
-                    #                                            'angle': 0.0,
-                    #                                            'randomize_order': True}
+    def initComponentClasses(self):
+        print('init')
+        # pre-populate dict of component classes. Each with its own num_epochs_completed counter etc
+        self.component_classes = {}
+        for stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating', 'ConstantBackground']:
 
-                elif stim_type == 'SplitDriftingSquareGrating':
-                    new_component_class = SplitDriftingSquareGrating(self.cfg)
+            if stim_type == 'DriftingSquareGrating':
+                new_component_class = DriftingSquareGrating(self.cfg)
+                new_component_class.run_parameters = self.run_parameters
+                #new_component_class.run_parameters['stim_time'] = 0.1
 
-                elif stim_type == 'ConstantBackground':
-                    new_component_class = ConstantBackground(self.cfg)
+                # COMMENTING THIS OUT. WILL GET SET IN THE CLASSES ABOVE
+                # RESSURECT IF I WANT TO LOOP OVER SPEEDS OR SOMETHING LIKE THAT
 
+                # new_component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
+                #                                            'intensity': [0.0, 1.0],
+                #                                            'center': [0, 0],
+                #                                            'speed': [-80.0, 80.0],
+                #                                            'angle': 0.0,
+                #                                            'randomize_order': True}
+
+            elif stim_type == 'SplitDriftingSquareGrating':
+                new_component_class = SplitDriftingSquareGrating(self.cfg)
+                new_component_class.run_parameters = self.run_parameters
+                #new_component_class.run_parameters['stim_time'] = 0.2
+
+            elif stim_type == 'ConstantBackground':
+                new_component_class = ConstantBackground(self.cfg)
+                new_component_class.run_parameters = self.run_parameters
+                #new_component_class.run_parameters['stim_time'] = 2
+
+            # if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
                 # Lock component stim timing run params to suite run params
-                new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
-                new_component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
-                new_component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
-                new_component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
+                # new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
+                # new_component_class.run_parameters['stim_time'] = 5 #self.run_parameters['stim_time']
+                # new_component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
+                # new_component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
 
-                self.component_classes[stim_type] = new_component_class
 
-        def getEpochParameters(self):
-            print(self.num_epochs_completed)
-            stim_type = str(self.stim_order[self.num_epochs_completed]) # note this num_epochs_completed is for the whole suite, not component stim!
-            self.convenience_parameters = {'component_stim_type': stim_type}
-            self.component_class = self.component_classes[stim_type]
 
-            self.component_class.getEpochParameters()
-            self.convenience_parameters.update(self.component_class.convenience_parameters)
-            self.epoch_parameters = self.component_class.epoch_parameters
+            self.component_classes[stim_type] = new_component_class
+            print("init stim time: {}".format(new_component_class.run_parameters['stim_time']))
 
-        def loadStimuli(self, client):
-            self.component_class.loadStimuli(client)
-            self.component_class.advanceEpochCounter() # up the component class epoch counter
+    def getEpochParameters(self):
+        print(self.num_epochs_completed)
+        stim_type = str(self.stim_order[self.num_epochs_completed]) # note this num_epochs_completed is for the whole suite, not component stim!
+        self.convenience_parameters = {'component_stim_type': stim_type}
+        self.component_class = self.component_classes[stim_type]
+        #print(stim_type)
+        #print(self.component_class.run_parameters['stim_time'])
+        if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
+            self.component_class.run_parameters['stim_time'] = 0.5
+        if stim_type == 'ConstantBackground':
+            self.component_class.run_parameters['stim_time'] = 30
 
-        def getParameterDefaults(self):
-            self.protocol_parameters = {}
+        self.component_class.getEpochParameters()
+        self.convenience_parameters.update(self.component_class.convenience_parameters)
+        self.epoch_parameters = self.component_class.epoch_parameters
 
-        def getRunParameterDefaults(self):
-            self.run_parameters = {'protocol_ID': 'OpticFlowExperiment',
-                                   'num_epochs': 0, # this will get reset above
-                                   'pre_time': 0.1,
-                                   'stim_time': 0.5,
-                                   'tail_time': 0,
-                                   'idle_color': 0.5}
+        self.run_parameters = self.component_class.run_parameters
+        
+        self.run_parameters['num_epochs'] = len(self.stim_order)
+
+        #self.run_parameters['stim_time'] = 5
+
+    def loadStimuli(self, client):
+        self.component_class.loadStimuli(client)
+        self.component_class.advanceEpochCounter() # up the component class epoch counter
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OpticFlowExperiment',
+                               'num_epochs': 0, # this will get reset above
+                               'pre_time': 0.1,
+                               'stim_time': 0.5,
+                               'tail_time': 0,
+                               'idle_color': 0.5}
 
