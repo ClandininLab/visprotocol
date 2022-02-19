@@ -184,7 +184,7 @@ class OpticFlowExperiment(BaseProtocol):
 
         ############################# SET THESE ##############################
         # How long should a cluster of epochs be?
-        epoch_cluster_duration = 1 #in min
+        epoch_cluster_duration = 7 #in min
         epoch_cluster_duration *= 60 # now in sec
 
         # What stimuli and how to weight them?
@@ -211,10 +211,9 @@ class OpticFlowExperiment(BaseProtocol):
         #self.run_parameters['num_epochs'] = num_epochs_in_cluster
         #####################################################################
 
-        self.stim_order.append('ConstantBackground')
-
-        self.stim_order = self.stim_order + self.stim_order + self.stim_order
-        # so currently this should take 4.5 min
+        #self.stim_order.append('ConstantBackground')
+        self.stim_order.insert(0,'ConstantBackground') # Add grey period
+        self.stim_order = self.stim_order + self.stim_order + self.stim_order # duplicate this 10min thing 3 times
 
         self.run_parameters['num_epochs'] = len(self.stim_order)
 
@@ -230,7 +229,6 @@ class OpticFlowExperiment(BaseProtocol):
             if stim_type == 'DriftingSquareGrating':
                 new_component_class = DriftingSquareGrating(self.cfg)
                 new_component_class.run_parameters = self.run_parameters
-                #new_component_class.run_parameters['stim_time'] = 0.1
 
                 # COMMENTING THIS OUT. WILL GET SET IN THE CLASSES ABOVE
                 # RESSURECT IF I WANT TO LOOP OVER SPEEDS OR SOMETHING LIKE THAT
@@ -245,21 +243,10 @@ class OpticFlowExperiment(BaseProtocol):
             elif stim_type == 'SplitDriftingSquareGrating':
                 new_component_class = SplitDriftingSquareGrating(self.cfg)
                 new_component_class.run_parameters = self.run_parameters
-                #new_component_class.run_parameters['stim_time'] = 0.2
 
             elif stim_type == 'ConstantBackground':
                 new_component_class = ConstantBackground(self.cfg)
                 new_component_class.run_parameters = self.run_parameters
-                #new_component_class.run_parameters['stim_time'] = 2
-
-            # if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
-                # Lock component stim timing run params to suite run params
-                # new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
-                # new_component_class.run_parameters['stim_time'] = 5 #self.run_parameters['stim_time']
-                # new_component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
-                # new_component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
-
-
 
             self.component_classes[stim_type] = new_component_class
             print("init stim time: {}".format(new_component_class.run_parameters['stim_time']))
@@ -269,12 +256,11 @@ class OpticFlowExperiment(BaseProtocol):
         stim_type = str(self.stim_order[self.num_epochs_completed]) # note this num_epochs_completed is for the whole suite, not component stim!
         self.convenience_parameters = {'component_stim_type': stim_type}
         self.component_class = self.component_classes[stim_type]
-        #print(stim_type)
-        #print(self.component_class.run_parameters['stim_time'])
+
         if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
-            self.component_class.run_parameters['stim_time'] = 0.5
+            self.component_class.run_parameters['stim_time'] = 1 # 1 sec
         if stim_type == 'ConstantBackground':
-            self.component_class.run_parameters['stim_time'] = 30
+            self.component_class.run_parameters['stim_time'] = 3*60 # 3 min
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
@@ -284,7 +270,6 @@ class OpticFlowExperiment(BaseProtocol):
         
         self.run_parameters['num_epochs'] = len(self.stim_order)
 
-        #self.run_parameters['stim_time'] = 5
 
     def loadStimuli(self, client):
         self.component_class.loadStimuli(client)
@@ -296,8 +281,8 @@ class OpticFlowExperiment(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'OpticFlowExperiment',
                                'num_epochs': 0, # this will get reset above
-                               'pre_time': 0.1,
-                               'stim_time': 0.5,
+                               'pre_time': 3,
+                               'stim_time': 1,
                                'tail_time': 0,
                                'idle_color': 0.5}
 
