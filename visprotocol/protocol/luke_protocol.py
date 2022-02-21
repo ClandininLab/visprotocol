@@ -184,11 +184,11 @@ class OpticFlowExperiment(BaseProtocol):
 
         ############################# SET THESE ##############################
         # How long should a cluster of epochs be?
-        epoch_cluster_duration = 7 #in min
+        epoch_cluster_duration = 6.25 #in min
         epoch_cluster_duration *= 60 # now in sec
 
         # What stimuli and how to weight them?
-        self.stim_list = ['DriftingSquareGrating', 'SplitDriftingSquareGrating']#'SplitDriftingSquareGrating']
+        self.stim_list = ['DriftingSquareGrating', 'SplitDriftingSquareGrating']
         stim_weights = [2,1]
 
         #################### FORM A SINGLE EPOCH CLUSTER ####################
@@ -207,14 +207,13 @@ class OpticFlowExperiment(BaseProtocol):
 
         #Update num epochs in cluster since could have decreased by a few due to rounding down
         num_epochs_in_cluster = int(stim_per_unit * np.sum(stim_weights))
-        print(num_epochs_in_cluster)
-        #self.run_parameters['num_epochs'] = num_epochs_in_cluster
-        #####################################################################
 
-        #self.stim_order.append('ConstantBackground')
+        ######## CONCATENATE EPOCH CLUSTERS BETWEEN GREY PERIODS ############
         self.stim_order.insert(0,'ConstantBackground') # Add grey period
-        self.stim_order = self.stim_order + self.stim_order + self.stim_order # duplicate this 10min thing 3 times
+        self.stim_order = self.stim_order + self.stim_order + self.stim_order + self.stim_order
+        self.stim_order.append('ConstantBackground')
 
+        # update to have the correct number of epochs
         self.run_parameters['num_epochs'] = len(self.stim_order)
 
         # initialize each component class
@@ -232,7 +231,6 @@ class OpticFlowExperiment(BaseProtocol):
 
                 # COMMENTING THIS OUT. WILL GET SET IN THE CLASSES ABOVE
                 # RESSURECT IF I WANT TO LOOP OVER SPEEDS OR SOMETHING LIKE THAT
-
                 # new_component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
                 #                                            'intensity': [0.0, 1.0],
                 #                                            'center': [0, 0],
@@ -257,10 +255,11 @@ class OpticFlowExperiment(BaseProtocol):
         self.convenience_parameters = {'component_stim_type': stim_type}
         self.component_class = self.component_classes[stim_type]
 
+        ### This overwrites run parameter defaults. This is where I'm handling assigning different stim_times to different stimuli.
         if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
             self.component_class.run_parameters['stim_time'] = 1 # 1 sec
         if stim_type == 'ConstantBackground':
-            self.component_class.run_parameters['stim_time'] = 3*60 # 3 min
+            self.component_class.run_parameters['stim_time'] = 60 # 3 min
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
