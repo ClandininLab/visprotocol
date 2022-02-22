@@ -9,6 +9,7 @@ import numpy as np
 import os
 import flyrpc.multicall
 import inspect
+import time
 
 import visprotocol
 from visprotocol.protocol import clandinin_protocol
@@ -1025,7 +1026,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
 # %%
 
 
-class HorizonWalk(BaseProtocol):
+class NaturalImageSuppression(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -1033,13 +1034,12 @@ class HorizonWalk(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_params = self.selectParametersFromLists((self.protocol_parameters['trajectory_range'],
+        current_params = self.selectParametersFromLists((
                                                          self.protocol_parameters['image_index'],
                                                          self.protocol_parameters['filter_flag']
                                                          ), randomize_order=True)
 
-        current_trajectory_index, current_image_index, current_filter_flag = current_params
-        print('Image index {}'.format(current_image_index))
+        current_image_index, current_filter_flag = current_params
         image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
                        'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
                        'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
@@ -1048,92 +1048,84 @@ class HorizonWalk(BaseProtocol):
 
         current_image = np.array(image_names)[int(current_image_index)]
 
-        # load walk trajectory
-        trajectory_dir = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'walking_trajectories')
-        file_name = 'walking_traj_20200728.npy'
-        snippets = np.load(os.path.join(trajectory_dir, file_name), allow_pickle=True)
-        snippet = snippets[int(current_trajectory_index)]
-        t = snippet['t']
-        x = snippet['x']
-        y = snippet['y']
-        heading = snippet['a']-90  # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
-
-        fly_x_trajectory = {'name': 'tv_pairs',
-                            'tv_pairs': list(zip(t, x)),
-                            'kind': 'linear'}
-        fly_y_trajectory = {'name': 'tv_pairs',
-                            'tv_pairs': list(zip(t, y)),
-                            'kind': 'linear'}
-        fly_theta_trajectory = {'name': 'tv_pairs',
-                                'tv_pairs': list(zip(t, heading)),
-                                'kind': 'linear'}
-
-        self.epoch_parameters = {'name': 'Composite',
-                                 'fly_x_trajectory': fly_x_trajectory,
-                                 'fly_y_trajectory': fly_y_trajectory,
-                                 'fly_theta_trajectory': fly_theta_trajectory,
-                                 'current_image': current_image,
-                                 'current_filter_flag': current_filter_flag,
-                                 'low_sigma': self.protocol_parameters['low_sigma'],
-                                 'high_sigma': self.protocol_parameters['high_sigma']}
-
-        self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
-                                       'current_trajectory_library': file_name,
-                                       'current_filter_flag': current_filter_flag,
-                                       'current_image': current_image}
-
-    def loadStimuli(self, client):
-        passedParameters = self.epoch_parameters.copy()
-
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-
-        multicall.set_fly_trajectory(passedParameters['fly_x_trajectory'],
-                                     passedParameters['fly_y_trajectory'],
-                                     passedParameters['fly_theta_trajectory'])
-
-
-        # Sigmas are in degrees, need to be in image pixels
-        # scale = 1536 / 360 pixels per degree
-        pixels_per_degree = 1536 / 360
-        if passedParameters['current_filter_flag'] == 1:
-            filter_name = 'difference_of_gaussians'
-            filter_kwargs = {'low_sigma': passedParameters['low_sigma'] * pixels_per_degree,  # degrees -> pixels
-                             'high_sigma': passedParameters['high_sigma'] * pixels_per_degree}  # degrees -> pixels
-        else:
+        if current_filter_flag == 0:
             filter_name = None
-            filter_kwargs = {}
+            filter_kwargs = None
+        elif current_filter_flag == 1:
+            filter_name = 'whiten'
+            filter_kwargs = None
+        elif current_filter_flag == 2:
+            # Sigmas are in degrees, need to be in image pixels
+            # scale = 1536 / 360 pixels per degree
+            pixels_per_degree = 1536 / 360
+            filter_name = 'difference_of_gaussians'
+            filter_kwargs = {'low_sigma': self.protocol_parameters['low_sigma'] * pixels_per_degree,  # degrees -> pixels
+                             'high_sigma': self.protocol_parameters['high_sigma'] * pixels_per_degree}  # degrees -> pixels
+
+        # Stim params for horizon cylinder
+        centerX = self.adjustCenter([0, 0])[0]
+        distance_to_travel = self.protocol_parameters['image_speed'] * self.run_parameters['stim_time']
+        startX = (0, centerX - distance_to_travel/2)
+        endX = (self.run_parameters['stim_time'], centerX + distance_to_travel/2)
+        x = [startX, endX]
+
+        rotation_trajectory = {'name': 'tv_pairs',
+                               'tv_pairs': x,
+                               'kind': 'linear'}
 
         # VH images are trimmed to [512, 1536] pixels (3:1 aspect ratio)
-        # For w & h to have equal pixels_per_degree,
-        # cylinder needs to have radius = 1, height = 3.464
-        # Entire height subtends 120 deg (1/3 of the width)
-        # Set r = 1
-        # tan(60) = (h/2) / r = (h/2) / 1
-        # h = 3.464
-        multicall.load_stim(name='HorizonCylinder',
-                            image_name=passedParameters['current_image'],
-                            filter_name=filter_name,
-                            filter_kwargs=filter_kwargs,
-                            cylinder_radius=1.0,
-                            cylinder_height=3.464,
-                            hold=True)
+        #   For w & h to have equal pixels_per_degree, cylinder needs to have radius = 1, height = 3.464...
+        #   Entire height subtends 120 deg (1/3 of the width)
+        #   tan(60) = (h/2) / r
+        #   h = 2 * r * tan(60) = 3.464
+        image_parameters = {'name': 'HorizonCylinder',
+                            'cylinder_radius': 1,
+                            'cylinder_height': 3.464,
+                            'image_name': current_image,
+                            'filter_name': filter_name,
+                            'filter_kwargs': filter_kwargs,
+                            'theta': rotation_trajectory}
 
+        # Stim params for probe (spot) stimulus
+        spot_parameters = self.getMovingSpotParameters(radius=self.protocol_parameters['spot_radius'],
+                                                       color=self.protocol_parameters['spot_color'],
+                                                       speed=self.protocol_parameters['spot_speed'],
+                                                       angle=0)
+        spot_parameters['sphere_radius'] = 0.5  # Render inside the image cylinder
+
+        self.epoch_parameters = (image_parameters, spot_parameters)
+        self.convenience_parameters = {'current_image': current_image,
+                                       'current_filter_name': filter_name,
+                                       'current_filter_kwargs': filter_kwargs,
+                                       'current_filter_flag': current_filter_flag}
+
+    def loadStimuli(self, client):
+        image_parameters = self.epoch_parameters[0].copy()
+        spot_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim(**image_parameters, hold=True)
+        multicall.load_stim(**spot_parameters, hold=True)
         multicall()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {
-                                    'trajectory_range': [0, 1, 2],
+        self.protocol_parameters = {'center': [0, 0],
+                                    'spot_radius': 7.5,
+                                    'spot_color': 0.0,
+                                    'spot_speed': 80,  # Deg./sec
+
+                                    'image_speed': -20,  # Deg./sec
                                     'image_index': [0, 1, 2, 3, 4],
-                                    'filter_flag': [0, 1],
-                                    'low_sigma': 3,  # degrees
-                                    'high_sigma': 6}  # degrees
+                                    'filter_flag': [0, 1, 2],
+                                    'low_sigma': 1,  # degrees
+                                    'high_sigma': 4}  # degrees
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'HorizonWalk',
-                               'num_epochs': 25,
-                               'pre_time': 2.0,
-                               'stim_time': 10.0,
-                               'tail_time': 2.0,
+        self.run_parameters = {'protocol_ID': 'NaturalImageSuppression',
+                               'num_epochs': 75,  # 5 images, 3 filter conditions, 5 trials each
+                               'pre_time': 1.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.5,
                                'idle_color': 0.5}
 
 
@@ -1158,7 +1150,7 @@ class ApproachTuning(BaseProtocol):
 
         time_steps = np.linspace(0, self.run_parameters['stim_time'], len(velocity))  # time steps of update trajectory
         # distance away from fly
-        distance = np.cumsum(velocity) # position at each update time point, according to new velocity value. Centered around 0
+        distance = np.cumsum(velocity)  # position at each update time point, according to new velocity value. Centered around 0
 
         position_x = np.sin(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * distance
         position_y = np.cos(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * distance
