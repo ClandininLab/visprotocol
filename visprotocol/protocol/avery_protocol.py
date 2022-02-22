@@ -492,12 +492,14 @@ class MedullaTuningSuite(BaseProtocol):
         stim_type = str(self.stim_order[self.num_epochs_completed])  # note this num_epochs_completed is for the whole suite, not component stim!
         self.convenience_parameters = {'component_stim_type': stim_type}
 
+        assert self.protocol_parameters['opto_mode'] in ['on', 'off', 'alternating']
+
         if self.protocol_parameters['opto_mode'] == 'on':
             self.convenience_parameters['opto_stim'] = True
 
         elif self.protocol_parameters['opto_mode'] == 'off':
             self.convenience_parameters['opto_stim'] = False
-            
+
         elif self.protocol_parameters['opto_mode'] == 'alternating':
             if np.mod(self.num_epochs_completed, 2) == 0:
                 self.convenience_parameters['opto_stim'] = False
@@ -548,7 +550,7 @@ class MedullaTuningSuite(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'MedullaTuningSuite',
-                               'num_epochs': 48,  # 87 = 16 * 3 averages each
+                               'num_epochs': 96,  # 96 = 16 stims * 2 opto conditions * 3 averages each
                                'pre_time': 2.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
