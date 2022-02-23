@@ -1049,14 +1049,17 @@ class NaturalImageSuppression(BaseProtocol):
         current_image = np.array(image_names)[int(current_image_index)]
 
         if current_filter_flag == 0:
+            current_image = current_image
             filter_name = None
             filter_kwargs = None
-        elif current_filter_flag == 1:
-            filter_name = 'whiten'
+        elif current_filter_flag == 1:  # pre-computed whitened image. Whitening takes a few seconds.
+            current_image = 'whitened_' + current_image
+            filter_name = None
             filter_kwargs = None
         elif current_filter_flag == 2:
             # Sigmas are in degrees, need to be in image pixels
             # scale = 1536 / 360 pixels per degree
+            current_image = current_image
             pixels_per_degree = 1536 / 360
             filter_name = 'difference_of_gaussians'
             filter_kwargs = {'low_sigma': self.protocol_parameters['low_sigma'] * pixels_per_degree,  # degrees -> pixels
@@ -1100,10 +1103,12 @@ class NaturalImageSuppression(BaseProtocol):
                                        'current_filter_flag': current_filter_flag}
 
     def loadStimuli(self, client):
+        bg = self.run_parameters.get('idle_color')
         image_parameters = self.epoch_parameters[0].copy()
         spot_parameters = self.epoch_parameters[1].copy()
 
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
         multicall.load_stim(**image_parameters, hold=True)
         multicall.load_stim(**spot_parameters, hold=True)
         multicall()
@@ -1688,8 +1693,8 @@ class CoherentDots(BaseProtocol):
                                        'current_seed': current_seed}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'n_points': 400,
-                                    'point_size': 30,
+        self.protocol_parameters = {'n_points': 125,  # More than ~200 causes frame drops on bruker
+                                    'point_size': 80,  # width = about 15 deg in center of bruker screen
                                     'intensity': 0.0,
                                     'speed': 80.0,
                                     'signal_direction': 0.0,
