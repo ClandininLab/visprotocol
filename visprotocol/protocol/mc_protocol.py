@@ -5,6 +5,7 @@ Created on Thu Jun 21 10:20:02 2018
 
 @author: minseung and mhturner
 """
+from matplotlib.pyplot import pause
 import numpy as np
 import os
 import flyrpc.multicall
@@ -249,18 +250,21 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
 # %%
 
-    def getOcclusionFixedParameters(self, center=None, bar_start_theta=None, bar_end_theta=None, occluder_start_theta=None, occluder_end_theta=None, bar_width=None, bar_height=None, bar_prime_color=None, bar_probe_color=None, bar_speed=None, occluder_height=None, occluder_color=None, 
-                                        preprime_duration=None, pause_duration=None, render_on_cylinder=None, bar_surface_radius=None, occluder_surface_radius=None):
+    def getOcclusionFixedParameters(self, center=None, bar_start_theta=None, bar_end_theta=None, bar_width=None, bar_height=None, 
+                                    bar_prime_color=None, bar_probe_color=None, bar_speed=None, 
+                                    occluder_theta=None, occluder_width=None, occluder_height=None, occluder_color=None, 
+                                    preprime_duration=None, pause_duration=None, render_on_cylinder=None, 
+                                    bar_surface_radius=None, occluder_surface_radius=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if bar_start_theta is None: bar_start_theta = self.protocol_parameters['bar_start_theta'] #negative value starts from the opposite side of bar direction
         if bar_end_theta is None: bar_end_theta = self.protocol_parameters['bar_end_theta'] #negative value starts from the opposite side of bar direction
-        if occluder_start_theta is None: occluder_start_theta = self.protocol_parameters['occluder_start_theta']
-        if occluder_end_theta is None: occluder_end_theta = self.protocol_parameters['occluder_end_theta']
         if bar_width is None: bar_width = self.protocol_parameters['bar_width']
         if bar_height is None: bar_height = self.protocol_parameters['bar_height']
         if bar_prime_color is None: bar_prime_color = self.protocol_parameters['bar_prime_color']
         if bar_probe_color is None: bar_probe_color = self.protocol_parameters['bar_probe_color']
         if bar_speed is None: bar_speed = self.protocol_parameters['bar_speed']
+        if occluder_theta is None: occluder_theta = self.protocol_parameters['occluder_theta']
+        if occluder_width is None: occluder_width = self.protocol_parameters['occluder_width']
         if occluder_height is None: occluder_height = self.protocol_parameters['occluder_height']
         if occluder_color is None: occluder_color = self.protocol_parameters['occluder_color']
         if preprime_duration is None: preprime_duration = self.protocol_parameters['preprime_duration']
@@ -272,36 +276,46 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         centerX = center[0]
 
         # Stimulus construction
+
+        bar_start_theta *= np.sign(bar_speed)
+        bar_end_theta *= np.sign(bar_speed)
+        occluder_theta *= np.sign(bar_speed)
+        
+
+        # Bar
         theta_distance = np.abs(bar_end_theta - bar_start_theta)
-        bar_duration_wo_pause = theta_distance / bar_speed
+        prime_distance = np.abs(occluder_theta - bar_start_theta)
+        prime_duration = prime_distance / np.abs(bar_speed)
+        probe_distance = np.abs(bar_end_theta - occluder_theta)
+        probe_duration = probe_distance / np.abs(bar_speed)
+        bar_duration_wo_pause = theta_distance / np.abs(bar_speed)
         bar_duration_w_pause = bar_duration_wo_pause + pause_duration
         stim_duration = preprime_duration + bar_duration_w_pause
 
-        # consistent bar trajectory
-        bar_start_theta *= np.sign(bar_speed)
-        bar_end_theta *= np.sign(bar_speed)
-        time = [0, preprime_duration]
-        x = [bar_start_theta, bar_start_theta]
-        bar_color = [bar_prime_color, bar_prime_color]
+        # Bar trajectory
+        time =       [0, 
+                      preprime_duration,
+                      preprime_duration+prime_duration,
+                      preprime_duration+prime_duration+pause_duration,
+                      stim_duration]
+        x =          [bar_start_theta,
+                      bar_start_theta,
+                      occluder_theta,
+                      occluder_theta,
+                      bar_end_theta]
+        bar_color =  [bar_prime_color,
+                      bar_prime_color,
+                      bar_prime_color,
+                      bar_probe_color,
+                      bar_probe_color]
 
-        time.append(stim_duration)
-        x.append(bar_end_theta)
-        bar_color.append(bar_prime_color)
-
-        # Compute location and width of the occluder per specification
-        occluder_width = np.abs(occluder_end_theta - occluder_start_theta)
-        occluder_loc = np.sign(bar_start_theta) * (occluder_end_theta + occluder_width/2)
+        # Occluder trajectory
         occluder_time = [0, stim_duration]
-        occluder_x = [occluder_loc, occluder_loc]
-
-        # bar_traj_r = list(zip(time, (centerX - np.array(x)).tolist()))
-        # occluder_traj_r = list(zip(occluder_time, (centerX - np.array(occluder_x)).tolist()))
-        # bar_traj_l = list(zip(time, (centerX + np.array(x)).tolist()))
-        # occluder_traj_l = list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist()))
+        occluder_x = [occluder_theta, occluder_theta]
 
         # Create flystim trajectory objects
-        bar_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())),                   'kind': 'linear'}
-        bar_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, bar_color)), 'kind': 'linear'}
+        bar_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())), 'kind': 'linear'}
+        bar_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, bar_color)), 'kind': 'previous'}
         occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
 
         if render_on_cylinder:
@@ -482,20 +496,20 @@ class OcclusionFixed(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'center': [0, 0],
-                                    'bar_start_theta': [90.0, -90.0],
+                                    'bar_start_theta': [90.0],
                                     'bar_end_theta': 0.0,
-                                    'occluder_start_theta': 60,
-                                    'occluder_end_theta': 30,
                                     'bar_width': 15.0,
-                                    'bar_height': 150.0,
+                                    'bar_height': 50.0,
                                     'bar_prime_color': [1.0],
                                     'bar_probe_color': 1.0,
-                                    'bar_speed': [15.0],
+                                    'bar_speed': [15.0, -15.0],
+                                    'occluder_theta': 60.0,
+                                    'occluder_width': 30.0,
                                     'occluder_height': 170.0,
-                                    'occluder_color': self.run_parameters.get('idle_color'),
+                                    'occluder_color': [0.0],
                                     'preprime_duration': 0.0,
                                     'pause_duration': [0.0],
-                                    'render_on_cylinder': False,
+                                    'render_on_cylinder': True,
                                     'bar_surface_radius': 3.0,
                                     'occluder_surface_radius': 2.0,
                                     'randomize_order': True,}
