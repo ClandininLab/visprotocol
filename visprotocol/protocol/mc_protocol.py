@@ -794,6 +794,64 @@ class ExpandingMovingSpot(BaseProtocol):
 
 # %%
 
+class FlickeringVertBars(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_temporal_frequency, current_theta_loc = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta_loc']), randomize_order=self.protocol_parameters['randomize_order'])
+        
+        # make color trajectory
+        color_traj = {'name': 'Sinusoid',
+                      'temporal_frequency': current_temporal_frequency,
+                      'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
+                      'offset': self.protocol_parameters['mean']}
+
+        if self.protocol_parameters['render_on_cylinder']:
+            self.epoch_parameters = {'name': 'MovingPatchOnCylinder',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'cylinder_radius': 1,
+                                    'color': color_traj,
+                                    'theta': current_theta_loc,
+                                    'phi': self.protocol_parameters['phi_loc'],
+                                    'angle': 0}
+        else:
+            self.epoch_parameters = {'name': 'MovingPatch',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'sphere_radius': 1,
+                                    'color': color_traj,
+                                    'theta': current_theta_loc,
+                                    'phi': self.protocol_parameters['phi_loc'],
+                                    'angle': 0}
+
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency, 
+                                       'current_theta_loc': current_theta_loc}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 150.0,
+                                    'width': 10.0,
+                                    'theta_loc': [0.0, 10.0],
+                                    'phi_loc': 0,
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'temporal_frequency': [10.0],
+                                    'render_on_cylinder': False,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'FlickeringVertBars',
+                               'num_epochs': 30,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
 
 class FlickeringPatch(BaseProtocol):
     def __init__(self, cfg):
@@ -803,9 +861,9 @@ class FlickeringPatch(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        adj_center = self.adjustCenter(self.protocol_parameters['center'])
-
-        current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
+        current_temporal_frequency, current_center = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], self.protocol_parameters['center']), randomize_order=self.protocol_parameters['randomize_order'])
+        
+        adj_center = self.adjustCenter(current_center)
 
         # make color trajectory
         color_traj = {'name': 'Sinusoid',
@@ -832,12 +890,13 @@ class FlickeringPatch(BaseProtocol):
                                     'phi': adj_center[1],
                                     'angle': 0}
 
-        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency, 
+                                       'current_center': current_center}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'height': 10.0,
                                     'width': 10.0,
-                                    'center': [0, 0],
+                                    'center': [[0,0], [10,0]],
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'temporal_frequency': [10.0],
