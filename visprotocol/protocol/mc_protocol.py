@@ -813,14 +813,24 @@ class FlickeringPatch(BaseProtocol):
                       'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
                       'offset': self.protocol_parameters['mean']}
 
-        self.epoch_parameters = {'name': 'MovingPatch',
-                                 'width': self.protocol_parameters['width'],
-                                 'height': self.protocol_parameters['height'],
-                                 'sphere_radius': 1,
-                                 'color': color_traj,
-                                 'theta': adj_center[0],
-                                 'phi': adj_center[1],
-                                 'angle': 0}
+        if self.protocol_parameters['render_on_cylinder']:
+            self.epoch_parameters = {'name': 'MovingPatchOnCylinder',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'cylinder_radius': 1,
+                                    'color': color_traj,
+                                    'theta': adj_center[0],
+                                    'phi': adj_center[1],
+                                    'angle': 0}
+        else:
+            self.epoch_parameters = {'name': 'MovingPatch',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'sphere_radius': 1,
+                                    'color': color_traj,
+                                    'theta': adj_center[0],
+                                    'phi': adj_center[1],
+                                    'angle': 0}
 
         self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
 
@@ -830,7 +840,8 @@ class FlickeringPatch(BaseProtocol):
                                     'center': [0, 0],
                                     'contrast': 1.0,
                                     'mean': 0.5,
-                                    'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
+                                    'temporal_frequency': [10.0],
+                                    'render_on_cylinder': False,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
