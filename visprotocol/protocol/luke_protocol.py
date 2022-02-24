@@ -87,8 +87,8 @@ class DriftingSquareGrating(BaseProtocol):
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'period': 20.0,
-                                    'rate': 20.0,
+        self.protocol_parameters = {'period': 60.0,
+                                    'rate': 60.0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'angle': [0.0, 180.0],
@@ -151,8 +151,8 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'period': 20.0,
-                                    'rate': 20.0,
+        self.protocol_parameters = {'period': 60.0,
+                                    'rate': 60.0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'angle': 0.0,
