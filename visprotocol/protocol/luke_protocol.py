@@ -259,7 +259,7 @@ class OpticFlowExperiment(BaseProtocol):
         if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
             self.component_class.run_parameters['stim_time'] = 1 # 1 sec
         if stim_type == 'ConstantBackground':
-            self.component_class.run_parameters['stim_time'] = 60 # 3 min
+            self.component_class.run_parameters['stim_time'] = 60#1 #60
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
