@@ -695,6 +695,7 @@ class DriftingSquareGrating(BaseProtocol):
         self.epoch_parameters = {'name': 'RotatingGrating',
                                  'period': self.protocol_parameters['period'],
                                  'rate': self.protocol_parameters['rate'],
+                                 'hold_duration': self.protocol_parameters['hold_duration'],
                                  'color': [1, 1, 1, 1],
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
@@ -711,11 +712,12 @@ class DriftingSquareGrating(BaseProtocol):
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'period': 20.0,
-                                    'rate': 20.0,
+        self.protocol_parameters = {'period': 40.0,
+                                    'rate': 80.0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
-                                    'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
+                                    'angle': [0.0, 180.0],
+                                    'hold_duration': 0.550,
                                     'center': [0, 0],
                                     'center_size': 180.0,
                                     'randomize_order': True}
