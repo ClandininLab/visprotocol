@@ -140,26 +140,16 @@ class Data():
                     num_stims = len(protocol_object.epoch_parameters)
                     for stim_ind in range(num_stims):
                         for key in protocol_object.epoch_parameters[stim_ind]:
-                            newValue = protocol_object.epoch_parameters[stim_ind][key]
-                            if type(newValue) is dict:
-                                newValue = str(newValue)
-                            prefix = 'stim' + str(stim_ind) + '_'
-                            if newValue is None:
-                                newValue = 'None'
-                            epochParametersGroup.attrs[prefix + key] = newValue
+                            prefix = 'stim{}_'.format(str(stim_ind))
+                            epochParametersGroup.attrs[prefix + key] = hdf5ifyParameter(protocol_object.epoch_parameters[stim_ind][key])
 
-                elif type(protocol_object.epoch_parameters) is dict:
-                    for key in protocol_object.epoch_parameters:  # save out epoch parameters
-                        newValue = protocol_object.epoch_parameters[key]
-                        if type(newValue) is dict:  # TODO: Find a way to split this into subgroups. Hacky work around.
-                            newValue = str(newValue)
-                        if newValue is None:
-                            newValue = 'None'
-                        epochParametersGroup.attrs[key] = newValue
+                elif type(protocol_object.epoch_parameters) is dict:  # single stim class
+                    for key in protocol_object.epoch_parameters:
+                        epochParametersGroup.attrs[key] = hdf5ifyParameter(protocol_object.epoch_parameters[key])
 
                 convenienceParametersGroup = new_epoch
                 for key in protocol_object.convenience_parameters:  # save out convenience parameters
-                    convenienceParametersGroup.attrs[key] = protocol_object.convenience_parameters[key]
+                    convenienceParametersGroup.attrs[key] = hdf5ifyParameter(protocol_object.convenience_parameters[key])
 
         else:
             print('Create a data file and/or define a fly first')
@@ -327,3 +317,16 @@ class AODscopeData(Data):
                     new_epoch_run['acquisition'].attrs['xyt_count'] = self.xyt_count
         else:
             print('Create a data file and/or define a fly first')
+
+# %% Useful functions. Outside classes.
+
+
+def hdf5ifyParameter(value):
+    if value is None:
+        value = 'None'
+    if type(value) is dict:  # TODO: Find a way to split this into subgroups. Hacky work around.
+        value = str(value)
+    if type(value) is np.str_:
+        value = str(value)
+
+    return value
