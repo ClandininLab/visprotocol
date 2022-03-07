@@ -283,7 +283,7 @@ class OpticFlowExperiment(BaseProtocol):
         self.run_parameters = {'protocol_ID': 'OpticFlowExperiment',
                                'num_epochs': 0, # this will get reset above
                                'pre_time': 4, # this will set pretime
-                               'stim_time': 1, #this will be overwritten based on what stim
+                               'stim_time': 1.5, #this will be overwritten based on what stim HOWEVER it is used to calculate timing
                                'tail_time': 0,
                                'idle_color': 0.5}
 
