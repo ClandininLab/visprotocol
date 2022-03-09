@@ -79,7 +79,8 @@ class DriftingSquareGrating(BaseProtocol):
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
                                  'profile': 'square',
-                                 'theta': self.screen_center[0]}
+                                 'theta': self.screen_center[0],
+                                 'hold_duration': 1}#### <-----------------------------------------HOLD FOR 1 SEC
 
         self.convenience_parameters = {'current_angle': current_angle}
 
@@ -145,7 +146,8 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                  'cylinder_location': (self.protocol_parameters['cylinder_xshift'],0,0),
                                  'cylinder_height': 10,
                                  'profile': 'square',
-                                 'theta': self.screen_center[0]}
+                                 'theta': self.screen_center[0],
+                                 'hold_duration': 1} #### <-----------------------------------------HOLD FOR 1 SEC
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
@@ -184,7 +186,7 @@ class OpticFlowExperiment(BaseProtocol):
 
         ############################# SET THESE ##############################
         # How long should a cluster of epochs be?
-        epoch_cluster_duration = 6.25 #in min
+        epoch_cluster_duration = 6.25 #in min # THIS IS SET BASED ON 5 1MIN GREY PERIODS AND 4 STIM PERIODS FOR 30MIN TOTAL
         epoch_cluster_duration *= 60 # now in sec
 
         # What stimuli and how to weight them?
@@ -257,9 +259,9 @@ class OpticFlowExperiment(BaseProtocol):
 
         ### This overwrites run parameter defaults. This is where I'm handling assigning different stim_times to different stimuli.
         if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
-            self.component_class.run_parameters['stim_time'] = 1 # 1 sec
+            self.component_class.run_parameters['stim_time'] = 1.5 # 1 SEC OF THIS WILL BE IN HOLD (NO MOVEMENT)
         if stim_type == 'ConstantBackground':
-            self.component_class.run_parameters['stim_time'] = 60#1 #60
+            self.component_class.run_parameters['stim_time'] = 60 # 1MIN GREY PERIODS
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
@@ -280,8 +282,8 @@ class OpticFlowExperiment(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'OpticFlowExperiment',
                                'num_epochs': 0, # this will get reset above
-                               'pre_time': 3,
-                               'stim_time': 1,
+                               'pre_time': 4, # this will set pretime
+                               'stim_time': 1.5, #this will be overwritten based on what stim HOWEVER it is used to calculate timing
                                'tail_time': 0,
                                'idle_color': 0.5}
 

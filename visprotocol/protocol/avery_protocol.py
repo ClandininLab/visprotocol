@@ -156,6 +156,8 @@ class ContrastReversingGrating(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
         # TODO: center size with aperture (center and center_size): maybe parent class aperture method?
         current_temporal_frequency, current_spatial_period = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'],
                                                                                              self.protocol_parameters['spatial_period']),
@@ -177,13 +179,10 @@ class ContrastReversingGrating(BaseProtocol):
                                  'cylinder_radius': 1.0,
                                  'cylinder_height': 10.0,
                                  'profile': 'square',
-                                 'theta': self.screen_center[0]}
+                                 'theta': adj_center[0]}
 
         self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency,
                                        'current_spatial_period': current_spatial_period}
-
-        self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
-                                'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'spatial_period': [10.0, 20.0],
@@ -191,7 +190,6 @@ class ContrastReversingGrating(BaseProtocol):
                                     'mean': 0.5,
                                     'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
                                     'center': [0, 0],
-                                    'center_size': 40.0,
                                     'angle': 0.0,
                                     'randomize_order': True}
 
@@ -467,8 +465,7 @@ class MedullaTuningSuite(BaseProtocol):
                                                            'contrast': 1.0,
                                                            'mean': 0.5,
                                                            'angle': 0.0,
-                                                           'center': [0, 0],
-                                                           'center_size': 180.0,
+                                                           'center': [30, 0],
                                                            'randomize_order': True}
 
             elif stim_type == 'FlickeringSpot':

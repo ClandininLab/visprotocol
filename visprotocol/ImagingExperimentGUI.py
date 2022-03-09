@@ -15,7 +15,7 @@ from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
 from datetime import datetime
 import os
-from visanalysis import plugin
+from visanalysis.util import h5io
 
 from visprotocol.clandinin_client import Client
 from visprotocol import clandinin_data, util, protocol
@@ -650,7 +650,7 @@ class ImagingExperimentGUI(QWidget):
 
     def populateGroups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_dset_dict = plugin.base.getHierarchy(file_path, additional_exclusions='rois')
+        group_dset_dict = h5io.getHierarchy(file_path, additional_exclusions='rois')
         self._populateTree(self.groupTree, group_dset_dict)
 
     def _populateTree(self, widget, dict):
@@ -685,10 +685,10 @@ class ImagingExperimentGUI(QWidget):
 
     def onTreeItemClicked(self, item, column):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_path = plugin.base.getPathFromTreeItem(self.groupTree.selectedItems()[0])
+        group_path = h5io.getPathFromTreeItem(self.groupTree.selectedItems()[0])
 
         if group_path != '':
-            attr_dict = plugin.base.getAttributesFromGroup(file_path, group_path)
+            attr_dict = h5io.getAttributesFromGroup(file_path, group_path)
             if 'series' in group_path.split('/')[-1]:
                 editable_values = False  # don't let user edit epoch parameters
             else:
@@ -720,13 +720,13 @@ class ImagingExperimentGUI(QWidget):
 
     def update_attrs_to_file(self, item):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_path = plugin.base.getPathFromTreeItem(self.groupTree.selectedItems()[0])
+        group_path = h5io.getPathFromTreeItem(self.groupTree.selectedItems()[0])
 
         attr_key = self.tableAttributes.item(item.row(), 0).text()
         attr_val = item.text()
 
         # update attr in file
-        plugin.base.changeAttribute(file_path, group_path, attr_key, attr_val)
+        h5io.changeAttribute(file_path, group_path, attr_key, attr_val)
         print('Changed attr {} to = {}'.format(attr_key, attr_val))
 
 # # # Other accessory classes. For data file initialization and threading # # # #

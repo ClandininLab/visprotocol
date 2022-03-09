@@ -1,0 +1,23 @@
+2speed_5coherence:
+  run_parameters:
+    protocol_ID: CoherentDots
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 1.5
+    idle_color: 0.5
+  protocol_parameters:
+    n_points: 125.0
+    point_size: 80.0
+    intensity: 0.0
+    speed:
+    - 80.0
+    - -80.0
+    signal_direction: 0.0
+    coherence:
+    - 0.0
+    - 0.25
+    - 0.5
+    - 0.75
+    - 1.0
+    randomize_order: true
