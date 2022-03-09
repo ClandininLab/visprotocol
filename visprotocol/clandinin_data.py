@@ -130,7 +130,7 @@ class Data():
         """
         if (self.currentFlyExists() and self.experimentFileExists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                epoch_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                epoch_time = datetime.now().strftime('%H:%M:%S.%f') #[:-4] MC 20220308 increasing precision of timestamp
                 epoch_run_group = experiment_file['/Flies/{}/epoch_runs/series_{}/epochs'.format(self.current_fly, str(self.series_count).zfill(3))]
                 new_epoch = epoch_run_group.create_group('epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3)))
                 new_epoch.attrs['epoch_time'] = epoch_time
