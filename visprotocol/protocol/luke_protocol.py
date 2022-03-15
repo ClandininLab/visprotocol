@@ -80,7 +80,8 @@ class DriftingSquareGrating(BaseProtocol):
                                  'cylinder_height': 10,
                                  'profile': 'square',
                                  'theta': self.screen_center[0],
-                                 'hold_duration': 1}#### <-----------------------------------------HOLD FOR 1 SEC
+                                 'hold_duration': 1,
+                                 'phi': 45}#### <-----------------------------------------HOLD FOR 1 SEC
 
         self.convenience_parameters = {'current_angle': current_angle}
 
@@ -147,7 +148,8 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                  'cylinder_height': 10,
                                  'profile': 'square',
                                  'theta': self.screen_center[0],
-                                 'hold_duration': 1} #### <-----------------------------------------HOLD FOR 1 SEC
+                                 'hold_duration': 1, #### <-----------------------------------------HOLD FOR 1 SEC
+                                 'phi': 45}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
