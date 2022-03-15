@@ -17,6 +17,8 @@ class Client():
         self.cfg = cfg
         self.niusb_device = None
 
+        print("IN CLANDININ CLIENT")
+
         # # # load rig-specific server/client options # #
         if socket.gethostname() == 'DESKTOP-4Q3O7LU':  # AODscope Karthala
             self.server_options = {'host': '171.65.17.126',
@@ -49,6 +51,8 @@ class Client():
 
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
+
+        print("IN CLANDININ CLIENT BOTTOM")
 
 
 class Client_Stim_Regeneration():

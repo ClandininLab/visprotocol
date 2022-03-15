@@ -40,6 +40,8 @@ class EpochRun():
         else:
             print('Warning - you are not saving your metadata!')
 
+        print("START RUN")
+
         # # # Epoch run loop # # #
         protocol_object.num_epochs_completed = 0
         while protocol_object.num_epochs_completed < protocol_object.run_parameters['num_epochs']:
@@ -51,7 +53,9 @@ class EpochRun():
             if self.pause is True:
                 pass # do nothing until resumed or stopped
             else: # start epoch and advance counter
+                print("CONTROL BEFORE START EPOCH")
                 self.startEpoch(protocol_object, data, client, save_metadata_flag=save_metadata_flag)
+                print("CONTROL AFTER START EPOCH")
         # # # Epoch run loop # # #
 
     def startEpoch(self, protocol_object, data, client, save_metadata_flag=True):
@@ -67,7 +71,10 @@ class EpochRun():
 
         # Use the protocol object to send the stimulus to flystim
         protocol_object.loadStimuli(client)
+        print("CONTROL START EPOCH LOADED STIM")
 
         protocol_object.startStimuli(client)
+        print("CONTROL START EPOCH STARTED STIM")
 
         protocol_object.advanceEpochCounter()
+        print("CONTROL START EPOCH ADVANCED COUNTER")

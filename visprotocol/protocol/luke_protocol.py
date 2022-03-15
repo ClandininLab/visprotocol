@@ -121,7 +121,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
     def loadStimuli(self, client):
         passed_parameters = self.epoch_parameters.copy()
         #passed_parameters_1 = self.epoch_parameters[1].copy()
-    
+
         bg = self.run_parameters.get('idle_color')
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
@@ -203,7 +203,7 @@ class OpticFlowExperiment(BaseProtocol):
 
         # given the duration of a single epoch and a cluster of epochs, how many epochs to present?
         num_epochs_in_cluster = int(epoch_cluster_duration / epoch_duration)
-        
+
         # create a list that contains the correct number of each stim
         stim_per_unit = int(num_epochs_in_cluster / np.sum(stim_weights))
         all_stims = [[self.stim_list[i]] * stim_weights[i] * stim_per_unit for i in range(len(self.stim_list))]
@@ -270,7 +270,7 @@ class OpticFlowExperiment(BaseProtocol):
         self.epoch_parameters = self.component_class.epoch_parameters
 
         self.run_parameters = self.component_class.run_parameters
-        
+
         self.run_parameters['num_epochs'] = len(self.stim_order)
 
 
@@ -288,4 +288,3 @@ class OpticFlowExperiment(BaseProtocol):
                                'stim_time': 1.5, #this will be overwritten based on what stim HOWEVER it is used to calculate timing
                                'tail_time': 0,
                                'idle_color': 0.5}
-
