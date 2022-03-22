@@ -67,6 +67,12 @@ class DriftingSquareGrating(BaseProtocol):
 
     def getEpochParameters(self):
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+        
+        ### OFFSET PHASE
+        if current_angle == 0:
+            offset = 180
+        else:
+            offset = 0
 
         self.epoch_parameters = {'name': 'RotatingGrating',
                                  'period': self.protocol_parameters['period'],
@@ -75,12 +81,12 @@ class DriftingSquareGrating(BaseProtocol):
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
                                  'angle': current_angle,
-                                 'offset': 0.0,
+                                 'offset': offset,
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
                                  'profile': 'square',
                                  'theta': self.screen_center[0],
-                                 'hold_duration': 1,
+                                 'hold_duration': .5,#1,
                                  'phi': -45}#### <-----------------------------------------HOLD FOR 1 SEC
 
         self.convenience_parameters = {'current_angle': current_angle}
@@ -148,7 +154,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                  'cylinder_height': 10,
                                  'profile': 'square',
                                  'theta': self.screen_center[0],
-                                 'hold_duration': 1, #### <-----------------------------------------HOLD FOR 1 SEC
+                                 'hold_duration': .5,#1, #### <-----------------------------------------HOLD FOR 1 SEC
                                  'phi': -45}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
@@ -192,8 +198,8 @@ class OpticFlowExperiment(BaseProtocol):
         epoch_cluster_duration *= 60 # now in sec
 
         # What stimuli and how to weight them?
-        self.stim_list = ['DriftingSquareGrating', 'SplitDriftingSquareGrating']
-        stim_weights = [2,1]
+        self.stim_list = ['DriftingSquareGrating']#, 'SplitDriftingSquareGrating']
+        stim_weights = [1]
 
         #################### FORM A SINGLE EPOCH CLUSTER ####################
         # calculate duration of an epoch (a single stim presentation)
@@ -261,9 +267,9 @@ class OpticFlowExperiment(BaseProtocol):
 
         ### This overwrites run parameter defaults. This is where I'm handling assigning different stim_times to different stimuli.
         if stim_type in ['DriftingSquareGrating', 'SplitDriftingSquareGrating']:
-            self.component_class.run_parameters['stim_time'] = 1.5 # 1 SEC OF THIS WILL BE IN HOLD (NO MOVEMENT)
+            self.component_class.run_parameters['stim_time'] = .75#1.5 # 1 SEC OF THIS WILL BE IN HOLD (NO MOVEMENT)
         if stim_type == 'ConstantBackground':
-            self.component_class.run_parameters['stim_time'] = 60 # 1MIN GREY PERIODS
+            self.component_class.run_parameters['stim_time'] = 1#60 # 1MIN GREY PERIODS
 
         self.component_class.getEpochParameters()
         self.convenience_parameters.update(self.component_class.convenience_parameters)
@@ -284,7 +290,7 @@ class OpticFlowExperiment(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'OpticFlowExperiment',
                                'num_epochs': 0, # this will get reset above
-                               'pre_time': 4, # this will set pretime
-                               'stim_time': 1.5, #this will be overwritten based on what stim HOWEVER it is used to calculate timing
+                               'pre_time': 1.25,#4, # this will set pretime
+                               'stim_time': 0.75,#1.5, #this will be overwritten based on what stim HOWEVER it is used to calculate timing
                                'tail_time': 0,
                                'idle_color': 0.5}
