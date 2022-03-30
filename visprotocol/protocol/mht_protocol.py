@@ -1036,10 +1036,11 @@ class NaturalImageSuppression(BaseProtocol):
     def getEpochParameters(self):
         current_params = self.selectParametersFromLists((
                                                          self.protocol_parameters['image_index'],
-                                                         self.protocol_parameters['filter_flag']
+                                                         self.protocol_parameters['filter_flag'],
+                                                         self.protocol_parameters['image_speed'],
                                                          ), randomize_order=True)
 
-        current_image_index, current_filter_flag = current_params
+        current_image_index, current_filter_flag, current_image_speed = current_params
         image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
                        'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
                        'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
@@ -1067,7 +1068,7 @@ class NaturalImageSuppression(BaseProtocol):
 
         # Stim params for horizon cylinder
         centerX = self.adjustCenter([0, 0])[0]
-        distance_to_travel = self.protocol_parameters['image_speed'] * self.run_parameters['stim_time']
+        distance_to_travel = current_image_speed * self.run_parameters['stim_time']
         startX = (0, centerX - distance_to_travel/2)
         endX = (self.run_parameters['stim_time'], centerX + distance_to_travel/2)
         x = [startX, endX]
@@ -1100,7 +1101,8 @@ class NaturalImageSuppression(BaseProtocol):
         self.convenience_parameters = {'current_image': current_image,
                                        'current_filter_name': filter_name,
                                        'current_filter_kwargs': filter_kwargs,
-                                       'current_filter_flag': current_filter_flag}
+                                       'current_filter_flag': current_filter_flag,
+                                       'current_image_speed': current_image_speed}
 
     def loadStimuli(self, client):
         bg = self.run_parameters.get('idle_color')
@@ -1117,17 +1119,16 @@ class NaturalImageSuppression(BaseProtocol):
         self.protocol_parameters = {'center': [0, 0],
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
-                                    'spot_speed': 80,  # Deg./sec
-
-                                    'image_speed': -20,  # Deg./sec
-                                    'image_index': [0, 1, 2, 3, 4],
-                                    'filter_flag': [0, 1, 2],
+                                    'spot_speed': 60,  # Deg./sec
+                                    'image_speed': [-30, 0, 30, 60, 120],  # Deg./sec
+                                    'image_index': [0, 1, 2],
+                                    'filter_flag': [0, 1],
                                     'low_sigma': 1,  # degrees
                                     'high_sigma': 4}  # degrees
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'NaturalImageSuppression',
-                               'num_epochs': 75,  # 5 images, 3 filter conditions, 5 trials each
+                               'num_epochs': 150,  # 3 images, 2 filter conditions, 5 speeds, 5 trials each
                                'pre_time': 1.5,
                                'stim_time': 3.0,
                                'tail_time': 1.5,
@@ -1689,6 +1690,53 @@ class PGS_Reduced(BaseProtocol):
 
 
 class CoherentDots(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_coherence, current_speed = self.selectParametersFromLists((self.protocol_parameters['coherence'], self.protocol_parameters['speed']),
+                                                                          randomize_order=self.protocol_parameters['randomize_order'])
+
+        current_seed = np.random.randint(0, 10000)
+
+        self.epoch_parameters = {'name': 'MovingDotField',
+                                 'n_points': int(self.protocol_parameters['n_points']),
+                                 'point_size': int(self.protocol_parameters['point_size']),
+                                 'sphere_radius': 1.0,
+                                 'color': self.protocol_parameters['intensity'],
+                                 'speed': current_speed,
+                                 'signal_direction': self.protocol_parameters['signal_direction'],
+                                 'coherence': current_coherence,
+                                 'random_seed': current_seed}
+
+        self.convenience_parameters = {'current_coherence': current_coherence,
+                                       'current_speed': current_speed,
+                                       'current_seed': current_seed}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'n_points': 125,  # More than ~200 causes frame drops on bruker
+                                    'point_size': 80,  # width = about 15 deg in center of bruker screen
+                                    'intensity': 0.0,
+                                    'speed': [80.0, -80.0],
+                                    'signal_direction': 0.0,
+                                    'coherence': [0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'CoherentDots',
+                               'num_epochs': 140,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.5,
+                               'idle_color': 0.5}
+
+# %%
+
+
+class SelfMotionDots(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
