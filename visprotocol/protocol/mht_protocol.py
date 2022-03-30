@@ -1119,8 +1119,8 @@ class NaturalImageSuppression(BaseProtocol):
         self.protocol_parameters = {'center': [0, 0],
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
-                                    'spot_speed': 60,  # Deg./sec
-                                    'image_speed': [-30, 0, 30, 60, 120],  # Deg./sec
+                                    'spot_speed': 80,  # Deg./sec
+                                    'image_speed': [-40, 0, 40, 80, 120],  # Deg./sec
                                     'image_index': [0, 1, 2],
                                     'filter_flag': [0, 1],
                                     'low_sigma': 1,  # degrees
