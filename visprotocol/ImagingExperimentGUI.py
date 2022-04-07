@@ -569,21 +569,22 @@ class ImagingExperimentGUI(QWidget):
         self.data.updateSeriesCount(self.series_counter_input.value())
         if self.data.experimentFileExists:
             if self.data.getSeriesCount() <= self.data.getHighestSeriesCount():
-                self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
+                self.series_counter_input.setStyleSheet("background-color: rgb(255, 0, 0);")
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
     def sendRun(self, save_metadata_flag=True):
         # check to make sure a protocol has been selected
         if self.protocol_object.run_parameters['protocol_ID'] == '':
-                self.status_label.setText('Select a protocol')
-                return  # no protocol exists, don't send anything
+            self.status_label.setText('Select a protocol')
+            return  # no protocol exists, don't send anything
 
         # check to make sure the series count does not already exist
         if save_metadata_flag:
             self.data.updateSeriesCount(self.series_counter_input.value())
             if (self.data.getSeriesCount() in self.data.getExistingSeries()):
-                self.series_counter_input.setStyleSheet("background-color: rgb(0, 255, 255);")
+                self.series_counter_input.setStyleSheet("background-color: rgb(255, 0, 0);")
+                self.status_label.setText('Select an unused series number')
                 return  # group already exists, don't send anything
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
