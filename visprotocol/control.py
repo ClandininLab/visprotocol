@@ -59,11 +59,15 @@ class EpochRun():
         # # # Epoch run loop # # #
 
     def startEpoch(self, protocol_object, data, client, save_metadata_flag=True):
+        print("CONTROL START EPOCH")
+
         #  get stimulus parameters for this epoch
         protocol_object.getEpochParameters()
+        print("CONTROL GET EPOCH PARAMS")
 
         if save_metadata_flag:
             data.createEpoch(protocol_object)
+        print("CONTROL CREATE EPOCH")
 
         # Send triggering TTL through the NI-USB device (if device is set)
         if client.niusb_device is not None:

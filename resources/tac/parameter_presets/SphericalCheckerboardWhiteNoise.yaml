@@ -16,7 +16,7 @@ MED_blue_only:
     center:
     - 0.0
     - 0.0
-    rgb_texture: False
+    rgb_texture: false
 MED_blueUV:
   run_parameters:
     protocol_ID: SphericalCheckerboardWhiteNoise
@@ -35,4 +35,23 @@ MED_blueUV:
     center:
     - 0.0
     - 0.0
-    rgb_texture: True
+    rgb_texture: true
+? ''
+: run_parameters:
+    protocol_ID: SphericalCheckerboardWhiteNoise
+    num_epochs: 20.0
+    pre_time: 2.0
+    stim_time: 60.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    patch_size: 5.0
+    update_rate: 10.0
+    rand_min: 0.0
+    rand_max: 1.0
+    grid_width: 80.0
+    grid_height: 80.0
+    center:
+    - 0.0
+    - 0.0
+    rgb_texture: false
