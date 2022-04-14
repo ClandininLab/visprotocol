@@ -3,7 +3,7 @@
 """
 Created on Thu Jun 21 10:20:02 2018
 
-@author: minseung and mhturner
+@author: minseung and mhturner -- and annotated and possibly modified by liz jun
 """
 from matplotlib.pyplot import pause
 import numpy as np
@@ -16,7 +16,7 @@ import visprotocol
 from visprotocol.protocol import clandinin_protocol
 
 
-class BaseProtocol(clandinin_protocol.BaseProtocol):
+class BaseProtocol(clandinin_protocol.BaseProtocol): # EJ QUESTION: When you have an input into the class, what carries over to BaseProtocol from clandinin_protocol.BaseProtocol?
     def __init__(self, cfg):
         super().__init__(cfg)  # call the parent class init method
 
@@ -254,7 +254,8 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                     bar_prime_color=None, bar_probe_color=None, bar_speed=None, 
                                     occluder_theta=None, occluder_width=None, occluder_height=None, occluder_color=None, 
                                     preprime_duration=None, pause_duration=None, render_on_cylinder=None, 
-                                    bar_surface_radius=None, occluder_surface_radius=None):
+        bar_surface_radius=None, occluder_surface_radius=None):
+        # EJ - If there's no arguement for these parameters, then just use default
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if bar_start_theta is None: bar_start_theta = self.protocol_parameters['bar_start_theta'] #negative value starts from the opposite side of bar direction
         if bar_end_theta is None: bar_end_theta = self.protocol_parameters['bar_end_theta'] #negative value starts from the opposite side of bar direction
@@ -451,9 +452,10 @@ class OcclusionFixed(BaseProtocol):
         self.getRunParameterDefaults()
         self.getParameterDefaults()
 
-    def getEpochParameters(self):
+    def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
         current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
 
+# EJ - inputs the current randomized parameters to calculate the other display and timing parameters
         bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
         self.epoch_parameters = (bar_parameters, occluder_parameters)
 
@@ -470,26 +472,26 @@ class OcclusionFixed(BaseProtocol):
         occluder_parameters = self.epoch_parameters[1].copy()
         self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
     
-        bg = self.run_parameters.get('idle_color')
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
-        multicall.load_stim(**bar_parameters, hold=True)
-        multicall.load_stim(**occluder_parameters, hold=True)
+        bg = self.run_parameters.get('idle_color') # EJ - get background color
+        multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
+        multicall.load_stim(**bar_parameters, hold=True) # EJ - load the bar with bar parameters
+        multicall.load_stim(**occluder_parameters, hold=True) # EJ - load the occluder with occluder parameters
         multicall()
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         sleep(self.run_parameters['pre_time'])
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         # stim time
-        multicall.start_stim(append_stim_frames=append_stim_frames)
-        multicall.start_corner_square()
+        multicall.start_stim(append_stim_frames=append_stim_frames) # EJ - start the stimulus (QUESTION: what is append_stim_frames for?)
+        multicall.start_corner_square() # EJ - start the video syncing object
         multicall()
         sleep(self.convenience_parameters['current_stim_duration'])
 
         # tail time
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.stop_stim(print_profile=print_profile)
-        multicall.black_corner_square()
+        multicall.stop_stim(print_profile=print_profile) # EJ - Stop the stim
+        multicall.black_corner_square() # EJ - activate the black corner square? (QUESTION)
         multicall()
 
         sleep(self.run_parameters['tail_time'])
@@ -523,6 +525,139 @@ class OcclusionFixed(BaseProtocol):
                                'stim_time': 5.5}
 
 # %%
+
+# EJ - start
+class Background(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
+        
+         current_bg_color = self.selectParametersFromLists(self.protocol_parameters['bg_color'], randomize_order=self.protocol_parameters['randomize_order'])
+         self.convenience_parameters = {'bg_color':current_bg_color}
+
+    def loadStimuli(self, client):
+        bg = self.convenience_parameters['bg_color']  #self.run_parameters.get('idle_color') # EJ - set background color
+        multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time']) 
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames) # EJ - start the stimulus (QUESTION: what is append_stim_frames for?)
+        multicall.start_corner_square() # EJ - start the video syncing object
+        multicall() 
+        sleep(self.run_parameters['stim_time'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile) # EJ - Stop the stim
+        multicall.black_corner_square() # EJ - activate the black corner square? (QUESTION)
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'bg_color': [0.0,1],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'Background',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'stim_time': 5.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+
+class StripeFixation(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
+        current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+
+# EJ - inputs the current randomized parameters to calculate the other display and timing parameters
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
+        self.epoch_parameters = (bar_parameters, occluder_parameters)
+
+        self.convenience_parameters = {'current_bar_width': current_bar_width,
+                                       'current_bar_prime_color': current_bar_prime_color,
+                                       'current_bar_probe_color': current_bar_probe_color,
+                                       'current_bar_speed': current_bar_speed,
+                                       'current_occluder_color': current_occluder_color,
+                                       'current_pause_duration': current_pause_duration,
+                                       'current_stim_duration': stim_duration}
+
+    def loadStimuli(self, client):
+        bar_parameters = self.epoch_parameters[0].copy()
+        occluder_parameters = self.epoch_parameters[1].copy()
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+
+        bg = self.run_parameters.get('idle_color') # EJ - get background color
+        multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
+        multicall.load_stim(**bar_parameters, hold=True) # EJ - load the bar with bar parameters
+        multicall.load_stim(**occluder_parameters, hold=True) # EJ - load the occluder with occluder parameters
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames) # EJ - start the stimulus (QUESTION: what is append_stim_frames for?)
+        multicall.start_corner_square() # EJ - start the video syncing object
+        multicall()
+        sleep(self.convenience_parameters['current_stim_duration'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile) # EJ - Stop the stim
+        multicall.black_corner_square() # EJ - activate the black corner square? (QUESTION)
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'bar_start_theta': [90.0],
+                                    'bar_end_theta': 0.0,
+                                    'bar_width': 15.0,
+                                    'bar_height': 50.0,
+                                    'bar_prime_color': [1.0],
+                                    'bar_probe_color': 1.0,
+                                    'bar_speed': [15.0, -15.0],
+                                    'occluder_theta': 60.0,
+                                    'occluder_width': 30.0,
+                                    'occluder_height': 170.0,
+                                    'occluder_color': [0.0],
+                                    'preprime_duration': 0.0,
+                                    'pause_duration': [0.0],
+                                    'render_on_cylinder': True,
+                                    'bar_surface_radius': 3.0,
+                                    'occluder_surface_radius': 2.0,
+                                    'randomize_order': True,}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OcclusionFixed',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0,
+                               'stim_time': 5.5}
+
+# EJ - end
+
 
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
     def __init__(self, cfg):
