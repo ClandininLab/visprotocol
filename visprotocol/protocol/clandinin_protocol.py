@@ -92,29 +92,21 @@ class BaseProtocol():
         multicall()
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
-        print("IN PROTOCOL START STIM TOP")
         sleep(self.run_parameters['pre_time'])
-        print("IN PROTOCOL START STIM 1")
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         # stim time
-        print("IN PROTOCOL START STIM 2")
         multicall.start_stim(append_stim_frames=append_stim_frames)
-        print("IN PROTOCOL START STIM 3")
         multicall.start_corner_square()
         multicall()
-        print("IN PROTOCOL START STIM 4")
         sleep(self.run_parameters['stim_time'])
 
         # tail time
-        print("IN PROTOCOL START STIM 5")
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
-        print("IN PROTOCOL START STIM 6")
         multicall()
 
         sleep(self.run_parameters['tail_time'])
-        print("IN PROTOCOL START STIM BOTTOM")
 
     # Convenience functions shared across protocols...
     def selectParametersFromLists(self, parameter_list, all_combinations=True, randomize_order=False):

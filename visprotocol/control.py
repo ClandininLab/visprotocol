@@ -40,11 +40,13 @@ class EpochRun():
         else:
             print('Warning - you are not saving your metadata!')
 
-        print("START RUN")
+        # print("START RUN")
 
         # # # Epoch run loop # # #
         protocol_object.num_epochs_completed = 0
         while protocol_object.num_epochs_completed < protocol_object.run_parameters['num_epochs']:
+            print('COMPLETED {} / {} EPOCHS'.format(protocol_object.num_epochs_completed, protocol_object.run_parameters['num_epochs']))
+
             QApplication.processEvents()
             if self.stop is True:
                 self.stop = False
@@ -53,21 +55,17 @@ class EpochRun():
             if self.pause is True:
                 pass # do nothing until resumed or stopped
             else: # start epoch and advance counter
-                print("CONTROL BEFORE START EPOCH")
+                # print("CONTROL BEFORE START EPOCH")
                 self.startEpoch(protocol_object, data, client, save_metadata_flag=save_metadata_flag)
-                print("CONTROL AFTER START EPOCH")
+                # print("CONTROL AFTER START EPOCH")
         # # # Epoch run loop # # #
 
     def startEpoch(self, protocol_object, data, client, save_metadata_flag=True):
-        print("CONTROL START EPOCH")
-
         #  get stimulus parameters for this epoch
         protocol_object.getEpochParameters()
-        print("CONTROL GET EPOCH PARAMS")
 
         if save_metadata_flag:
             data.createEpoch(protocol_object)
-        print("CONTROL CREATE EPOCH")
 
         # Send triggering TTL through the NI-USB device (if device is set)
         if client.niusb_device is not None:
@@ -75,10 +73,10 @@ class EpochRun():
 
         # Use the protocol object to send the stimulus to flystim
         protocol_object.loadStimuli(client)
-        print("CONTROL START EPOCH LOADED STIM")
+        # print("CONTROL START EPOCH LOADED STIM")
 
         protocol_object.startStimuli(client)
-        print("CONTROL START EPOCH STARTED STIM")
+        # print("CONTROL START EPOCH STARTED STIM")
 
         protocol_object.advanceEpochCounter()
-        print("CONTROL START EPOCH ADVANCED COUNTER")
+        # print("CONTROL START EPOCH ADVANCED COUNTER")

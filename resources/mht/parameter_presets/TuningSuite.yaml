@@ -1,9 +1,0 @@
-R65B05:
-  run_parameters:
-    protocol_ID: TuningSuite
-    num_epochs: 80.0
-    pre_time: 1.5
-    stim_time: 3.0
-    tail_time: 1.5
-    idle_color: 0.5
-  protocol_parameters: {}

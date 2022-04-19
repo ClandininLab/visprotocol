@@ -322,7 +322,7 @@ class ExpandingMovingSpot(BaseProtocol):
                                        'current_speed': current_speed}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'diameter': [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
+        self.protocol_parameters = {'diameter': [5, 10, 15, 20, 25, 30],
                                     'intensity': [0.0, 1.0],
                                     'center': [0, 0],
                                     'speed': [80.0],
@@ -405,7 +405,8 @@ class LoomingSpot(BaseProtocol):
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
         rv_ratio = self.protocol_parameters['rv_ratio']  # msec
-        current_rv_ratio = self.selectParametersFromLists(rv_ratio, randomize_order=self.protocol_parameters['randomize_order'])
+        current_rv_ratio, current_intensity = self.selectParametersFromLists((rv_ratio, self.protocol_parameters['intensity']),
+                                                                             randomize_order=self.protocol_parameters['randomize_order'])
 
         current_rv_ratio = current_rv_ratio / 1e3  # msec -> sec
         r_traj = {'name': 'Loom',
@@ -417,14 +418,14 @@ class LoomingSpot(BaseProtocol):
         self.epoch_parameters = {'name': 'MovingSpot',
                                  'radius': r_traj,
                                  'sphere_radius': 1,
-                                 'color': self.protocol_parameters['intensity'],
+                                 'color': current_intensity,
                                  'theta': adj_center[0],
                                  'phi': adj_center[1]}
 
-        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio}
+        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio, 'current_intensity': current_intensity}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'intensity': 0.0,
+        self.protocol_parameters = {'intensity': [0.0, 1.0],
                                     'center': [0, 0],
                                     'start_size': 2.5,
                                     'end_size': 80.0,
@@ -1584,8 +1585,8 @@ class PanGlomSuite(BaseProtocol):
                                'tail_time': 1.5,
                                'idle_color': 0.5}
 
-# %%
 
+# %%
 
 class PGS_Reduced(BaseProtocol):
     def __init__(self, cfg):

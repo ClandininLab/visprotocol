@@ -21,11 +21,8 @@ yyyy-mm-dd
 """
 import h5py
 import os
-import inspect
-import yaml
 from datetime import datetime
 import numpy as np
-import visprotocol
 
 
 class Data():
