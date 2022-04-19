@@ -19,7 +19,7 @@ repeated_dark_15:
 tuning_suite:
   run_parameters:
     protocol_ID: ExpandingMovingSpot
-    num_epochs: 400.0
+    num_epochs: 200.0
     pre_time: 1.0
     stim_time: 3.0
     tail_time: 1.0
@@ -33,11 +33,9 @@ tuning_suite:
     - 40.0
     intensity:
     - 0.0
-    - 0.25
-    - 0.75
     - 1.0
     center:
-    - 0.0
+    - 40.0
     - 0.0
     speed:
     - 40.0
