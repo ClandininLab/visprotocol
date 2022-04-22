@@ -929,22 +929,36 @@ class NaturalImageSuppression(BaseProtocol):
 
         current_image = np.array(image_names)[int(current_image_index)]
 
-        if current_filter_flag == 0:
+        if current_filter_flag == 0:  # RAW image
             current_image = current_image
             filter_name = None
             filter_kwargs = None
-        elif current_filter_flag == 1:  # pre-computed whitened image. Whitening takes a few seconds.
+        elif current_filter_flag == 1:  # WHITENED. pre-computed whitened image. Whitening takes a few seconds.
             current_image = 'whitened_' + current_image
             filter_name = None
             filter_kwargs = None
-        elif current_filter_flag == 2:
+        elif current_filter_flag == 2:  # DIFFERENCE OF GAUSSIANS
             # Sigmas are in degrees, need to be in image pixels
             # scale = 1536 / 360 pixels per degree
             current_image = current_image
             pixels_per_degree = 1536 / 360
             filter_name = 'difference_of_gaussians'
-            filter_kwargs = {'low_sigma': self.protocol_parameters['low_sigma'] * pixels_per_degree,  # degrees -> pixels
-                             'high_sigma': self.protocol_parameters['high_sigma'] * pixels_per_degree}  # degrees -> pixels
+            filter_kwargs = {'low_sigma': 1 * pixels_per_degree,  # degrees -> pixels
+                             'high_sigma': 4 * pixels_per_degree}  # degrees -> pixels
+        elif current_filter_flag == 3:  # HIGHPASS
+            current_image = current_image
+            pixels_per_degree = 1536 / 360
+            filter_name = 'butterworth'
+            filter_kwargs = {'cutoff_frequency_ratio': 0.1,
+                             'order': 2,
+                             'high_pass': True}
+        elif current_filter_flag == 4:  # LOWPASS
+            current_image = current_image
+            pixels_per_degree = 1536 / 360
+            filter_name = 'butterworth'
+            filter_kwargs = {'cutoff_frequency_ratio': 0.1,
+                             'order': 2,
+                             'high_pass': False}
 
         # Stim params for horizon cylinder
         centerX = self.adjustCenter([0, 0])[0]
@@ -999,19 +1013,17 @@ class NaturalImageSuppression(BaseProtocol):
         self.protocol_parameters = {'center': [0, 0],
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
-                                    'spot_speed': 80,  # Deg./sec
-                                    'image_speed': [-40, 0, 40, 80, 120],  # Deg./sec
-                                    'image_index': [0, 1, 2],
-                                    'filter_flag': [0, 1],
-                                    'low_sigma': 1,  # degrees
-                                    'high_sigma': 4}  # degrees
+                                    'spot_speed': 100,  # Deg./sec
+                                    'image_speed': [0, 40, 160, 320],  # Deg./sec
+                                    'image_index': [0, 5, 15],
+                                    'filter_flag': [0, 1, 3, 4]}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'NaturalImageSuppression',
-                               'num_epochs': 150,  # 3 images, 2 filter conditions, 5 speeds, 5 trials each
-                               'pre_time': 1.5,
+                               'num_epochs': 240,  # 4 x 3 x 4 = 48; 5 trials each = 240
+                               'pre_time': 1.0,
                                'stim_time': 3.0,
-                               'tail_time': 1.5,
+                               'tail_time': 1.0,
                                'idle_color': 0.5}
 
 
