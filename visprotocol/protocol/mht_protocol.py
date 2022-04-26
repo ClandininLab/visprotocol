@@ -406,7 +406,7 @@ class SurroundGratingTuning(BaseProtocol):
         patch_parameters = self.getMovingSpotParameters(speed=current_spot_speed,
                                                         radius=self.protocol_parameters['spot_radius'],
                                                         color=self.protocol_parameters['spot_color'],
-                                                        distance_to_travel=180)
+                                                        distance_to_travel=220)
 
         grate_parameters = {'name': 'RotatingGrating',
                             'period': current_grate_period,
