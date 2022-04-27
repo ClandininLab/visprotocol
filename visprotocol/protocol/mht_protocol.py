@@ -1589,8 +1589,8 @@ class CoherentDots(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_coherence, current_speed = self.selectParametersFromLists((self.protocol_parameters['coherence'], self.protocol_parameters['speed']),
-                                                                          randomize_order=self.protocol_parameters['randomize_order'])
+        current_coherence, current_signal_direction = self.selectParametersFromLists((self.protocol_parameters['coherence'], self.protocol_parameters['signal_direction']),
+                                                                                     randomize_order=self.protocol_parameters['randomize_order'])
 
         current_seed = np.random.randint(0, 10000)
 
@@ -1599,23 +1599,26 @@ class CoherentDots(BaseProtocol):
                                  'point_size': int(self.protocol_parameters['point_size']),
                                  'sphere_radius': 1.0,
                                  'color': self.protocol_parameters['intensity'],
-                                 'speed': current_speed,
-                                 'signal_direction': self.protocol_parameters['signal_direction'],
+                                 'speed': self.protocol_parameters['speed'],
+                                 'signal_direction': current_signal_direction,
                                  'coherence': current_coherence,
-                                 'random_seed': current_seed}
+                                 'random_seed': current_seed,
+                                 'sphere_pitch': self.protocol_parameters['sphere_pitch']}
 
         self.convenience_parameters = {'current_coherence': current_coherence,
-                                       'current_speed': current_speed,
-                                       'current_seed': current_seed}
+                                       'current_speed': self.protocol_parameters['speed'],
+                                       'current_seed': current_seed,
+                                       'current_signal_direction': current_signal_direction}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'n_points': 125,  # More than ~200 causes frame drops on bruker
                                     'point_size': 80,  # width = about 15 deg in center of bruker screen
                                     'intensity': 0.0,
-                                    'speed': [80.0, -80.0],
-                                    'signal_direction': 0.0,
+                                    'speed': 80.0,
+                                    'signal_direction': [0.0, 90.0, 180.0, 270.0],
                                     'coherence': [0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0],
-                                    'randomize_order': True}
+                                    'randomize_order': True,
+                                    'sphere_pitch': -45}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'CoherentDots',
@@ -1665,7 +1668,7 @@ class SelfMotionDots(BaseProtocol):
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'CoherentDots',
+        self.run_parameters = {'protocol_ID': 'SelfMotionDots',
                                'num_epochs': 140,
                                'pre_time': 1.0,
                                'stim_time': 4.0,
