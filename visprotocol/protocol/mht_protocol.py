@@ -1616,15 +1616,15 @@ class CoherentDots(BaseProtocol):
                                     'intensity': 0.0,
                                     'speed': 80.0,
                                     'signal_direction': [0.0, 90.0, 180.0, 270.0],
-                                    'coherence': [0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0],
+                                    'coherence': [0.0, 0.25, 0.5, 0.75, 1.0],
                                     'randomize_order': True,
                                     'sphere_pitch': -45}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'CoherentDots',
-                               'num_epochs': 140,
+                               'num_epochs': 200,  # 4 x 5 x 10 trials
                                'pre_time': 1.0,
-                               'stim_time': 4.0,
+                               'stim_time': 3.0,
                                'tail_time': 1.5,
                                'idle_color': 0.5}
 
