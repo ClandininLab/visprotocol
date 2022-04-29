@@ -1594,16 +1594,17 @@ class CoherentDots(BaseProtocol):
 
         current_seed = np.random.randint(0, 10000)
 
-        self.epoch_parameters = {'name': 'MovingDotField',
+        self.epoch_parameters = {'name': 'MovingDotField_Cylindrical',
                                  'n_points': int(self.protocol_parameters['n_points']),
                                  'point_size': int(self.protocol_parameters['point_size']),
-                                 'sphere_radius': 1.0,
+                                 'cylinder_radius': 1.0,
                                  'color': self.protocol_parameters['intensity'],
                                  'speed': self.protocol_parameters['speed'],
                                  'signal_direction': current_signal_direction,
                                  'coherence': current_coherence,
                                  'random_seed': current_seed,
-                                 'sphere_pitch': self.protocol_parameters['sphere_pitch']}
+                                 'cylinder_pitch': self.protocol_parameters['cylinder_pitch'],
+                                 'phi_limits': self.protocol_parameters['phi_limits']}
 
         self.convenience_parameters = {'current_coherence': current_coherence,
                                        'current_speed': self.protocol_parameters['speed'],
@@ -1611,18 +1612,19 @@ class CoherentDots(BaseProtocol):
                                        'current_signal_direction': current_signal_direction}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'n_points': 125,  # More than ~200 causes frame drops on bruker
+        self.protocol_parameters = {'n_points': 150,  # More than ~200 causes frame drops on bruker
                                     'point_size': 80,  # width = about 15 deg in center of bruker screen
                                     'intensity': 0.0,
                                     'speed': 80.0,
-                                    'signal_direction': [0.0, 90.0, 180.0, 270.0],
+                                    'signal_direction': [0, 45, 90, 135, 180, 225, 270, 315],
                                     'coherence': [0.0, 0.25, 0.5, 0.75, 1.0],
                                     'randomize_order': True,
-                                    'sphere_pitch': -45}
+                                    'cylinder_pitch': 45,
+                                    'phi_limits': [45, 135]}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'CoherentDots',
-                               'num_epochs': 200,  # 4 x 5 x 10 trials
+                               'num_epochs': 200,  # 8 x 5 x 10 trials
                                'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 1.5,
