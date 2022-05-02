@@ -439,7 +439,7 @@ class SurroundGratingTuning(BaseProtocol):
         self.protocol_parameters = {'center': [0, 0],
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
-                                    'spot_speed': [-100, 100],
+                                    'spot_speed': [100],
                                     'grate_period': [5, 10, 20, 40],
                                     'grate_rate': [20, 40, 80, 160, 320],
                                     'grate_contrast': 0.5,
@@ -448,7 +448,7 @@ class SurroundGratingTuning(BaseProtocol):
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'SurroundGratingTuning',
-                               'num_epochs': 200,  # 2 x 4 x 5 = 40; 5 averages each
+                               'num_epochs': 100,  # 1 x 4 x 5 = 20; 5 averages each
                                'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
@@ -1617,14 +1617,14 @@ class CoherentDots(BaseProtocol):
                                     'intensity': 0.0,
                                     'speed': 80.0,
                                     'signal_direction': [0, 45, 90, 135, 180, 225, 270, 315],
-                                    'coherence': [0.0, 0.25, 0.5, 0.75, 1.0],
+                                    'coherence': [0.0, 0.5, 1.0],
                                     'randomize_order': True,
                                     'cylinder_pitch': 45,
                                     'phi_limits': [45, 135]}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'CoherentDots',
-                               'num_epochs': 200,  # 8 x 5 x 10 trials
+                               'num_epochs': 120,  # 8 x 3 x 5 trials
                                'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 1.5,
