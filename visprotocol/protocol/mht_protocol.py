@@ -1612,15 +1612,15 @@ class CoherentDots(BaseProtocol):
                                        'current_signal_direction': current_signal_direction}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'n_points': 150,  # More than ~200 causes frame drops on bruker
-                                    'point_size': 80,  # width = about 15 deg in center of bruker screen
+        self.protocol_parameters = {'n_points': 200,  # More than ~200 causes frame drops on bruker
+                                    'point_size': 60,  # width = about 10-15 deg in center of bruker screen
                                     'intensity': 0.0,
                                     'speed': 80.0,
                                     'signal_direction': [0, 45, 90, 135, 180, 225, 270, 315],
                                     'coherence': [0.0, 0.5, 1.0],
                                     'randomize_order': True,
-                                    'cylinder_pitch': 45,
-                                    'phi_limits': [45, 135]}
+                                    'cylinder_pitch': 60,
+                                    'phi_limits': [20, 160]}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'CoherentDots',
