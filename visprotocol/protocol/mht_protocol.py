@@ -1619,7 +1619,7 @@ class CoherentDots(BaseProtocol):
                                     'signal_direction': [0, 45, 90, 135, 180, 225, 270, 315],
                                     'coherence': [0.0, 0.5, 1.0],
                                     'randomize_order': True,
-                                    'cylinder_pitch': 60,
+                                    'cylinder_pitch': -60,
                                     'phi_limits': [20, 160]}
 
     def getRunParameterDefaults(self):
