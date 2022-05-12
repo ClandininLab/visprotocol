@@ -21,7 +21,7 @@ import flyrpc.multicall
 import visprotocol
 
 
-class BaseProtocol():
+class BaseProtocol(): # EJ - Where the meat of all the base protocol code is at 
     def __init__(self, cfg):
         self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
