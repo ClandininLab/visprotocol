@@ -35,6 +35,10 @@ class Client():
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
                                    'use_server': True}
+        elif socket.gethostname() == '40hr-fitness':  # 40HrFitness
+            self.server_options = {'host': '0.0.0.0',
+                                   'port': 60629,
+                                   'use_server': True}
         else:
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
