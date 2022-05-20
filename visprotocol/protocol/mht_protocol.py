@@ -918,9 +918,10 @@ class NaturalImageSuppression(BaseProtocol):
                                                          self.protocol_parameters['image_index'],
                                                          self.protocol_parameters['filter_flag'],
                                                          self.protocol_parameters['image_speed'],
+                                                         self.protocol_parameters['background_direction'],
                                                          ), randomize_order=True)
 
-        current_image_index, current_filter_flag, current_image_speed = current_params
+        current_image_index, current_filter_flag, current_image_speed, current_background_direction = current_params
         image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
                        'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
                        'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
@@ -979,6 +980,8 @@ class NaturalImageSuppression(BaseProtocol):
         image_parameters = {'name': 'HorizonCylinder',
                             'cylinder_radius': 1,
                             'cylinder_height': 3.464,
+                            'cylinder_pitch': self.protocol_parameters['cylinder_pitch'],
+                            'cylinder_yaw': current_background_direction,
                             'image_name': current_image,
                             'filter_name': filter_name,
                             'filter_kwargs': filter_kwargs,
@@ -996,7 +999,8 @@ class NaturalImageSuppression(BaseProtocol):
                                        'current_filter_name': filter_name,
                                        'current_filter_kwargs': filter_kwargs,
                                        'current_filter_flag': current_filter_flag,
-                                       'current_image_speed': current_image_speed}
+                                       'current_image_speed': current_image_speed,
+                                       'current_background_direction': current_background_direction}
 
     def loadStimuli(self, client):
         bg = self.run_parameters.get('idle_color')
@@ -1014,13 +1018,16 @@ class NaturalImageSuppression(BaseProtocol):
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
                                     'spot_speed': 100,  # Deg./sec
-                                    'image_speed': [0, 40, 160, 320],  # Deg./sec
+                                    'image_speed': [160],  # Deg./sec
                                     'image_index': [0, 5, 15],
-                                    'filter_flag': [0, 1, 3, 4]}
+                                    'filter_flag': [0],
+                                    'cylinder_pitch': -45,
+                                    'background_direction': [0, 45, 90, 135, 180, 225, 270, 315],  # Deg.
+                                    }
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'NaturalImageSuppression',
-                               'num_epochs': 240,  # 4 x 3 x 4 = 48; 5 trials each = 240
+                               'num_epochs': 120,  # 1 x 3 x 1 x 8 = 24; 5 trials each = 120
                                'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
