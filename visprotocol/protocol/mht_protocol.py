@@ -399,11 +399,12 @@ class SurroundGratingTuning(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_spot_speed, current_grate_rate, current_grate_period = self.selectParametersFromLists((self.protocol_parameters['spot_speed'], self.protocol_parameters['grate_rate'], self.protocol_parameters['grate_period']),
+        current_spot_speed, current_grate_rate, current_grate_period, current_angle = self.selectParametersFromLists((self.protocol_parameters['spot_speed'], self.protocol_parameters['grate_rate'], self.protocol_parameters['grate_period'], self.protocol_parameters['angle']),
                                                                                                       all_combinations=True,
                                                                                                       randomize_order=self.protocol_parameters['randomize_order'])
 
         patch_parameters = self.getMovingSpotParameters(speed=current_spot_speed,
+                                                        angle=0,
                                                         radius=self.protocol_parameters['spot_radius'],
                                                         color=self.protocol_parameters['spot_color'],
                                                         distance_to_travel=220)
@@ -414,17 +415,19 @@ class SurroundGratingTuning(BaseProtocol):
                             'color': [1, 1, 1, 1],
                             'mean': self.run_parameters['idle_color'],
                             'contrast': self.protocol_parameters['grate_contrast'],
-                            'angle': self.protocol_parameters['angle'],
+                            'angle': current_angle,
                             'offset': 0.0,
                             'cylinder_radius': 1.1,
                             'cylinder_height': 20,
                             'profile': 'sine',
+                            'phi': self.protocol_parameters['phi'],
                             'theta': self.screen_center[0]}
 
         self.epoch_parameters = (grate_parameters, patch_parameters)
         self.convenience_parameters = {'current_spot_speed': current_spot_speed,
                                        'current_grate_rate': current_grate_rate,
-                                       'current_grate_period': current_grate_period}
+                                       'current_grate_period': current_grate_period,
+                                       'current_angle': current_angle}
 
     def loadStimuli(self, client):
         grate_parameters = self.epoch_parameters[0].copy()
@@ -440,15 +443,16 @@ class SurroundGratingTuning(BaseProtocol):
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
                                     'spot_speed': [100],
-                                    'grate_period': [5, 10, 20, 40],
-                                    'grate_rate': [20, 40, 80, 160, 320],
+                                    'grate_period': [20],
+                                    'grate_rate': [160],
                                     'grate_contrast': 0.5,
-                                    'angle': 0.0,
+                                    'angle': [0, 45, 90, 135, 180, 225, 270, 315],
+                                    'phi': -45,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'SurroundGratingTuning',
-                               'num_epochs': 100,  # 1 x 4 x 5 = 20; 5 averages each
+                               'num_epochs': 40,  # 1 x 1 x 1 * 8 = 8; 5 averages each = 40
                                'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
