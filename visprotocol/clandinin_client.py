@@ -35,6 +35,10 @@ class Client():
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
                                    'use_server': True}
+        elif socket.gethostname() == '40hr-fitness':  # 40HrFitness
+            self.server_options = {'host': '0.0.0.0',
+                                   'port': 60629,
+                                   'use_server': True}
         else:
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
@@ -44,7 +48,7 @@ class Client():
         if self.server_options['use_server']:
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
         else:
-            aux_screen = Screen(id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
+            aux_screen = Screen(server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
             if self.draw_screens:
               draw_screens(aux_screen)
             self.manager = launch_stim_server(aux_screen)

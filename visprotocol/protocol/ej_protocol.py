@@ -3,29 +3,660 @@
 """
 Created on Thu Jun 21 10:20:02 2018
 
-@author: mhturner
+@author: minseung and mhturner -- and annotated and possibly modified by liz jun
 """
+from matplotlib.pyplot import pause
 import numpy as np
 import os
 import flyrpc.multicall
 import inspect
+from time import sleep
 
 import visprotocol
 from visprotocol.protocol import clandinin_protocol
 
 
-class BaseProtocol(clandinin_protocol.BaseProtocol):
+class BaseProtocol(clandinin_protocol.BaseProtocol): # EJ QUESTION: When you have an input into the class, what carries over to BaseProtocol from clandinin_protocol.BaseProtocol?
     def __init__(self, cfg):
         super().__init__(cfg)  # call the parent class init method
 
+    def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None):
+        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
+        if angle is None: angle = self.protocol_parameters['angle']
+        if speed is None: speed = self.protocol_parameters['speed']
+        if width is None: width = self.protocol_parameters['width']
+        if height is None: height = self.protocol_parameters['height']
+        if color is None: color = self.protocol_parameters['color']
+
+        centerX = center[0]
+        centerY = center[1]
+        stim_time = self.run_parameters['stim_time']
+        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
+            distance_to_travel = speed * stim_time
+            # trajectory just has two points, at time=0 and time=stim_time
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            x = [startX, endX]
+            y = [startY, endY]
+
+        else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
+            travel_time = distance_to_travel / speed
+            if travel_time > stim_time:
+                print('Warning: stim_time is too short to show whole trajectory at this speed!')
+                hang_time = 0
+            else:
+                hang_time = (stim_time - travel_time)/2
+
+            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
+            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+
+            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+
+            x = [x_1, x_2, x_3, x_4]
+            y = [y_1, y_2, y_3, y_4]
+
+        x_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': x,
+                        'kind': 'linear'}
+        y_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': y,
+                        'kind': 'linear'}
+
+        patch_parameters = {'name': 'MovingPatch',
+                            'width': width,
+                            'height': height,
+                            'color': color,
+                            'theta': x_trajectory,
+                            'phi': y_trajectory,
+                            'angle': angle}
+        return patch_parameters
+
+    def getMovingSpotParameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
+        if center is None: center = self.protocol_parameters['center']
+        if angle is None: angle = self.protocol_parameters['angle']
+        if speed is None: speed = self.protocol_parameters['speed']
+        if radius is None: radius = self.protocol_parameters['radius']
+        if color is None: color = self.protocol_parameters['color']
+
+        center = self.adjustCenter(center)
+
+        centerX = center[0]
+        centerY = center[1]
+        stim_time = self.run_parameters['stim_time']
+        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
+            distance_to_travel = speed * stim_time
+            # trajectory just has two points, at time=0 and time=stim_time
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            x = [startX, endX]
+            y = [startY, endY]
+
+        else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
+            travel_time = distance_to_travel / speed
+            if travel_time > stim_time:
+                print('Warning: stim_time is too short to show whole trajectory at this speed!')
+                hang_time = 0
+            else:
+                hang_time = (stim_time - travel_time)/2
+
+            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
+            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+
+            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+
+            x = [x_1, x_2, x_3, x_4]
+            y = [y_1, y_2, y_3, y_4]
+
+        x_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': x,
+                        'kind': 'linear'}
+        y_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': y,
+                        'kind': 'linear'}
+
+        spot_parameters = {'name': 'MovingSpot',
+                           'radius': radius,
+                           'color': color,
+                           'theta': x_trajectory,
+                           'phi': y_trajectory}
+        return spot_parameters
+
 # %%
 
+    def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_prime_color=None, bar_probe_color=None, bar_speed=None, occluder_height=None, occluder_color=None, 
+                                        preprime_duration=None, prime_duration=None, occlusion_duration=None, pause_duration=None, probe_duration=None, render_on_cylinder=None, bar_surface_radius=None, occluder_surface_radius=None):
+        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
+        if start_theta is None: start_theta = self.protocol_parameters['start_theta'] #negative value starts from the opposite side of bar direction
+        if bar_width is None: bar_width = self.protocol_parameters['bar_width']
+        if bar_height is None: bar_height = self.protocol_parameters['bar_height']
+        if bar_prime_color is None: bar_prime_color = self.protocol_parameters['bar_prime_color']
+        if bar_probe_color is None: bar_probe_color = self.protocol_parameters['bar_probe_color']
+        if bar_speed is None: bar_speed = self.protocol_parameters['bar_speed']
+        if occluder_height is None: occluder_height = self.protocol_parameters['occluder_height']
+        if occluder_color is None: occluder_color = self.protocol_parameters['occluder_color']
+        if preprime_duration is None: preprime_duration = self.protocol_parameters['preprime_duration']
+        if prime_duration is None: prime_duration = self.protocol_parameters['prime_duration']
+        if occlusion_duration is None: occlusion_duration = self.protocol_parameters['occlusion_duration']
+        if pause_duration is None: pause_duration = self.protocol_parameters['pause_duration']
+        if probe_duration is None: probe_duration = self.protocol_parameters['probe_duration']
+        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder']
+        if bar_surface_radius is None: bar_surface_radius = self.protocol_parameters['bar_surface_radius']
+        if occluder_surface_radius is None: occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
+
+        centerX = center[0]
+
+        # Stimulus construction
+
+        stim_duration = preprime_duration + prime_duration + occlusion_duration + probe_duration + pause_duration
+
+        # consistent bar trajectory
+        start_theta *= np.sign(bar_speed)
+        time = [0, preprime_duration]
+        x = [start_theta, start_theta]
+        bar_color = [bar_prime_color, bar_prime_color]
+
+        prime_movement = bar_speed * (prime_duration + occlusion_duration)
+        prime_end_theta = start_theta + prime_movement
+        prime_end_time = preprime_duration + prime_duration + occlusion_duration
+
+        time.append(prime_end_time)
+        x.append(prime_end_theta)
+        bar_color.append(bar_prime_color)
+
+        pause_end_theta = prime_end_theta
+        pause_end_time = prime_end_time + pause_duration
+
+        time.append(pause_end_time)
+        x.append(pause_end_theta)
+        bar_color.append(bar_probe_color)
+
+        probe_movement = bar_speed * probe_duration
+        probe_end_theta = pause_end_theta + probe_movement
+        probe_end_time = pause_end_time + probe_duration
+
+        time.append(probe_end_time)
+        x.append(probe_end_theta)
+        bar_color.append(bar_probe_color)
+
+        # Compute location and width of the occluder per specification
+        occlusion_start_theta = start_theta + bar_speed * prime_duration
+        occluder_width = np.abs(bar_speed) * occlusion_duration + bar_width # the last term ensures that the bar is completely hidden during the occlusion period
+        occluder_loc = occlusion_start_theta + np.sign(bar_speed) * (occluder_width/2 - bar_width/2) # the last two terms account for widths of the bar and the occluder, such that the bar is completely hidden during occlusion period
+        occluder_time = [0, stim_duration]
+        occluder_x = [occluder_loc, occluder_loc]
+
+        # bar_traj_r = list(zip(time, (centerX - np.array(x)).tolist()))
+        # occluder_traj_r = list(zip(occluder_time, (centerX - np.array(occluder_x)).tolist()))
+        # bar_traj_l = list(zip(time, (centerX + np.array(x)).tolist()))
+        # occluder_traj_l = list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist()))
+
+        # Create flystim trajectory objects
+        bar_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())),                   'kind': 'linear'}
+        bar_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, bar_color)), 'kind': 'linear'}
+        occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
+
+        if render_on_cylinder:
+            bar_parameters = {'name': 'MovingPatchOnCylinder',
+                                'width': bar_width,
+                                'height': bar_height,
+                                'color': bar_color_traj,
+                                'theta': bar_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'cylinder_radius': bar_surface_radius}
+            occluder_parameters = {'name': 'MovingPatchOnCylinder',
+                                'width': occluder_width,
+                                'height': occluder_height,
+                                'color': occluder_color,
+                                'theta': occluder_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'cylinder_radius': occluder_surface_radius}
+        else:
+            bar_parameters = {'name': 'MovingPatch',
+                                'width': bar_width,
+                                'height': bar_height,
+                                'color': bar_color_traj,
+                                'theta': bar_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'sphere_radius': bar_surface_radius}
+            occluder_parameters = {'name': 'MovingPatch',
+                                'width': occluder_width,
+                                'height': occluder_height,
+                                'color': occluder_color,
+                                'theta': occluder_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'sphere_radius': occluder_surface_radius}
+
+        return bar_parameters, occluder_parameters, stim_duration
+
+# %%
+
+    def getOcclusionFixedParameters(self, center=None, bar_start_theta=None, bar_end_theta=None, bar_width=None, bar_height=None, 
+                                    bar_prime_color=None, bar_probe_color=None, bar_speed=None, 
+                                    occluder_theta=None, occluder_width=None, occluder_height=None, occluder_color=None, 
+                                    preprime_duration=None, pause_duration=None, render_on_cylinder=None, 
+        bar_surface_radius=None, occluder_surface_radius=None):
+        # EJ - If there's no arguement for these parameters, then just use default
+        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
+        if bar_start_theta is None: bar_start_theta = self.protocol_parameters['bar_start_theta'] #negative value starts from the opposite side of bar direction
+        if bar_end_theta is None: bar_end_theta = self.protocol_parameters['bar_end_theta'] #negative value starts from the opposite side of bar direction
+        if bar_width is None: bar_width = self.protocol_parameters['bar_width']
+        if bar_height is None: bar_height = self.protocol_parameters['bar_height']
+        if bar_prime_color is None: bar_prime_color = self.protocol_parameters['bar_prime_color']
+        if bar_probe_color is None: bar_probe_color = self.protocol_parameters['bar_probe_color']
+        if bar_speed is None: bar_speed = self.protocol_parameters['bar_speed']
+        if occluder_theta is None: occluder_theta = self.protocol_parameters['occluder_theta']
+        if occluder_width is None: occluder_width = self.protocol_parameters['occluder_width']
+        if occluder_height is None: occluder_height = self.protocol_parameters['occluder_height']
+        if occluder_color is None: occluder_color = self.protocol_parameters['occluder_color']
+        if preprime_duration is None: preprime_duration = self.protocol_parameters['preprime_duration']
+        if pause_duration is None: pause_duration = self.protocol_parameters['pause_duration']
+        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder']
+        if bar_surface_radius is None: bar_surface_radius = self.protocol_parameters['bar_surface_radius']
+        if occluder_surface_radius is None: occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
+
+        centerX = center[0]
+
+        # Stimulus construction
+
+        bar_start_theta *= np.sign(bar_speed)
+        bar_end_theta *= np.sign(bar_speed)
+        occluder_theta *= np.sign(bar_speed)
+        
+
+        # Bar
+        theta_distance = np.abs(bar_end_theta - bar_start_theta)
+        prime_distance = np.abs(occluder_theta - bar_start_theta)
+        prime_duration = prime_distance / np.abs(bar_speed)
+        probe_distance = np.abs(bar_end_theta - occluder_theta)
+        probe_duration = probe_distance / np.abs(bar_speed)
+        bar_duration_wo_pause = theta_distance / np.abs(bar_speed)
+        bar_duration_w_pause = bar_duration_wo_pause + pause_duration
+        stim_duration = preprime_duration + bar_duration_w_pause
+
+        # Bar trajectory
+        time =       [0, 
+                      preprime_duration,
+                      preprime_duration+prime_duration,
+                      preprime_duration+prime_duration+pause_duration,
+                      stim_duration]
+        x =          [bar_start_theta,
+                      bar_start_theta,
+                      occluder_theta,
+                      occluder_theta,
+                      bar_end_theta]
+        bar_color =  [bar_prime_color,
+                      bar_prime_color,
+                      bar_prime_color,
+                      bar_probe_color,
+                      bar_probe_color]
+
+        # Occluder trajectory
+        occluder_time = [0, stim_duration]
+        occluder_x = [occluder_theta, occluder_theta]
+
+        # Create flystim trajectory objects
+        bar_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())), 'kind': 'linear'}
+        bar_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, bar_color)), 'kind': 'previous'}
+        occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
+
+        if render_on_cylinder:
+            bar_parameters = {'name': 'MovingPatchOnCylinder',
+                                'width': bar_width,
+                                'height': bar_height,
+                                'color': bar_color_traj,
+                                'theta': bar_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'cylinder_radius': bar_surface_radius}
+            occluder_parameters = {'name': 'MovingPatchOnCylinder',
+                                'width': occluder_width,
+                                'height': occluder_height,
+                                'color': occluder_color,
+                                'theta': occluder_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'cylinder_radius': occluder_surface_radius}
+        else:
+            bar_parameters = {'name': 'MovingPatch',
+                                'width': bar_width,
+                                'height': bar_height,
+                                'color': bar_color_traj,
+                                'theta': bar_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'sphere_radius': bar_surface_radius}
+            occluder_parameters = {'name': 'MovingPatch',
+                                'width': occluder_width,
+                                'height': occluder_height,
+                                'color': occluder_color,
+                                'theta': occluder_theta_traj,
+                                'phi': 0,
+                                'angle': 0,
+                                'sphere_radius': occluder_surface_radius}
+
+        return bar_parameters, occluder_parameters, stim_duration
+
+# %%
 
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # FLY-CENTERED STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
+
+class OcclusionWithPause(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_occlusion_duration, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'], self.protocol_parameters['occlusion_duration'], self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionWithPauseParameters(bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, occlusion_duration=current_occlusion_duration, pause_duration=current_pause_duration)
+        self.epoch_parameters = (bar_parameters, occluder_parameters)
+
+        self.convenience_parameters = {'current_bar_width': current_bar_width,
+                                       'current_bar_prime_color': current_bar_prime_color,
+                                       'current_bar_probe_color': current_bar_probe_color,
+                                       'current_bar_speed': current_bar_speed,
+                                       'current_occluder_color': current_occluder_color,
+                                       'current_occlusion_duration': current_occlusion_duration,
+                                       'current_pause_duration': current_pause_duration,
+                                       'current_stim_duration': stim_duration}
+
+    def loadStimuli(self, client):
+        bar_parameters = self.epoch_parameters[0].copy()
+        occluder_parameters = self.epoch_parameters[1].copy()
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+    
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
+        multicall.load_stim(**bar_parameters, hold=True)
+        multicall.load_stim(**occluder_parameters, hold=True)
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.convenience_parameters['current_stim_duration'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'start_theta': -90.0,
+                                    'bar_width': 15.0,
+                                    'bar_height': 150.0,
+                                    'bar_prime_color': [1.0, 0.0],
+                                    'bar_probe_color': 1.0,
+                                    'bar_speed': [-35.0, -25.0, -15.0, 15.0, 25.0, 35.0],
+                                    'occluder_height': 170.0,
+                                    'occluder_color': self.run_parameters.get('idle_color'),
+                                    'preprime_duration': 0.0,
+                                    'prime_duration': 2.0,
+                                    'occlusion_duration': [0.5, 2.0],
+                                    'pause_duration': [0.0, 1.0],
+                                    'probe_duration': 1.5,
+                                    'render_on_cylinder': False,
+                                    'bar_surface_radius': 3.0,
+                                    'occluder_surface_radius': 2.0,
+                                    'randomize_order': True,}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OcclusionWithPause',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0,
+                               'stim_time': 5.5}
+
+# %%
+
+class OcclusionFixed(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
+        current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+
+# EJ - inputs the current randomized parameters to calculate the other display and timing parameters
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
+        self.epoch_parameters = (bar_parameters, occluder_parameters)
+
+        self.convenience_parameters = {'current_bar_width': current_bar_width,
+                                       'current_bar_prime_color': current_bar_prime_color,
+                                       'current_bar_probe_color': current_bar_probe_color,
+                                       'current_bar_speed': current_bar_speed,
+                                       'current_occluder_color': current_occluder_color,
+                                       'current_pause_duration': current_pause_duration,
+                                       'current_stim_duration': stim_duration}
+
+    def loadStimuli(self, client):
+        bar_parameters = self.epoch_parameters[0].copy()
+        occluder_parameters = self.epoch_parameters[1].copy()
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+    
+        bg = self.run_parameters.get('idle_color') # EJ - get background color
+        multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
+        multicall.load_stim(**bar_parameters, hold=True) # EJ - load the bar with bar parameters
+        multicall.load_stim(**occluder_parameters, hold=True) # EJ - load the occluder with occluder parameters
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames) # EJ - start the stimulus (QUESTION: what is append_stim_frames for?)
+        multicall.start_corner_square() # EJ - start the video syncing object
+        multicall()
+        sleep(self.convenience_parameters['current_stim_duration'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile) # EJ - Stop the stim
+        multicall.black_corner_square() # EJ - activate the black corner square? (QUESTION)
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'bar_start_theta': [90.0],
+                                    'bar_end_theta': 0.0,
+                                    'bar_width': 15.0,
+                                    'bar_height': 50.0,
+                                    'bar_prime_color': [1.0],
+                                    'bar_probe_color': 1.0,
+                                    'bar_speed': [15.0, -15.0],
+                                    'occluder_theta': 60.0,
+                                    'occluder_width': 30.0,
+                                    'occluder_height': 170.0,
+                                    'occluder_color': [0.0],
+                                    'preprime_duration': 0.0,
+                                    'pause_duration': [0.0],
+                                    'render_on_cylinder': True,
+                                    'bar_surface_radius': 3.0,
+                                    'occluder_surface_radius': 2.0,
+                                    'randomize_order': True,}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OcclusionFixed',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0,
+                               'stim_time': 5.5}
+
+# %%
+
+# EJ - start
+class Background(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
+        
+         current_bg_color = self.selectParametersFromLists(self.protocol_parameters['bg_color'], randomize_order=self.protocol_parameters['randomize_order'])
+         self.convenience_parameters = {'bg_color':current_bg_color}
+
+    def loadStimuli(self, client):
+        bg = self.convenience_parameters['bg_color']  #self.run_parameters.get('idle_color') # EJ - set background color
+        multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time']) 
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames) # EJ - start the stimulus (QUESTION: what is append_stim_frames for?)
+        multicall.start_corner_square() # EJ - start the video syncing object
+        multicall() 
+        sleep(self.run_parameters['stim_time'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile) # EJ - Stop the stim
+        multicall.black_corner_square() # EJ - activate the black corner square? (QUESTION)
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'bg_color': [0.0,1],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'Background',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'stim_time': 5.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+
+class StripeFixation(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
+        current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+
+# EJ - inputs the current randomized parameters to calculate the other display and timing parameters
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
+        self.epoch_parameters = (bar_parameters, occluder_parameters)
+
+        self.convenience_parameters = {'current_bar_width': current_bar_width,
+                                       'current_bar_prime_color': current_bar_prime_color,
+                                       'current_bar_probe_color': current_bar_probe_color,
+                                       'current_bar_speed': current_bar_speed,
+                                       'current_occluder_color': current_occluder_color,
+                                       'current_pause_duration': current_pause_duration,
+                                       'current_stim_duration': stim_duration}
+
+    def loadStimuli(self, client):
+        bar_parameters = self.epoch_parameters[0].copy()
+        occluder_parameters = self.epoch_parameters[1].copy()
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+
+        bg = self.run_parameters.get('idle_color') # EJ - get background color
+        multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
+        multicall.load_stim(**bar_parameters, hold=True) # EJ - load the bar with bar parameters
+        multicall.load_stim(**occluder_parameters, hold=True) # EJ - load the occluder with occluder parameters
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames) # EJ - start the stimulus (QUESTION: what is append_stim_frames for?)
+        multicall.start_corner_square() # EJ - start the video syncing object
+        multicall()
+        sleep(self.convenience_parameters['current_stim_duration'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile) # EJ - Stop the stim
+        multicall.black_corner_square() # EJ - activate the black corner square? (QUESTION)
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'bar_start_theta': [90.0],
+                                    'bar_end_theta': 0.0,
+                                    'bar_width': 15.0,
+                                    'bar_height': 50.0,
+                                    'bar_prime_color': [1.0],
+                                    'bar_probe_color': 1.0,
+                                    'bar_speed': [15.0, -15.0],
+                                    'occluder_theta': 60.0,
+                                    'occluder_width': 30.0,
+                                    'occluder_height': 170.0,
+                                    'occluder_color': [0.0],
+                                    'preprime_duration': 0.0,
+                                    'pause_duration': [0.0],
+                                    'render_on_cylinder': True,
+                                    'bar_surface_radius': 3.0,
+                                    'occluder_surface_radius': 2.0,
+                                    'randomize_order': True,}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OcclusionFixed',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0,
+                               'stim_time': 5.5}
+
+# EJ - end
 
 
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
@@ -133,6 +764,57 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
 
 # %%
 
+class ExpandingEdges(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_rate, current_expand_dark = self.selectParametersFromLists((self.protocol_parameters['rate'], self.protocol_parameters['expand_dark']), randomize_order = self.protocol_parameters['randomize_order'])
+
+
+        self.epoch_parameters = {'name': 'ExpandingEdges',
+                                 'period': self.protocol_parameters['period'],
+                                 'rate': current_rate,
+                                 'expander_color': self.protocol_parameters['dark_color'] if current_expand_dark else self.protocol_parameters['light_color'],
+                                 'opposite_color': self.protocol_parameters['light_color'] if current_expand_dark else self.protocol_parameters['dark_color'],
+                                 'width_0': self.protocol_parameters['width_0'],
+                                 'hold_duration': self.protocol_parameters['hold_duration'],
+                                 'color': [1, 1, 1, 1],
+                                 'n_theta_pixels': self.protocol_parameters['n_theta_pixels'],
+                                 'cylinder_radius': 1,
+                                 'vert_extent': self.protocol_parameters['vert_extent'],
+                                 'theta_offset': self.protocol_parameters['theta_offset'],
+                                 'theta': self.screen_center[0]}
+
+        self.convenience_parameters = {'current_rate': current_rate, 'current_expand_dark': current_expand_dark}
+
+        self.meta_parameters = {'center': self.adjustCenter(self.protocol_parameters['center'])}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period': 40.0,
+                                    'rate': [-80.0, 80.0],
+                                    'vert_extent': 80.0,
+                                    'theta_offset': 0.0,
+                                    'light_color': 1.0,
+                                    'dark_color': 0.0,
+                                    'expand_dark': [0,1],
+                                    'width_0': 2,
+                                    'hold_duration': 0.550,
+                                    'n_theta_pixels': 5760,
+                                    'center': [0, 0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'ExpandingEdges',
+                               'num_epochs': 400,
+                               'pre_time': 1.0,
+                               'stim_time': 0.800, # 0.550 hold then 0.250 rotate
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
 
 class DriftingSquareGrating(BaseProtocol):
     def __init__(self, cfg):
@@ -148,6 +830,7 @@ class DriftingSquareGrating(BaseProtocol):
         self.epoch_parameters = {'name': 'RotatingGrating',
                                  'period': self.protocol_parameters['period'],
                                  'rate': self.protocol_parameters['rate'],
+                                 'hold_duration': self.protocol_parameters['hold_duration'],
                                  'color': [1, 1, 1, 1],
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
@@ -164,11 +847,12 @@ class DriftingSquareGrating(BaseProtocol):
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'period': 20.0,
-                                    'rate': 20.0,
+        self.protocol_parameters = {'period': 40.0,
+                                    'rate': 80.0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
-                                    'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
+                                    'angle': [0.0, 180.0],
+                                    'hold_duration': 0.550,
                                     'center': [0, 0],
                                     'center_size': 180.0,
                                     'randomize_order': True}
@@ -183,6 +867,84 @@ class DriftingSquareGrating(BaseProtocol):
 
 # %%
 
+class SplitDriftingSquareGrating(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def loadStimuli(self, client):
+        passed_parameters_0 = self.epoch_parameters_0.copy()
+        passed_parameters_1 = self.epoch_parameters_1.copy()
+    
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
+        multicall.load_stim(**passed_parameters_0, hold=True)
+        multicall.load_stim(**passed_parameters_1, hold=True)
+        multicall()
+
+    def getEpochParameters(self):
+        # TODO: center size with aperture (center and center_size)
+        current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+
+        self.epoch_parameters_0 = {'name': 'RotatingGrating',
+                                 'period': self.protocol_parameters['period'],
+                                 'rate': self.protocol_parameters['rate'],
+                                 'color': [1, 1, 1, 1],
+                                 'mean': self.protocol_parameters['mean'],
+                                 'contrast': self.protocol_parameters['contrast'],
+                                 'angle': current_angle,
+                                 'offset': 0.0,
+                                 'cylinder_radius': 1,
+                                 'cylinder_location': (self.protocol_parameters['cylinder_xshift'],0,0),
+                                 'cylinder_height': 10,
+                                 'profile': 'square',
+                                 'theta': self.screen_center[0]}
+        self.epoch_parameters_1 = {'name': 'RotatingGrating',
+                                 'period': self.protocol_parameters['period'],
+                                 'rate': self.protocol_parameters['rate'], #-
+                                 'color': [1, 1, 1, 1],
+                                 'mean': self.protocol_parameters['mean'],
+                                 'contrast': self.protocol_parameters['contrast'],
+                                 'angle': current_angle+180.0, #remove
+                                 'offset': 0.0, #change this??
+                                 'cylinder_radius': 1,
+                                 'cylinder_location': (self.protocol_parameters['cylinder_xshift'],0,0), #-
+                                 'cylinder_height': 10,
+                                 'profile': 'square',
+                                 'theta': self.screen_center[0]}
+        # self.epoch_parameters_1 = self.epoch_parameters_0.copy()
+        # self.epoch_parameters_1['cylinder_location'] = (-self.protocol_parameters['cylinder_xshift'],0,0)
+
+
+        self.convenience_parameters = {'current_angle': current_angle}
+
+        self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
+                                'center': self.adjustCenter(self.protocol_parameters['center'])}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period': 20.0,
+                                    'rate': 20.0,
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'angle': [0.0, 180.0],
+                                    'center': [0, 0],
+                                    'center_size': 180.0,
+                                    'cylinder_xshift': -0.001,
+                                    'randomize_order': True,
+                                    }
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SplitDriftingSquareGrating',
+                               'num_epochs': 40,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
 
 class ExpandingMovingSpot(BaseProtocol):
     def __init__(self, cfg):
@@ -203,7 +965,7 @@ class ExpandingMovingSpot(BaseProtocol):
                                        'current_speed': current_speed}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'diameter': [5, 10, 15, 20, 25, 30],
+        self.protocol_parameters = {'diameter': [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0],
                                     'intensity': [0.0, 1.0],
                                     'center': [0, 0],
                                     'speed': [80.0],
@@ -220,6 +982,64 @@ class ExpandingMovingSpot(BaseProtocol):
 
 # %%
 
+class FlickeringVertBars(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_temporal_frequency, current_theta_loc = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta_loc']), randomize_order=self.protocol_parameters['randomize_order'])
+        
+        # make color trajectory
+        color_traj = {'name': 'Sinusoid',
+                      'temporal_frequency': current_temporal_frequency,
+                      'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
+                      'offset': self.protocol_parameters['mean']}
+
+        if self.protocol_parameters['render_on_cylinder']:
+            self.epoch_parameters = {'name': 'MovingPatchOnCylinder',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'cylinder_radius': 1,
+                                    'color': color_traj,
+                                    'theta': current_theta_loc,
+                                    'phi': self.protocol_parameters['phi_loc'],
+                                    'angle': 0}
+        else:
+            self.epoch_parameters = {'name': 'MovingPatch',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'sphere_radius': 1,
+                                    'color': color_traj,
+                                    'theta': current_theta_loc,
+                                    'phi': self.protocol_parameters['phi_loc'],
+                                    'angle': 0}
+
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency, 
+                                       'current_theta_loc': current_theta_loc}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 150.0,
+                                    'width': 10.0,
+                                    'theta_loc': [0.0, 10.0],
+                                    'phi_loc': 0,
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'temporal_frequency': [10.0],
+                                    'render_on_cylinder': False,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'FlickeringVertBars',
+                               'num_epochs': 30,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
 
 class FlickeringPatch(BaseProtocol):
     def __init__(self, cfg):
@@ -229,9 +1049,9 @@ class FlickeringPatch(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        adj_center = self.adjustCenter(self.protocol_parameters['center'])
-
-        current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
+        current_temporal_frequency, current_center = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], self.protocol_parameters['center']), randomize_order=self.protocol_parameters['randomize_order'])
+        
+        adj_center = self.adjustCenter(current_center)
 
         # make color trajectory
         color_traj = {'name': 'Sinusoid',
@@ -239,24 +1059,36 @@ class FlickeringPatch(BaseProtocol):
                       'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
                       'offset': self.protocol_parameters['mean']}
 
-        self.epoch_parameters = {'name': 'MovingPatch',
-                                 'width': self.protocol_parameters['width'],
-                                 'height': self.protocol_parameters['height'],
-                                 'sphere_radius': 1,
-                                 'color': color_traj,
-                                 'theta': adj_center[0],
-                                 'phi': adj_center[1],
-                                 'angle': 0}
+        if self.protocol_parameters['render_on_cylinder']:
+            self.epoch_parameters = {'name': 'MovingPatchOnCylinder',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'cylinder_radius': 1,
+                                    'color': color_traj,
+                                    'theta': adj_center[0],
+                                    'phi': adj_center[1],
+                                    'angle': 0}
+        else:
+            self.epoch_parameters = {'name': 'MovingPatch',
+                                    'width': self.protocol_parameters['width'],
+                                    'height': self.protocol_parameters['height'],
+                                    'sphere_radius': 1,
+                                    'color': color_traj,
+                                    'theta': adj_center[0],
+                                    'phi': adj_center[1],
+                                    'angle': 0}
 
-        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency, 
+                                       'current_center': current_center}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'height': 10.0,
                                     'width': 10.0,
-                                    'center': [0, 0],
+                                    'center': [[0,0], [10,0]],
                                     'contrast': 1.0,
                                     'mean': 0.5,
-                                    'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
+                                    'temporal_frequency': [10.0],
+                                    'render_on_cylinder': False,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
@@ -286,8 +1118,7 @@ class LoomingSpot(BaseProtocol):
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
         rv_ratio = self.protocol_parameters['rv_ratio']  # msec
-        current_rv_ratio, current_intensity = self.selectParametersFromLists((rv_ratio, self.protocol_parameters['intensity']),
-                                                                             randomize_order=self.protocol_parameters['randomize_order'])
+        current_rv_ratio = self.selectParametersFromLists(rv_ratio, randomize_order=self.protocol_parameters['randomize_order'])
 
         current_rv_ratio = current_rv_ratio / 1e3  # msec -> sec
         r_traj = {'name': 'Loom',
@@ -299,14 +1130,14 @@ class LoomingSpot(BaseProtocol):
         self.epoch_parameters = {'name': 'MovingSpot',
                                  'radius': r_traj,
                                  'sphere_radius': 1,
-                                 'color': current_intensity,
+                                 'color': self.protocol_parameters['intensity'],
                                  'theta': adj_center[0],
                                  'phi': adj_center[1]}
 
-        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio, 'current_intensity': current_intensity}
+        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'intensity': [0.0, 1.0],
+        self.protocol_parameters = {'intensity': 0.0,
                                     'center': [0, 0],
                                     'start_size': 2.5,
                                     'end_size': 80.0,
@@ -399,15 +1230,14 @@ class SurroundGratingTuning(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_spot_speed, current_grate_rate, current_grate_period, current_angle = self.selectParametersFromLists((self.protocol_parameters['spot_speed'], self.protocol_parameters['grate_rate'], self.protocol_parameters['grate_period'], self.protocol_parameters['angle']),
+        current_spot_speed, current_grate_rate, current_grate_period = self.selectParametersFromLists((self.protocol_parameters['spot_speed'], self.protocol_parameters['grate_rate'], self.protocol_parameters['grate_period']),
                                                                                                       all_combinations=True,
                                                                                                       randomize_order=self.protocol_parameters['randomize_order'])
 
         patch_parameters = self.getMovingSpotParameters(speed=current_spot_speed,
-                                                        angle=0,
                                                         radius=self.protocol_parameters['spot_radius'],
                                                         color=self.protocol_parameters['spot_color'],
-                                                        distance_to_travel=220)
+                                                        distance_to_travel=180)
 
         grate_parameters = {'name': 'RotatingGrating',
                             'period': current_grate_period,
@@ -415,24 +1245,23 @@ class SurroundGratingTuning(BaseProtocol):
                             'color': [1, 1, 1, 1],
                             'mean': self.run_parameters['idle_color'],
                             'contrast': self.protocol_parameters['grate_contrast'],
-                            'angle': current_angle,
+                            'angle': self.protocol_parameters['angle'],
                             'offset': 0.0,
                             'cylinder_radius': 1.1,
                             'cylinder_height': 20,
                             'profile': 'sine',
-                            'phi': self.protocol_parameters['phi'],
                             'theta': self.screen_center[0]}
 
         self.epoch_parameters = (grate_parameters, patch_parameters)
         self.convenience_parameters = {'current_spot_speed': current_spot_speed,
                                        'current_grate_rate': current_grate_rate,
-                                       'current_grate_period': current_grate_period,
-                                       'current_angle': current_angle}
+                                       'current_grate_period': current_grate_period}
 
     def loadStimuli(self, client):
         grate_parameters = self.epoch_parameters[0].copy()
         patch_parameters = self.epoch_parameters[1].copy()
 
+        bg = self.run_parameters.get('idle_color')
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.load_stim(**grate_parameters, hold=True)
         multicall.load_stim(**patch_parameters, hold=True)
@@ -442,17 +1271,17 @@ class SurroundGratingTuning(BaseProtocol):
         self.protocol_parameters = {'center': [0, 0],
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
-                                    'spot_speed': [100],
-                                    'grate_period': [20],
-                                    'grate_rate': [160],
+                                    'spot_speed': [60.0],
+                                    'grate_period': [10.0, 20.0, 30.0, 40.0],
+                                    'grate_rate': [-120.0, -90.0, -60.0, -30.0, -15.0, 0.0,
+                                                   15.0, 30.0, 60.0, 90.0, 120.0],
                                     'grate_contrast': 0.5,
-                                    'angle': [0, 45, 90, 135, 180, 225, 270, 315],
-                                    'phi': -45,
+                                    'angle': 0.0,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'SurroundGratingTuning',
-                               'num_epochs': 40,  # 1 x 1 x 1 * 8 = 8; 5 averages each = 40
+                               'num_epochs': 220, # 11 x 5 avgs each
                                'pre_time': 1.0,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
@@ -802,7 +1631,6 @@ class UniformFlash(BaseProtocol):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
-
 class RealWalkThroughFakeForest(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -811,22 +1639,17 @@ class RealWalkThroughFakeForest(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_params = self.selectParametersFromLists((self.protocol_parameters['trajectory_range'],
-                                                         self.protocol_parameters['n_trees'],
-                                                         self.protocol_parameters['include_ground']
-                                                         ), randomize_order=True)
-
-        current_trajectory_index, current_n_trees, current_include_ground = current_params
+        current_trajectory_index = int(self.selectParametersFromLists(self.protocol_parameters['trajectory_range'], randomize_order=True))
 
         # load walk trajectory
         trajectory_dir = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'walking_trajectories')
         file_name = 'walking_traj_20200728.npy'
         snippets = np.load(os.path.join(trajectory_dir, file_name), allow_pickle=True)
-        snippet = snippets[int(current_trajectory_index)]
+        snippet = snippets[current_trajectory_index]
         t = snippet['t']
         x = snippet['x']
         y = snippet['y']
-        heading = snippet['a']-90  # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
+        heading = snippet['a']-90 # angle in degrees. Rotate by -90 to align with heading 0 being down +y axis
 
         fly_x_trajectory = {'name': 'tv_pairs',
                             'tv_pairs': list(zip(t, x)),
@@ -841,7 +1664,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
         z_level = -0.20
         tree_locations = []
         np.random.seed(int(self.protocol_parameters['rand_seed']))
-        for tree in range(int(current_n_trees)):
+        for tree in range(int(self.protocol_parameters['n_trees'])):
             tree_locations.append([np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), z_level+self.protocol_parameters['tree_height']/2])
 
         self.epoch_parameters = {'name': 'Composite',
@@ -856,9 +1679,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                  'z_level': z_level}
 
         self.convenience_parameters = {'current_trajectory_index': current_trajectory_index,
-                                       'current_trajectory_library': file_name,
-                                       'current_n_trees': current_n_trees,
-                                       'current_include_ground': current_include_ground}
+                                       'current_trajectory_library': file_name}
 
     def loadStimuli(self, client):
         passedParameters = self.epoch_parameters.copy()
@@ -873,12 +1694,16 @@ class RealWalkThroughFakeForest(BaseProtocol):
         multicall.load_stim(name='ConstantBackground',
                             color=[sc, sc, sc, 1.0])
 
-        if self.convenience_parameters['current_include_ground'] == 1:
-            fc = passedParameters['floor_color']
-            multicall.load_stim(name='TexturedGround',
-                                color=[fc, fc, fc, 1.0],
-                                z_level=passedParameters['z_level'],
-                                hold=True)
+        # base_dir = r'C:\Users\mhturner\Documents\GitHub\visprotocol\resources\mht\images\VH_NatImages'
+        # fn = 'imk00125.iml'
+        # multicall.load_stim(name='HorizonCylinder',
+        #                     image_path=os.path.join(base_dir, fn))
+
+        fc = passedParameters['floor_color']
+        multicall.load_stim(name='TexturedGround',
+                            color=[fc, fc, fc, 1.0],
+                            z_level=passedParameters['z_level'],
+                            hold=True)
 
         multicall.load_stim(name='Forest',
                             color=passedParameters['tree_color'],
@@ -890,6 +1715,7 @@ class RealWalkThroughFakeForest(BaseProtocol):
 
         multicall()
 
+
     def getParameterDefaults(self):
         self.protocol_parameters = {'n_trees': 40,
                                     'tree_height': 1.0,
@@ -897,12 +1723,11 @@ class RealWalkThroughFakeForest(BaseProtocol):
                                     'sky_color': 0.5,
                                     'tree_color': 0.0,
                                     'rand_seed': 1,
-                                    'trajectory_range': [0, 1, 2],
-                                    'include_ground': [0, 1]}
+                                    'trajectory_range': [0, 1, 2, 3, 4]}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'RealWalkThroughFakeForest',
-                               'num_epochs': 30,
+        self.run_parameters = {'protocol_ID': 'ForestRandomWalk',
+                               'num_epochs': 25,
                                'pre_time': 2.0,
                                'stim_time': 20.0,
                                'tail_time': 2.0,
@@ -910,135 +1735,6 @@ class RealWalkThroughFakeForest(BaseProtocol):
 # %%
 
 
-class NaturalImageSuppression(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        current_params = self.selectParametersFromLists((
-                                                         self.protocol_parameters['image_index'],
-                                                         self.protocol_parameters['filter_flag'],
-                                                         self.protocol_parameters['image_speed'],
-                                                         self.protocol_parameters['background_direction'],
-                                                         ), randomize_order=True)
-
-        current_image_index, current_filter_flag, current_image_speed, current_background_direction = current_params
-        image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
-                       'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
-                       'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
-                       'imk02733.tif', 'imk02999.tif', 'imk03093.tif', 'imk03347.tif',
-                       'imk03447.tif', 'imk03584.tif', 'imk03758.tif', 'imk03760.tif']
-
-        current_image = np.array(image_names)[int(current_image_index)]
-
-        if current_filter_flag == 0:  # RAW image
-            current_image = current_image
-            filter_name = None
-            filter_kwargs = None
-        elif current_filter_flag == 1:  # WHITENED. pre-computed whitened image. Whitening takes a few seconds.
-            current_image = 'whitened_' + current_image
-            filter_name = None
-            filter_kwargs = None
-        elif current_filter_flag == 2:  # DIFFERENCE OF GAUSSIANS
-            # Sigmas are in degrees, need to be in image pixels
-            # scale = 1536 / 360 pixels per degree
-            current_image = current_image
-            pixels_per_degree = 1536 / 360
-            filter_name = 'difference_of_gaussians'
-            filter_kwargs = {'low_sigma': 1 * pixels_per_degree,  # degrees -> pixels
-                             'high_sigma': 4 * pixels_per_degree}  # degrees -> pixels
-        elif current_filter_flag == 3:  # HIGHPASS
-            current_image = current_image
-            pixels_per_degree = 1536 / 360
-            filter_name = 'butterworth'
-            filter_kwargs = {'cutoff_frequency_ratio': 0.1,
-                             'order': 2,
-                             'high_pass': True}
-        elif current_filter_flag == 4:  # LOWPASS
-            current_image = current_image
-            pixels_per_degree = 1536 / 360
-            filter_name = 'butterworth'
-            filter_kwargs = {'cutoff_frequency_ratio': 0.1,
-                             'order': 2,
-                             'high_pass': False}
-
-        # Stim params for horizon cylinder
-        centerX = self.adjustCenter([0, 0])[0]
-        distance_to_travel = current_image_speed * self.run_parameters['stim_time']
-        startX = (0, centerX - distance_to_travel/2)
-        endX = (self.run_parameters['stim_time'], centerX + distance_to_travel/2)
-        x = [startX, endX]
-
-        rotation_trajectory = {'name': 'tv_pairs',
-                               'tv_pairs': x,
-                               'kind': 'linear'}
-
-        # VH images are trimmed to [512, 1536] pixels (3:1 aspect ratio)
-        #   For w & h to have equal pixels_per_degree, cylinder needs to have radius = 1, height = 3.464...
-        #   Entire height subtends 120 deg (1/3 of the width)
-        #   tan(60) = (h/2) / r
-        #   h = 2 * r * tan(60) = 3.464
-        image_parameters = {'name': 'HorizonCylinder',
-                            'cylinder_radius': 1,
-                            'cylinder_height': 3.464,
-                            'cylinder_pitch': self.protocol_parameters['cylinder_pitch'],
-                            'cylinder_yaw': current_background_direction,
-                            'image_name': current_image,
-                            'filter_name': filter_name,
-                            'filter_kwargs': filter_kwargs,
-                            'theta': rotation_trajectory}
-
-        # Stim params for probe (spot) stimulus
-        spot_parameters = self.getMovingSpotParameters(radius=self.protocol_parameters['spot_radius'],
-                                                       color=self.protocol_parameters['spot_color'],
-                                                       speed=self.protocol_parameters['spot_speed'],
-                                                       angle=0)
-        spot_parameters['sphere_radius'] = 0.5  # Render inside the image cylinder
-
-        self.epoch_parameters = (image_parameters, spot_parameters)
-        self.convenience_parameters = {'current_image': current_image,
-                                       'current_filter_name': filter_name,
-                                       'current_filter_kwargs': filter_kwargs,
-                                       'current_filter_flag': current_filter_flag,
-                                       'current_image_speed': current_image_speed,
-                                       'current_background_direction': current_background_direction}
-
-    def loadStimuli(self, client):
-        bg = self.run_parameters.get('idle_color')
-        image_parameters = self.epoch_parameters[0].copy()
-        spot_parameters = self.epoch_parameters[1].copy()
-
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-        multicall.load_stim(**image_parameters, hold=True)
-        multicall.load_stim(**spot_parameters, hold=True)
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'center': [0, 0],
-                                    'spot_radius': 7.5,
-                                    'spot_color': 0.0,
-                                    'spot_speed': 100,  # Deg./sec
-                                    'image_speed': [160],  # Deg./sec
-                                    'image_index': [0, 5, 15],
-                                    'filter_flag': [0],
-                                    'cylinder_pitch': -45,
-                                    'background_direction': [0, 45, 90, 135, 180, 225, 270, 315],  # Deg.
-                                    }
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'NaturalImageSuppression',
-                               'num_epochs': 120,  # 1 x 3 x 1 x 8 = 24; 5 trials each = 120
-                               'pre_time': 1.0,
-                               'stim_time': 3.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-
-# %%
 class ApproachTuning(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -1059,7 +1755,7 @@ class ApproachTuning(BaseProtocol):
 
         time_steps = np.linspace(0, self.run_parameters['stim_time'], len(velocity))  # time steps of update trajectory
         # distance away from fly
-        distance = np.cumsum(velocity)  # position at each update time point, according to new velocity value. Centered around 0
+        distance = np.cumsum(velocity) # position at each update time point, according to new velocity value. Centered around 0
 
         position_x = np.sin(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * distance
         position_y = np.cos(np.deg2rad(self.protocol_parameters['tower_azimuth'])) * distance
@@ -1214,6 +1910,7 @@ class TowerDistanceWalk(BaseProtocol):
 
         multicall()
 
+
     def getParameterDefaults(self):
         self.protocol_parameters = {'forward_velocity': [0.02],
                                     'n_towers': 5,
@@ -1364,7 +2061,6 @@ class MovingSpotOnVR(BaseProtocol):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
-
 class PanGlomSuite(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -1487,203 +2183,78 @@ class PanGlomSuite(BaseProtocol):
                                'tail_time': 1.5,
                                'idle_color': 0.5}
 
-
-# %%
-
-class PGS_Reduced(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-        self.cfg = cfg
-        self.stim_list = ['LoomingSpot', 'DriftingSquareGrating', 'ExpandingMovingSpot',
-                          'MovingRectangle']
-        n = [1, 1, 3, 1]  # weight each stim draw by how many trial types it has. Total = 6
-        avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
-        all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
-
-        self.stim_order = np.random.permutation(np.hstack(all_stims))
-
-        # initialize each component class
-        self.initComponentClasses()
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def initComponentClasses(self):
-        # pre-populate dict of component classes. Each with its own num_epochs_completed counter etc
-        self.component_classes = {}
-        for stim_type in self.stim_list:
-            if stim_type == 'LoomingSpot':
-                new_component_class = LoomingSpot(self.cfg)
-                new_component_class.protocol_parameters = {'intensity': 0.0,
-                                                           'center': [0, 0],
-                                                           'start_size': 2.5,
-                                                           'end_size': 80.0,
-                                                           'rv_ratio': 100.0,
-                                                           'randomize_order': True}
-
-            elif stim_type == 'DriftingSquareGrating':
-                new_component_class = DriftingSquareGrating(self.cfg)
-                new_component_class.protocol_parameters = {'period': 20.0,
-                                                           'rate': 20.0,
-                                                           'contrast': 1.0,
-                                                           'mean': 0.5,
-                                                           'angle': 0.0,
-                                                           'center': [0, 0],
-                                                           'center_size': 180.0,
-                                                           'randomize_order': True}
-
-            elif stim_type == 'ExpandingMovingSpot':
-                new_component_class = ExpandingMovingSpot(self.cfg)
-                new_component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
-                                                           'intensity': 0.0,
-                                                           'center': [0, 0],
-                                                           'speed': 80.0,
-                                                           'angle': 0.0,
-                                                           'randomize_order': True}
-
-            elif stim_type == 'MovingRectangle':
-                new_component_class = MovingRectangle(self.cfg)
-                new_component_class.protocol_parameters = {'width': 10.0,
-                                                           'height': 120.0,
-                                                           'intensity': 0.0,
-                                                           'center': [0, 0],
-                                                           'speed': 80.0,
-                                                           'angle': 0.0,
-                                                           'randomize_order': True}
-
-            # Lock component stim timing run params to suite run params
-            new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
-            new_component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
-            new_component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
-            new_component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
-
-            self.component_classes[stim_type] = new_component_class
-
-    def getEpochParameters(self):
-        stim_type = str(self.stim_order[self.num_epochs_completed]) # note this num_epochs_completed is for the whole suite, not component stim!
-        self.convenience_parameters = {'component_stim_type': stim_type}
-        self.component_class = self.component_classes[stim_type]
-
-        self.component_class.getEpochParameters()
-        self.convenience_parameters.update(self.component_class.convenience_parameters)
-        self.epoch_parameters = self.component_class.epoch_parameters
-
-    def loadStimuli(self, client):
-        self.component_class.loadStimuli(client)
-        self.component_class.advanceEpochCounter() # up the component class epoch counter
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'PGS_Reduced',
-                               'num_epochs': 180,  # 180 = 6 * 30 averages each
-                               'pre_time': 1.5,
-                               'stim_time': 3.0,
-                               'tail_time': 1.5,
-                               'idle_color': 0.5}
-
     # %%
 
-"""
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # DOTS STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-"""
 
+    class TuningSuite(BaseProtocol):
+        def __init__(self, cfg):
+            super().__init__(cfg)
+            self.cfg = cfg
+            self.stim_list = ['ExpandingMovingSpot', 'MovingRectangle']
+            n = [12, 4]  # weight each stim draw by how many trial types it has. Total = 20
+            avg_per_stim = int(self.run_parameters['num_epochs'] / np.sum(n))
+            all_stims = [[self.stim_list[i]] * n[i] * avg_per_stim for i in range(len(n))]
 
-class CoherentDots(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+            self.stim_order = np.random.permutation(np.hstack(all_stims))
 
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
+            # initialize each component class
+            self.initComponentClasses()
 
-    def getEpochParameters(self):
-        current_coherence, current_signal_direction = self.selectParametersFromLists((self.protocol_parameters['coherence'], self.protocol_parameters['signal_direction']),
-                                                                                     randomize_order=self.protocol_parameters['randomize_order'])
+            self.getRunParameterDefaults()
+            self.getParameterDefaults()
 
-        current_seed = np.random.randint(0, 10000)
+        def initComponentClasses(self):
+            # pre-populate dict of component classes. Each with its own num_epochs_completed counter etc
+            self.component_classes = {}
+            for stim_type in self.stim_list:
 
-        self.epoch_parameters = {'name': 'MovingDotField_Cylindrical',
-                                 'n_points': int(self.protocol_parameters['n_points']),
-                                 'point_size': int(self.protocol_parameters['point_size']),
-                                 'cylinder_radius': 1.0,
-                                 'color': self.protocol_parameters['intensity'],
-                                 'speed': self.protocol_parameters['speed'],
-                                 'signal_direction': current_signal_direction,
-                                 'coherence': current_coherence,
-                                 'random_seed': current_seed,
-                                 'cylinder_pitch': self.protocol_parameters['cylinder_pitch'],
-                                 'phi_limits': self.protocol_parameters['phi_limits']}
+                if stim_type == 'ExpandingMovingSpot':
+                    new_component_class = ExpandingMovingSpot(self.cfg)
+                    new_component_class.protocol_parameters = {'diameter': [5.0, 15.0, 50.0],
+                                                               'intensity': [0.0, 1.0],
+                                                               'center': [0, 0],
+                                                               'speed': [-80.0, 80.0],
+                                                               'angle': 0.0,
+                                                               'randomize_order': True}
 
-        self.convenience_parameters = {'current_coherence': current_coherence,
-                                       'current_speed': self.protocol_parameters['speed'],
-                                       'current_seed': current_seed,
-                                       'current_signal_direction': current_signal_direction}
+                elif stim_type == 'MovingRectangle':
+                    new_component_class = MovingRectangle(self.cfg)
+                    new_component_class.protocol_parameters = {'width': 10.0,
+                                                               'height': 120.0,
+                                                               'intensity': [0.0, 1.0],
+                                                               'center': [0, 0],
+                                                               'speed': 80.0,
+                                                               'angle': [0.0, 180.0],
+                                                               'randomize_order': True}
 
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'n_points': 200,  # More than ~200 causes frame drops on bruker
-                                    'point_size': 60,  # width = about 10-15 deg in center of bruker screen
-                                    'intensity': 0.0,
-                                    'speed': 80.0,
-                                    'signal_direction': [0, 45, 90, 135, 180, 225, 270, 315],
-                                    'coherence': [0.0, 0.5, 1.0],
-                                    'randomize_order': True,
-                                    'cylinder_pitch': -60,
-                                    'phi_limits': [20, 160]}
+                # Lock component stim timing run params to suite run params
+                new_component_class.run_parameters['pre_time'] = self.run_parameters['pre_time']
+                new_component_class.run_parameters['stim_time'] = self.run_parameters['stim_time']
+                new_component_class.run_parameters['tail_time'] = self.run_parameters['tail_time']
+                new_component_class.run_parameters['idle_color'] = self.run_parameters['idle_color']
 
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'CoherentDots',
-                               'num_epochs': 120,  # 8 x 3 x 5 trials
-                               'pre_time': 1.0,
-                               'stim_time': 3.0,
-                               'tail_time': 1.5,
-                               'idle_color': 0.5}
+                self.component_classes[stim_type] = new_component_class
 
-# %%
+        def getEpochParameters(self):
+            stim_type = str(self.stim_order[self.num_epochs_completed]) # note this num_epochs_completed is for the whole suite, not component stim!
+            self.convenience_parameters = {'component_stim_type': stim_type}
+            self.component_class = self.component_classes[stim_type]
 
+            self.component_class.getEpochParameters()
+            self.convenience_parameters.update(self.component_class.convenience_parameters)
+            self.epoch_parameters = self.component_class.epoch_parameters
 
-class SelfMotionDots(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+        def loadStimuli(self, client):
+            self.component_class.loadStimuli(client)
+            self.component_class.advanceEpochCounter() # up the component class epoch counter
 
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
+        def getParameterDefaults(self):
+            self.protocol_parameters = {}
 
-    def getEpochParameters(self):
-        current_coherence, current_speed = self.selectParametersFromLists((self.protocol_parameters['coherence'], self.protocol_parameters['speed']),
-                                                                          randomize_order=self.protocol_parameters['randomize_order'])
-
-        current_seed = np.random.randint(0, 10000)
-
-        self.epoch_parameters = {'name': 'MovingDotField',
-                                 'n_points': int(self.protocol_parameters['n_points']),
-                                 'point_size': int(self.protocol_parameters['point_size']),
-                                 'sphere_radius': 1.0,
-                                 'color': self.protocol_parameters['intensity'],
-                                 'speed': current_speed,
-                                 'signal_direction': self.protocol_parameters['signal_direction'],
-                                 'coherence': current_coherence,
-                                 'random_seed': current_seed}
-
-        self.convenience_parameters = {'current_coherence': current_coherence,
-                                       'current_speed': current_speed,
-                                       'current_seed': current_seed}
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'n_points': 125,  # More than ~200 causes frame drops on bruker
-                                    'point_size': 80,  # width = about 15 deg in center of bruker screen
-                                    'intensity': 0.0,
-                                    'speed': [80.0, -80.0],
-                                    'signal_direction': 0.0,
-                                    'coherence': [0.0, 0.125, 0.25, 0.5, 0.75, 0.875, 1.0],
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'SelfMotionDots',
-                               'num_epochs': 140,
-                               'pre_time': 1.0,
-                               'stim_time': 4.0,
-                               'tail_time': 1.5,
-                               'idle_color': 0.5}
+        def getRunParameterDefaults(self):
+            self.run_parameters = {'protocol_ID': 'TuningSuite',
+                                   'num_epochs': 80, # 80 = 16 * 5 averages each
+                                   'pre_time': 1.5,
+                                   'stim_time': 3.0,
+                                   'tail_time': 1.5,
+                                   'idle_color': 0.5}

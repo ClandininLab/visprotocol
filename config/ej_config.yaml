@@ -1,4 +1,4 @@
-experimenter: MC
+experimenter: EJ
 prep_choices: [Behavior, Left optic lobe, Right optic lobe, Whole brain, Optic glomeruli]
 driver_choices: [isoD1, Tm3 (R13E12-Gal4), Tm3 (R13E12-LexA), nSyb-Gal4, EG-Gal4]
 indicator_choices: [TdTomato, GCaMP8f, GCaMP7f, GCaMP6f, GCaMP6m, Syt1GCaMP6f, SytGCaMP6S, Syt1GCaMP7FU, GCaMP6S.brpS.mCherry, ASAP2f, ASAP4c, ASAP4c_F413G, 10_90_GCaMP6f, 10_90_GCaMP7f, 10_90_ASAP2f, 10_90_ASAP4c, 10_90_ASAP4c_F413G, SF-iGluSnFR.A184V]
@@ -20,13 +20,8 @@ rig_config:
     screen_center: [0, 0]
     rig: 24HrFitness
 
-  40HrFitness:
-    data_directory: /home/clandinin/minseung/FlystimData
-    screen_center: [0, 0]
-    rig: 40HrFitness
-
   Laptop:
-    data_directory: /Volumes/GoogleDrive/My\ Drive/research/clandinin_lab/data/FlystimData
+    data_directory: /home/ejjun/Documents/data
     screen_center: [0, 0]
     rig: (testing)
 
