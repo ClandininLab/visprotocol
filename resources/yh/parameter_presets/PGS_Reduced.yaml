@@ -1,0 +1,9 @@
+drug_third:
+  run_parameters:
+    protocol_ID: PGS_Reduced
+    num_epochs: 60.0
+    pre_time: 1.5
+    stim_time: 3.0
+    tail_time: 1.5
+    idle_color: 0.5
+  protocol_parameters: {}

@@ -1,0 +1,96 @@
+bruker_v0:
+  run_parameters:
+    protocol_ID: VisualCuedAttention
+    num_epochs: 80.0
+    pre_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+    stim_time: 5.5
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    z_offset: 32.0
+    displacement_distance: 75.0
+    first_displacement_speed: 50.0
+    second_displacement_speed: 50.0
+    bar_width_degrees: 15.0
+    bar_height_degrees: 50.0
+    bar_color:
+    - 0.0
+    cue_temporal_frequency: 5.0
+    cue_mean_color: 0.25
+    cue_contrast:
+    - 1.0
+    cue_on_left:
+    - 0.0
+    - 1.0
+    precue_period: 5.0
+    cue_period: 2.0
+    delay_period:
+    - 0.0
+    randomize_order: true
+bruker_v1:
+  run_parameters:
+    protocol_ID: VisualCuedAttention
+    num_epochs: 144.0
+    pre_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+    stim_time: 5.5
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    z_offset: 32.0
+    displacement_distance: 75.0
+    first_displacement_speed: 50.0
+    second_displacement_speed: 50.0
+    bar_width_degrees: 15.0
+    bar_height_degrees: 150.0
+    bar_color:
+    - 0.0
+    cue_temporal_frequency: 5.0
+    cue_mean_color: 0.25
+    cue_contrast:
+    - 1.0
+    cue_on_left:
+    - 0.0
+    - 1.0
+    precue_period: 5.0
+    cue_period: 2.0
+    delay_period:
+    - 0.0
+    randomize_order: true
+bruker_v1_dimmer:
+  run_parameters:
+    protocol_ID: VisualCuedAttention
+    num_epochs: 144.0
+    pre_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.1
+    stim_time: 5.5
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    z_offset: 32.0
+    displacement_distance: 75.0
+    first_displacement_speed: 50.0
+    second_displacement_speed: 50.0
+    bar_width_degrees: 15.0
+    bar_height_degrees: 150.0
+    bar_color:
+    - 0.0
+    cue_temporal_frequency: 5.0
+    cue_mean_color: 0.05
+    cue_contrast:
+    - 1.0
+    cue_on_left:
+    - 0.0
+    - 1.0
+    precue_period: 5.0
+    cue_period: 2.0
+    delay_period:
+    - 0.0
+    randomize_order: true

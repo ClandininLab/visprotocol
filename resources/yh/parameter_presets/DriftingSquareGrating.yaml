@@ -1,0 +1,23 @@
+20_20_4dir:
+  run_parameters:
+    protocol_ID: DriftingSquareGrating
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    period: 20.0
+    rate: 20.0
+    contrast: 1.0
+    mean: 0.5
+    angle:
+    - 0.0
+    - 90.0
+    - 180.0
+    - 270.0
+    center:
+    - 0.0
+    - 0.0
+    center_size: 180.0
+    randomize_order: true

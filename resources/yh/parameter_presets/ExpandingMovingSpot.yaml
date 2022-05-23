@@ -1,0 +1,78 @@
+backforth_tuning:
+  run_parameters:
+    protocol_ID: ExpandingMovingSpot
+    num_epochs: 140.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    diameter:
+    - 5.0
+    - 10.0
+    - 15.0
+    - 20.0
+    - 30.0
+    - 40.0
+    - 50.0
+    intensity:
+    - 0.0
+    - 1.0
+    center:
+    - 0.0
+    - 0.0
+    speed:
+    - 80.0
+    - -80.0
+    angle: 0.0
+    randomize_order: true
+? ''
+: run_parameters:
+    protocol_ID: ExpandingMovingSpot
+    num_epochs: 220.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    diameter:
+    - 2.0
+    - 4.0
+    - 6.0
+    - 8.0
+    - 10.0
+    - 12.0
+    - 15.0
+    - 20.0
+    - 30.0
+    - 40.0
+    - 50.0
+    intensity:
+    - 0.0
+    - 1.0
+    center:
+    - 0.0
+    - 0.0
+    speed:
+    - 80.0
+    - -80.0
+    angle: 0.0
+    randomize_order: true
+repeated_dark_15:
+  run_parameters:
+    protocol_ID: ExpandingMovingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    diameter: 15.0
+    intensity: 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed:
+    - 80.0
+    angle: 0.0
+    randomize_order: true
