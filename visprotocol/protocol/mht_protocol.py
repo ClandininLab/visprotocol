@@ -1141,16 +1141,15 @@ class SaccadeSuppression(BaseProtocol):
                                     'spot_traj_amplitude': 60,  # Deg
                                     'image_index': [0, 5, 15],
                                     'cylinder_pitch': -45,
-                                    'mean_intersaccade_time': 0.5,  # sec
-                                    'saccade_refractory_time': 0.25,  # sec
-                                    'saccade_duration': 0.2,  # sec
-                                    'saccade_refractory_time': 0.25,  # sec
+                                    'mean_intersaccade_time': 2.0,  # sec
+                                    'saccade_refractory_time': 1.0,  # sec
+                                    'saccade_duration': 0.25,  # sec
                                     'saccade_amplitude': 70,  # Deg.
                                     }
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'SaccadeSuppression',
-                               'num_epochs': 30,  # 3 images x 10 trials each = 70
+                               'num_epochs': 30,  # 3 images x 10 trials each = 30
                                'pre_time': 2.0,
                                'stim_time': 20.0,
                                'tail_time': 2.0,
