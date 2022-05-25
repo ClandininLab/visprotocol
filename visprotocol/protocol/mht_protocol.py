@@ -1037,6 +1037,125 @@ class NaturalImageSuppression(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+# %%
+
+
+class SaccadeSuppression(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        current_image_index = self.selectParametersFromLists(self.protocol_parameters['image_index'], randomize_order=True)
+
+        image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
+                       'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
+                       'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
+                       'imk02733.tif', 'imk02999.tif', 'imk03093.tif', 'imk03347.tif',
+                       'imk03447.tif', 'imk03584.tif', 'imk03758.tif', 'imk03760.tif']
+
+        current_image = np.array(image_names)[int(current_image_index)]
+
+        # Make saccade trajectory for image cylinder:
+        # Inter-saccade times drawn from exponential (poisson timing)
+        # Draw more than you need, since many will be trimmed by refractory
+
+        inter_saccade_times = np.random.exponential(self.protocol_parameters['mean_intersaccade_time'],
+                                                    size=4*int(self.run_parameters['stim_time'] / self.protocol_parameters['mean_intersaccade_time']))
+
+        # remove inter-saccade times that are faster than the refractory period
+        inter_saccade_times = inter_saccade_times[inter_saccade_times>self.protocol_parameters['saccade_refractory_time']]
+
+        saccade_times = np.cumsum(inter_saccade_times)
+        # Trim saccade times that extend beyond the stim time
+        saccade_times = saccade_times[saccade_times<(self.run_parameters['stim_time']-self.protocol_parameters['saccade_duration'])]
+
+        # choose saccade step amplitudes from binary distribution
+        saccade_steps = np.cumsum(np.random.choice([-self.protocol_parameters['saccade_amplitude'], +self.protocol_parameters['saccade_amplitude']],
+                                                   size=len(saccade_times)))
+
+        # Build up time / value pairs for saccade trajectory
+        timepoints = np.zeros(shape=2*len(saccade_times))
+        timepoints[0::2] = saccade_times
+        timepoints[1::2] = saccade_times + self.protocol_parameters['saccade_duration']
+        timepoints = np.insert(timepoints, 0, 0)
+        timepoints = np.append(timepoints, self.run_parameters['stim_time'])
+
+        theta = np.zeros_like(timepoints)
+        theta[1::2] = np.insert(saccade_steps, 0, 0)
+        theta[2::2] = saccade_steps
+
+        rotation_trajectory = {'name': 'tv_pairs',
+                               'tv_pairs': list(zip(timepoints, theta)),
+                               'kind': 'linear'}
+
+        # VH images are trimmed to [512, 1536] pixels (3:1 aspect ratio)
+        #   For w & h to have equal pixels_per_degree, cylinder needs to have radius = 1, height = 3.464...
+        #   Entire height subtends 120 deg (1/3 of the width)
+        #   tan(60) = (h/2) / r
+        #   h = 2 * r * tan(60) = 3.464
+        image_parameters = {'name': 'HorizonCylinder',
+                            'cylinder_radius': 1,
+                            'cylinder_height': 3.464,
+                            'cylinder_pitch': self.protocol_parameters['cylinder_pitch'],
+                            'image_name': current_image,
+                            'theta': rotation_trajectory}
+
+        # Stim params for probe (spot) stimulus
+        position_traj = {'name': 'Sinusoid',
+                         'temporal_frequency': self.protocol_parameters['spot_traj_frequency'],
+                         'amplitude': self.protocol_parameters['spot_traj_amplitude'],
+                         'offset': adj_center[0]}
+
+        spot_parameters = {'name': 'MovingSpot',
+                            'radius': self.protocol_parameters['spot_radius'],
+                            'color': self.protocol_parameters['spot_color'],
+                            'theta': position_traj,
+                            'phi': adj_center[1],
+                            'sphere_radius': 0.5}
+
+        self.epoch_parameters = (image_parameters, spot_parameters)
+        self.convenience_parameters = {'current_image': current_image,
+                                       'saccade_timepoints': timepoints,
+                                       'saccade_theta': theta}
+
+    def loadStimuli(self, client):
+        bg = self.run_parameters.get('idle_color')
+        image_parameters = self.epoch_parameters[0].copy()
+        spot_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+        multicall.load_stim(**image_parameters, hold=True)
+        multicall.load_stim(**spot_parameters, hold=True)
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [0, 0],
+                                    'spot_radius': 7.5,
+                                    'spot_color': 0.0,
+                                    'spot_traj_frequency': 0.5,  # Hz
+                                    'spot_traj_amplitude': 60,  # Deg
+                                    'image_index': [0, 5, 15],
+                                    'cylinder_pitch': -45,
+                                    'mean_intersaccade_time': 0.5,  # sec
+                                    'saccade_refractory_time': 0.25,  # sec
+                                    'saccade_duration': 0.2,  # sec
+                                    'saccade_refractory_time': 0.25,  # sec
+                                    'saccade_amplitude': 70,  # Deg.
+                                    }
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SaccadeSuppression',
+                               'num_epochs': 30,  # 3 images x 10 trials each = 70
+                               'pre_time': 2.0,
+                               'stim_time': 20.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
+
 
 # %%
 class ApproachTuning(BaseProtocol):
