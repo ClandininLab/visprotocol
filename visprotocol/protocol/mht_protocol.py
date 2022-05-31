@@ -1134,14 +1134,14 @@ class SaccadeSuppression(BaseProtocol):
         multicall()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'center': [0, 0],
+        self.protocol_parameters = {'center': [30, 0],
                                     'spot_radius': 7.5,
                                     'spot_color': 0.0,
                                     'spot_traj_frequency': 0.5,  # Hz
                                     'spot_traj_amplitude': 60,  # Deg
                                     'image_index': [0, 5, 15],
                                     'cylinder_pitch': -45,
-                                    'mean_intersaccade_time': 2.0,  # sec
+                                    'mean_intersaccade_time': 1.5,  # sec
                                     'saccade_refractory_time': 1.0,  # sec
                                     'saccade_duration': 0.25,  # sec
                                     'saccade_amplitude': 70,  # Deg.
