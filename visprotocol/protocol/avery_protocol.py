@@ -417,6 +417,110 @@ class UniformFlash(BaseProtocol):
                                'idle_color': 0.5}
 
 
+# %% Flickering full field with opto
+
+class FlickerWithOpto(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        # # # Visual stimulus parameters # # #
+        # Adjust protocol_parameters['center'] according to rig screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        # Sinusoid trajectory dictionary. See flystim.trajectory
+        intensity_trajectory = {'name': 'Sinusoid',
+                                'temporal_frequency': self.protocol_parameters['temporal_frequency'],
+                                'amplitude': self.run_parameters['idle_color'] * self.protocol_parameters['contrast'],
+                                'offset': self.run_parameters['idle_color']}
+
+        # epoch_parameters dictionary. Defines the flystim stimulus for this epoch.
+        # See flystim.stimuli
+        self.epoch_parameters = {'name': 'MovingPatch',
+                                 'width': self.protocol_parameters['width'],
+                                 'height': self.protocol_parameters['height'],
+                                 'sphere_radius': 1,
+                                 'color': intensity_trajectory,
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1],
+                                 'angle': 0}
+
+        # # # Opto parameters # # #
+        # Error checking: opto_mode has to be one of these three options
+        assert self.protocol_parameters['opto_mode'] in ['on', 'off', 'alternating']
+
+        # Figure out whether opto_stim is true/false for this epoch
+        self.convenience_parameters = {}
+        if self.protocol_parameters['opto_mode'] == 'on':
+            self.convenience_parameters['opto_stim'] = True
+
+        elif self.protocol_parameters['opto_mode'] == 'off':
+            self.convenience_parameters['opto_stim'] = False
+
+        elif self.protocol_parameters['opto_mode'] == 'alternating':
+            if np.mod(self.num_epochs_completed, 2) == 0:  # Even numbered trials
+                self.convenience_parameters['opto_stim'] = False
+            else:   # Odd numbered trials
+                self.convenience_parameters['opto_stim'] = True
+        else:
+            print('Unrecognized opto_mode string. Allowable: [on, off, alternating]')
+
+        # Figure out opto timing for this epoch
+        current_opto_start_time = self.selectParametersFromLists(self.protocol_parameters['opto_start_time'], randomize_order=self.protocol_parameters['randomize_order'])
+        self.convenience_parameters['current_opto_start_time'] = current_opto_start_time
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        if self.convenience_parameters['opto_stim']:  # Show opto on this trial
+            # |--current_opto_start_time--|--opto_time--|--(pre_time-opto_time-current_opto_start_time)
+            sleep(self.convenience_parameters['current_opto_start_time'])  # sleep until opto start time
+            # deliver opto pulse
+            client.niusb_device.outputStep(output_channel='ctr1',
+                                           low_time=0.001,
+                                           high_time=self.protocol_parameters['opto_time'],
+                                           initial_delay=0.0)
+            sleep(self.run_parameters['pre_time']-self.protocol_parameters['opto_time']-self.convenience_parameters['current_opto_start_time'])
+        else:  # no opto on this trial
+            sleep(self.run_parameters['pre_time'])
+
+        # The rest of this is standard visual stim stuff...
+        # Multicall starts multiple stims simultaneously
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()  # multicall starts stim and corner square at the same time
+        sleep(self.run_parameters['stim_time'])  # sleep during the stim time
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        multicall()   # multicall to stop stim + corner square at the same time
+
+        sleep(self.run_parameters['tail_time'])  # sleep during tail time
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 180.0,
+                                    'width': 180.0,
+                                    'center': [0, 0],
+                                    'temporal_frequency': 1.0,  # Hz
+                                    'contrast': 1.0,  # weber contrast. c = (i-b)/b
+                                    'opto_mode': 'alternating',  # 'on', 'off', 'alternating'
+                                    'opto_time': 1.0,  # sec
+                                    'opto_start_time': [1, 2, 3, 4],  # sec, time within the pre-time
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'FlickerWithOpto',
+                               'num_epochs': 80,
+                               'pre_time': 5.0,
+                               'stim_time': 3.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
+
 
 # %%
 """
