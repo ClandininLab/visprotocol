@@ -1124,14 +1124,8 @@ class SaccadeSuppression(BaseProtocol):
                                     'spot_speed': 100,  # Deg./sec.
                                     'image_index': [0, 5, 15],
                                     'cylinder_pitch': -45,
-<<<<<<< HEAD
-                                    'mean_intersaccade_time': 1.5,  # sec
-                                    'saccade_refractory_time': 1.0,  # sec
-                                    'saccade_duration': 0.25,  # sec
-=======
                                     'saccade_sample_period': 0.25,  # sec
                                     'saccade_duration': 0.20,  # sec
->>>>>>> 53ec33c482dd7b2b16291f9145d9e811dd2f2c3d
                                     'saccade_amplitude': 70,  # Deg.
                                     }
 
