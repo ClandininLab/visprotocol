@@ -1,0 +1,20 @@
+single_image:
+  run_parameters:
+    protocol_ID: SaccadeSuppression
+    num_epochs: 60.0
+    pre_time: 1.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    center:
+    - 30.0
+    - 0.0
+    spot_radius: 7.5
+    spot_color: 0.0
+    spot_speed: 100.0
+    image_index: 15.0
+    cylinder_pitch: -45.0
+    saccade_sample_period: 0.25
+    saccade_duration: 0.2
+    saccade_amplitude: 70.0
