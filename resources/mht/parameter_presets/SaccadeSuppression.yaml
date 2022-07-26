@@ -10,7 +10,7 @@ single_image:
     center:
     - 30.0
     - 0.0
-    spot_radius: 7.5
+    spot_radius: 5.0
     spot_color: 0.0
     spot_speed: 100.0
     image_index: 15.0
