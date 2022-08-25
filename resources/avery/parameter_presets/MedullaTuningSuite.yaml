@@ -1,0 +1,33 @@
+Wash:
+  run_parameters:
+    protocol_ID: MedullaTuningSuite
+    num_epochs: 48.0
+    pre_time: 2.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    opto_mode: 'off'
+    opto_time: 1.0
+Stim:
+  run_parameters:
+    protocol_ID: MedullaTuningSuite
+    num_epochs: 96.0
+    pre_time: 2.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    opto_mode: alternating
+    opto_time: 1.0
+Pre:
+  run_parameters:
+    protocol_ID: MedullaTuningSuite
+    num_epochs: 48.0
+    pre_time: 2.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    opto_mode: 'off'
+    opto_time: 1.0

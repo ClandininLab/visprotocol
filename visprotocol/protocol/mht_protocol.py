@@ -1037,6 +1037,106 @@ class NaturalImageSuppression(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+# %%
+
+
+class SaccadeSuppression(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        # Possible saccade times tile the space from 0 ... stim_time at intervals of saccade_sample_period
+        saccade_times = list(np.arange(0, self.run_parameters['stim_time'], self.protocol_parameters['saccade_sample_period']))
+        parameter_list = (self.protocol_parameters['image_index'], saccade_times)
+        current_image_index, current_saccade_time = self.selectParametersFromLists(parameter_list,
+                                                                                   all_combinations=True,
+                                                                                   randomize_order=True)
+
+        image_names = ['imk00152.tif', 'imk00377.tif', 'imk00405.tif', 'imk00459.tif',
+                       'imk00657.tif', 'imk01151.tif', 'imk01154.tif', 'imk01192.tif',
+                       'imk01769.tif', 'imk01829.tif', 'imk02265.tif', 'imk02281.tif',
+                       'imk02733.tif', 'imk02999.tif', 'imk03093.tif', 'imk03347.tif',
+                       'imk03447.tif', 'imk03584.tif', 'imk03758.tif', 'imk03760.tif']
+
+        current_image = np.array(image_names)[int(current_image_index)]
+
+        # Start at a random theta rotation in the front of the cylinder, to collect across different spatial locations of image
+        start_theta = np.random.uniform(-90, 0)
+        print('current_saccade_time = {}'.format(current_saccade_time))
+
+        timepoints = [0,
+                      current_saccade_time,
+                      current_saccade_time+self.protocol_parameters['saccade_duration'],
+                      self.run_parameters['stim_time']
+                      ]
+        theta = [start_theta,
+                 start_theta,
+                 start_theta + self.protocol_parameters['saccade_amplitude'],
+                 start_theta + self.protocol_parameters['saccade_amplitude']
+                 ]
+        rotation_trajectory = {'name': 'tv_pairs',
+                               'tv_pairs': list(zip(timepoints, theta)),
+                               'kind': 'linear'}
+
+        # VH images are trimmed to [512, 1536] pixels (3:1 aspect ratio)
+        #   For w & h to have equal pixels_per_degree, cylinder needs to have radius = 1, height = 3.464...
+        #   Entire height subtends 120 deg (1/3 of the width)
+        #   tan(60) = (h/2) / r
+        #   h = 2 * r * tan(60) = 3.464
+        image_parameters = {'name': 'HorizonCylinder',
+                            'cylinder_radius': 1,
+                            'cylinder_height': 3.464,
+                            'cylinder_pitch': self.protocol_parameters['cylinder_pitch'],
+                            'image_name': current_image,
+                            'theta': rotation_trajectory}
+
+        # Stim params for probe (spot) stimulus
+        spot_parameters = self.getMovingSpotParameters(speed=self.protocol_parameters['spot_speed'],
+                                                       angle=0,
+                                                       radius=self.protocol_parameters['spot_radius'],
+                                                       color=self.protocol_parameters['spot_color'],
+                                                       distance_to_travel=220)
+        spot_parameters['sphere_radius'] = 0.5  # Render inside the image cylinder
+
+        self.epoch_parameters = (image_parameters, spot_parameters)
+        self.convenience_parameters = {'current_image': current_image,
+                                       'current_saccade_time': current_saccade_time}
+
+    def loadStimuli(self, client):
+        bg = self.run_parameters.get('idle_color')
+        image_parameters = self.epoch_parameters[0].copy()
+        spot_parameters = self.epoch_parameters[1].copy()
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+        multicall.load_stim(**image_parameters, hold=True)
+        multicall.load_stim(**spot_parameters, hold=True)
+        multicall()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'center': [30, 0],
+                                    'spot_radius': 7.5,
+                                    'spot_color': 0.0,
+                                    'spot_speed': 100,  # Deg./sec.
+                                    'image_index': [0, 5, 15],
+                                    'cylinder_pitch': -45,
+                                    'saccade_sample_period': 0.25,  # sec
+                                    'saccade_duration': 0.20,  # sec
+                                    'saccade_amplitude': 70,  # Deg.
+                                    }
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SaccadeSuppression',
+                               'num_epochs': 180,  # 3 images x 12 saccade times = 36 x 5 trials each = 180 epochs
+                               'pre_time': 1.0,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
 
 # %%
 class ApproachTuning(BaseProtocol):
