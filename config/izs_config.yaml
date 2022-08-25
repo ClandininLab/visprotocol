@@ -1,0 +1,25 @@
+experimenter: izs
+prep_choices: [Optic lobe, Whole brain]
+driver_choices: [L2, nSyb-Gal4]
+indicator_choices: [TdTomato, GCaMP7f, GCaMP6f]
+
+rig_config:
+  AODscope_OneScreen:
+    data_directory: E:/path/to/FlystimData
+    screen_center: [180, 0]
+    rig: AODscope
+
+  Bruker_LeftScreen:
+    data_directory: E:/path/to/FlystimData
+    screen_center: [0,-30]
+    rig: Bruker
+
+  Bruker_TwoScreens:
+    data_directory: E:/path/to/FlystimData
+    screen_center: [0, -30] #center of two screens and a little down
+    rig: Bruker
+
+  Laptop:
+    data_directory: E:/path/to/FlystimData
+    screen_center: [0, 0]
+    rig: (testing)
