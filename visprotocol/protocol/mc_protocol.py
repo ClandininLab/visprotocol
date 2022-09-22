@@ -20,13 +20,14 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)  # call the parent class init method
 
-    def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None):
+    def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None, render_on_cylinder=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
         if width is None: width = self.protocol_parameters['width']
         if height is None: height = self.protocol_parameters['height']
         if color is None: color = self.protocol_parameters['color']
+        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder']
 
         centerX = center[0]
         centerY = center[1]
@@ -70,7 +71,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                         'tv_pairs': y,
                         'kind': 'linear'}
 
-        patch_parameters = {'name': 'MovingPatch',
+        patch_parameters = {'name': 'MovingPatchOnCylinder' if render_on_cylinder else 'MovingPatch',
                             'width': width,
                             'height': height,
                             'color': color,
@@ -254,8 +255,9 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                     bar_prime_color=None, bar_probe_color=None, bar_speed=None, 
                                     occluder_theta=None, occluder_width=None, occluder_height=None, occluder_color=None, 
                                     preprime_duration=None, pause_duration=None, render_on_cylinder=None, 
-                                    bar_surface_radius=None, occluder_surface_radius=None):
+                                    bar_surface_radius=None, occluder_surface_radius=None, angle=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
+        if angle is None: angle = self.protocol_parameters['angle']
         if bar_start_theta is None: bar_start_theta = self.protocol_parameters['bar_start_theta'] #negative value starts from the opposite side of bar direction
         if bar_end_theta is None: bar_end_theta = self.protocol_parameters['bar_end_theta'] #negative value starts from the opposite side of bar direction
         if bar_width is None: bar_width = self.protocol_parameters['bar_width']
@@ -325,7 +327,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                 'color': bar_color_traj,
                                 'theta': bar_theta_traj,
                                 'phi': 0,
-                                'angle': 0,
+                                'angle': angle,
                                 'cylinder_radius': bar_surface_radius}
             occluder_parameters = {'name': 'MovingPatchOnCylinder',
                                 'width': occluder_width,
@@ -333,7 +335,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                 'color': occluder_color,
                                 'theta': occluder_theta_traj,
                                 'phi': 0,
-                                'angle': 0,
+                                'angle': angle,
                                 'cylinder_radius': occluder_surface_radius}
         else:
             bar_parameters = {'name': 'MovingPatch',
@@ -342,7 +344,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                 'color': bar_color_traj,
                                 'theta': bar_theta_traj,
                                 'phi': 0,
-                                'angle': 0,
+                                'angle': angle,
                                 'sphere_radius': bar_surface_radius}
             occluder_parameters = {'name': 'MovingPatch',
                                 'width': occluder_width,
@@ -350,7 +352,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                                 'color': occluder_color,
                                 'theta': occluder_theta_traj,
                                 'phi': 0,
-                                'angle': 0,
+                                'angle': angle,
                                 'sphere_radius': occluder_surface_radius}
 
         return bar_parameters, occluder_parameters, stim_duration
@@ -452,12 +454,13 @@ class OcclusionFixed(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_angle, current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['angle'],self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration)
+        bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration, angle=current_angle)
         self.epoch_parameters = (bar_parameters, occluder_parameters)
 
-        self.convenience_parameters = {'current_bar_width': current_bar_width,
+        self.convenience_parameters = {'current_angle': current_angle,
+                                       'current_bar_width': current_bar_width,
                                        'current_bar_prime_color': current_bar_prime_color,
                                        'current_bar_probe_color': current_bar_probe_color,
                                        'current_bar_speed': current_bar_speed,
@@ -496,6 +499,7 @@ class OcclusionFixed(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'center': [0, 0],
+                                    'angle': [0.0],
                                     'bar_start_theta': [90.0],
                                     'bar_end_theta': 0.0,
                                     'bar_width': 15.0,
@@ -855,7 +859,7 @@ class FlickeringVertBars(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_temporal_frequency, current_theta_loc = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta_loc']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_angle, current_temporal_frequency, current_theta_loc = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta_loc']), randomize_order=self.protocol_parameters['randomize_order'])
         
         # make color trajectory
         color_traj = {'name': 'Sinusoid',
@@ -871,7 +875,7 @@ class FlickeringVertBars(BaseProtocol):
                                     'color': color_traj,
                                     'theta': current_theta_loc,
                                     'phi': self.protocol_parameters['phi_loc'],
-                                    'angle': 0}
+                                    'angle': current_angle}
         else:
             self.epoch_parameters = {'name': 'MovingPatch',
                                     'width': self.protocol_parameters['width'],
@@ -880,20 +884,22 @@ class FlickeringVertBars(BaseProtocol):
                                     'color': color_traj,
                                     'theta': current_theta_loc,
                                     'phi': self.protocol_parameters['phi_loc'],
-                                    'angle': 0}
+                                    'angle': current_angle}
 
-        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency, 
+        self.convenience_parameters = {'current_angle': current_angle,
+                                       'current_temporal_frequency': current_temporal_frequency, 
                                        'current_theta_loc': current_theta_loc}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 150.0,
+        self.protocol_parameters = {'angle': [0.0],
+                                    'height': 150.0,
                                     'width': 10.0,
                                     'theta_loc': [0.0, 10.0],
                                     'phi_loc': 0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'temporal_frequency': [10.0],
-                                    'render_on_cylinder': False,
+                                    'render_on_cylinder': True,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
@@ -1165,6 +1171,7 @@ class MovingRectangle(BaseProtocol):
     def getEpochParameters(self):
         current_intensity, current_angle = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
 
+        
         self.epoch_parameters = self.getMovingPatchParameters(angle=current_angle, color=current_intensity)
 
         self.convenience_parameters = {'current_angle': current_angle,
@@ -1177,10 +1184,64 @@ class MovingRectangle(BaseProtocol):
                                     'center': [0, 0],
                                     'speed': 80.0,
                                     'angle': [0.0, 180.0],
+                                    'render_on_cylinder': True,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'MovingRectangle',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+class TernaryBars(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stimulus_ID = 'RandomBars'
+
+        current_period, current_theta_offset, current_angle = self.selectParametersFromLists((self.protocol_parameters['period'], self.protocol_parameters['theta_offset'], self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
+        start_seed = int(np.random.choice(range(int(1e6))))
+        
+        distribution_data = {'name': 'Ternary',
+                             'args': [],
+                             'kwargs': {'rand_min': self.protocol_parameters['rand_min'],
+                                        'rand_max': self.protocol_parameters['rand_max']}}
+
+        self.epoch_parameters = {'name': stimulus_ID,
+                                 'period': current_period,
+                                 'width': current_period,
+                                 'vert_extent': self.protocol_parameters['vert_extent'],
+                                 'theta_offset': current_theta_offset,
+                                 'background': 0.0,
+                                 'update_rate': self.protocol_parameters['update_rate'],
+                                 'angle': current_angle,
+                                 'start_seed': start_seed,
+                                 'distribution_data': distribution_data}
+        
+        self.convenience_parameters = {'start_seed': start_seed,
+                                       'current_angle': current_angle}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period': [5.0],
+                                    # 'width': 5.0,
+                                    'vert_extent': 120.0,
+                                    'theta_offset': [0.0],
+                                    # 'background': 0.0,
+                                    'rand_min': 0.0,
+                                    'rand_max': 1.0,
+                                    'update_rate': 4.0,
+                                    'angle': [0.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'TernaryBars',
                                'num_epochs': 40,
                                'pre_time': 0.5,
                                'stim_time': 3.0,
