@@ -24,6 +24,7 @@ rig_config:
     data_directory: /home/clandinin/minseung/FlystimData
     screen_center: [0, 0]
     rig: 40HrFitness
+    fictrac: True
 
   Laptop:
     data_directory: /Volumes/GoogleDrive/My\ Drive/research/clandinin_lab/data/FlystimData

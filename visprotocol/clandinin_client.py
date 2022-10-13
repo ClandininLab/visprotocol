@@ -36,7 +36,7 @@ class Client():
                                    'port': 60629,
                                    'use_server': True}
         elif socket.gethostname() == '40hr-fitness':  # 40HrFitness
-            self.server_options = {'host': '0.0.0.0',
+            self.server_options = {'host': '171.65.18.61',
                                    'port': 60629,
                                    'use_server': True}
         else:

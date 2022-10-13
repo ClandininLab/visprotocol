@@ -35,7 +35,7 @@ class EpochRun():
         self.pause = False
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
         
-        if protocol_object.run_parameters['do_fictrac']:
+        if 'do_fictrac' in protocol_object.run_parameters and protocol_object.run_parameters['do_fictrac']:
             client.manager.ft_start()
             sleep(2) # Give Fictrac time to load
 
@@ -63,7 +63,7 @@ class EpochRun():
                 self.startEpoch(protocol_object, data, client, save_metadata_flag=save_metadata_flag)
                 # print("CONTROL AFTER START EPOCH")
 
-        if protocol_object.run_parameters['do_fictrac']:
+        if 'do_fictrac' in protocol_object.run_parameters and protocol_object.run_parameters['do_fictrac']:
             client.manager.ft_close()
         # # # Epoch run loop # # #
 

@@ -45,6 +45,9 @@ class ImagingExperimentGUI(QWidget):
         self.cfg['rig_name'] = self.rig_name
         self.cfg['draw_screens'] = self.draw_screens
 
+        rig_config = self.cfg['rig_config'][self.rig_name]
+        self.cfg['fictrac_avail'] = 'fictrac' in rig_config and rig_config['fictrac']
+
         # start a client
         self.client = Client(self.cfg)
 
@@ -100,11 +103,12 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
 
         # Fictrac checkbox:
-        fictrac_label = QLabel('Fictrac:')
-        self.protocol_grid.addWidget(fictrac_label, 1, 2)
-        self.fictrac_checkbox = QCheckBox()
-        self.fictrac_checkbox.setChecked(False)
-        self.protocol_grid.addWidget(self.fictrac_checkbox, 1, 3)
+        if self.cfg['fictrac_avail']:
+            fictrac_label = QLabel('Fictrac:')
+            self.protocol_grid.addWidget(fictrac_label, 1, 2)
+            self.fictrac_checkbox = QCheckBox()
+            self.fictrac_checkbox.setChecked(False)
+            self.protocol_grid.addWidget(self.fictrac_checkbox, 1, 3)
         
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
@@ -641,7 +645,8 @@ class ImagingExperimentGUI(QWidget):
             else: # QLineEdit
                 self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
 
-        self.protocol_object.run_parameters['do_fictrac'] = self.fictrac_checkbox.isChecked() # FicTrac
+        if self.cfg['fictrac_avail']:
+            self.protocol_object.run_parameters['do_fictrac'] = self.fictrac_checkbox.isChecked() # FicTrac
 
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
