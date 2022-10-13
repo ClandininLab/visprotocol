@@ -99,6 +99,13 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(protocol_label, 1, 0)
         self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
 
+        # Fictrac checkbox:
+        fictrac_label = QLabel('Fictrac:')
+        self.protocol_grid.addWidget(fictrac_label, 1, 2)
+        self.fictrac_checkbox = QCheckBox()
+        self.fictrac_checkbox.setChecked(False)
+        self.protocol_grid.addWidget(self.fictrac_checkbox, 1, 3)
+        
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
         self.protocol_grid.addWidget(parameter_preset_label, 2, 0)
@@ -110,7 +117,7 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(savePresetButton, 2, 2)
 
         # Run paramters input:
-        self.updateRunParamtersInput()
+        self.updaterunParametersInput()
 
         # View button:
         self.viewButton = QPushButton("View", self)
@@ -359,7 +366,7 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_object.loadParameterPresets()
         self.updateParameterPresetSelector()
         self.updateProtocolParametersInput()
-        self.updateRunParamtersInput()
+        self.updaterunParametersInput()
         self.show()
 
     def onPressedButton(self):
@@ -506,7 +513,7 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_object.selectProtocolPreset(text)
         self.resetLayout()
         self.updateProtocolParametersInput()
-        self.updateRunParamtersInput()
+        self.updaterunParametersInput()
         self.show()
 
     def onSelectedExistingFly(self, index):
@@ -534,7 +541,7 @@ class ImagingExperimentGUI(QWidget):
         self.fly_effector_1.setCurrentText(fly_data_dict['effector_2'])
         self.fly_genotype_input.setText(fly_data_dict['genotype'])
 
-    def updateRunParamtersInput(self):
+    def updaterunParametersInput(self):
         self.run_params_ct = 0
         # Run parameters list
         for key, value in self.protocol_object.run_parameters.items():
@@ -633,6 +640,8 @@ class ImagingExperimentGUI(QWidget):
                 self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
             else: # QLineEdit
                 self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
+
+        self.protocol_object.run_parameters['do_fictrac'] = self.fictrac_checkbox.isChecked() # FicTrac
 
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox

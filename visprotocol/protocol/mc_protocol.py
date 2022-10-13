@@ -454,7 +454,7 @@ class OcclusionFixed(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_angle, current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration = self.selectParametersFromLists((self.protocol_parameters['angle'],self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_angle, current_bar_start_theta, current_bar_width, current_bar_prime_color, current_bar_probe_color, current_bar_speed, current_occluder_color, current_pause_duration, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['angle'],self.protocol_parameters['bar_start_theta'],self.protocol_parameters['bar_width'], self.protocol_parameters['bar_prime_color'], self.protocol_parameters['bar_probe_color'], self.protocol_parameters['bar_speed'], self.protocol_parameters['occluder_color'],  self.protocol_parameters['pause_duration'],  self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
 
         bar_parameters, occluder_parameters, stim_duration = self.getOcclusionFixedParameters(bar_start_theta=current_bar_start_theta, bar_width=current_bar_width, bar_prime_color=current_bar_prime_color, bar_probe_color=current_bar_probe_color, bar_speed=current_bar_speed, occluder_color=current_occluder_color, pause_duration=current_pause_duration, angle=current_angle)
         self.epoch_parameters = (bar_parameters, occluder_parameters)
@@ -466,6 +466,7 @@ class OcclusionFixed(BaseProtocol):
                                        'current_bar_speed': current_bar_speed,
                                        'current_occluder_color': current_occluder_color,
                                        'current_pause_duration': current_pause_duration,
+                                       'current_closed_loop': current_closed_loop,
                                        'current_stim_duration': stim_duration}
 
     def loadStimuli(self, client):
@@ -478,6 +479,9 @@ class OcclusionFixed(BaseProtocol):
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
         multicall.load_stim(**bar_parameters, hold=True)
         multicall.load_stim(**occluder_parameters, hold=True)
+        # Fictrac
+        if self.run_parameters['do_fictrac']:
+            multicall.ft_sleep(self.run_parameters['pre_time'])
         multicall()
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
@@ -486,13 +490,24 @@ class OcclusionFixed(BaseProtocol):
         # stim time
         multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
+        # Fictrac
+        if self.run_parameters['do_fictrac']:
+            if self.convenience_parameters['current_closed_loop']:
+                multicall.ft_set_pos_0()
+                multicall.ft_update_pos_for(self.convenience_parameters['current_stim_duration'], update_theta=True, update_x=False, update_y=False)
+            else:
+                multicall.ft_sleep(self.convenience_parameters['current_stim_duration'])
         multicall()
+        
         sleep(self.convenience_parameters['current_stim_duration'])
 
         # tail time
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
+        # Fictrac
+        if self.run_parameters['do_fictrac']:
+            multicall.ft_sleep(self.run_parameters['tail_time'])
         multicall()
 
         sleep(self.run_parameters['tail_time'])
@@ -500,6 +515,7 @@ class OcclusionFixed(BaseProtocol):
     def getParameterDefaults(self):
         self.protocol_parameters = {'center': [0, 0],
                                     'angle': [0.0],
+                                    'closed_loop': [0],
                                     'bar_start_theta': [90.0],
                                     'bar_end_theta': 0.0,
                                     'bar_width': 15.0,
