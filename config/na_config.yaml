@@ -1,0 +1,16 @@
+experimenter: NA
+prep_choices: [Behavior, Left optic lobe, Right optic lobe, Whole brain, Optic glomeruli]
+driver_choices: [isoD1, P1-SplitGal4, nSyb-Gal4]
+indicator_choices: [TdTomato, GCaMP8f, GCaMP6f]
+effector_choices: [CsChrimson, Kir2.1, Shi, GtACR]
+
+rig_config:
+  40HrFitness:
+    data_directory: /home/clandinin/Niyathi/FlystimData
+    screen_center: [0, 0]
+    rig: 40HrFitness
+
+  24HrFitness:
+    data_directory: /home/clandinin/Niyathi/ballrig_data/FlystimData
+    screen_center: [0, 0]
+    rig: 24HrFitness

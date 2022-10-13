@@ -1,0 +1,30 @@
+grey_walk:
+  run_parameters:
+    protocol_ID: Background
+    num_epochs: 30.0
+    pre_time: 1.0
+    stim_time: 60.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    bg_color:
+    - 0.5
+    randomize_order: true
+dark_walk:
+  run_parameters:
+    protocol_ID: Background
+    num_epochs: 30.0
+    pre_time: 1.0
+    stim_time: 60.0
+    tail_time: 1.0
+    idle_color: 0.0
+  protocol_parameters:
+    center:
+    - 0.0
+    - 0.0
+    bg_color:
+    - 0.0
+    randomize_order: true

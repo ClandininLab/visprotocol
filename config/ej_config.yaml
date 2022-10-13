@@ -6,19 +6,24 @@ effector_choices: [Kir2.1, Shi, CsChrimson, GtACR]
 
 rig_config:
   Bruker_LeftScreen:
-    data_directory: E:/Minseung/FlystimData
+    data_directory: E:/ejjun/FlystimData
     screen_center: [0,-30]
     rig: Bruker
 
   Bruker_TwoScreens:
-    data_directory: E:/Minseung/FlystimData
+    data_directory: E:/ejjun/FlystimData
     screen_center: [0, -30]
     rig: Bruker
 
   24HrFitness:
-    data_directory: /home/clandinin/minseung/ballrig_data/FlystimData
+    data_directory: /home/clandinin/ejjun/ballrig_data/FlystimData
     screen_center: [0, 0]
     rig: 24HrFitness
+
+  40HrFitness:
+    data_directory: /home/clandinin/ejjun/FlystimData
+    screen_center: [0, 0]
+    rig: 40HrFitness
 
   Laptop:
     data_directory: /home/ejjun/Documents/data

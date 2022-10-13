@@ -537,10 +537,10 @@ class Background(BaseProtocol):
     def getEpochParameters(self): # EJ - randomizing and intializing/defining current parameters (all uniform prob) and putting some of them in lists (convenience parameters)
         
          current_bg_color = self.selectParametersFromLists(self.protocol_parameters['bg_color'], randomize_order=self.protocol_parameters['randomize_order'])
-         self.convenience_parameters = {'bg_color':current_bg_color}
+         self.epoch_parameters = {'bg_color':current_bg_color}
 
     def loadStimuli(self, client):
-        bg = self.convenience_parameters['bg_color']  #self.run_parameters.get('idle_color') # EJ - set background color
+        bg = self.epoch_parameters['bg_color']  #self.run_parameters.get('idle_color') # EJ - set background color
         multicall = flyrpc.multicall.MyMultiCall(client.manager) # EJ - stimulus display program?
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200) # EJ - load the background with multicall
         multicall()
