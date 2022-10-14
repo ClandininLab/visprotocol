@@ -70,8 +70,8 @@ def main():
     #draw_screens([left_screen, center_screen, right_screen])
     #plt.show()
 
-    # screens = [left_screen, center_screen, right_screen, aux_screen]
-    screens = [left_screen, center_screen, right_screen]
+    screens = [left_screen, center_screen, right_screen, aux_screen]
+    # screens = [left_screen, center_screen, right_screen]
 
     port = 60629
     host = ''
@@ -98,10 +98,15 @@ def main():
     manager.register_function_on_root(ft_manager.set_pos_0, "ft_set_pos_0")
     manager.register_function_on_root(ft_manager.update_pos, "ft_update_pos")
     manager.register_function_on_root(ft_manager.update_pos_for, "ft_update_pos_for")
+    manager.register_function_on_root(ft_manager.loop_start, "ft_loop_start")
+    manager.register_function_on_root(ft_manager.loop_stop, "ft_loop_stop")
+    manager.register_function_on_root(ft_manager.loop_start_closed_loop, "ft_loop_start_closed_loop")
+    manager.register_function_on_root(ft_manager.loop_stop_closed_loop, "ft_loop_stop_closed_loop")
+    manager.register_function_on_root(ft_manager.loop_update_closed_loop_vars, "ft_loop_update_closed_loop_vars")
     ####
 
     #### Set up Labjack
-    daq_device = daq.LabJackTSeries(serial_number="440017544", trigger_channels=["FI04"])
+    daq_device = daq.LabJackTSeries(dev="440017544", trigger_channel=["FIO4", "FIO5", "FIO6"])
     manager.register_function_on_root(daq_device.sendTrigger, "daq_sendTrigger")
     manager.register_function_on_root(daq_device.outputStep, "daq_outputStep")
     ####

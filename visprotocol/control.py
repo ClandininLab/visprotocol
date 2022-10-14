@@ -38,6 +38,7 @@ class EpochRun():
         if 'do_fictrac' in protocol_object.run_parameters and protocol_object.run_parameters['do_fictrac']:
             client.manager.ft_start()
             sleep(2) # Give Fictrac time to load
+            client.manager.ft_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
 
         if save_metadata_flag:
             data.createEpochRun(protocol_object)

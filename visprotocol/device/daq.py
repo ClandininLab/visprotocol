@@ -88,12 +88,12 @@ class LabJackTSeries(DAQ):
         if initial_delay > 0:
             time.sleep(initial_delay)
         if low_time > 0:
-            self.daq.write(output_channel, (write_states*0).tolist())
+            self.write(output_channel, (write_states*0).tolist())
             time.sleep(low_time)
         if high_time > 0:
-            self.daq.write(output_channel, (write_states*1).tolist())
+            self.write(output_channel, (write_states*1).tolist())
             time.sleep(high_time)
-        self.daq.write(output_channel, (write_states*0).tolist())
+        self.write(output_channel, (write_states*0).tolist())
 
     def close(self):
         ljm.close(self.handle)

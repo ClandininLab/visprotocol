@@ -479,24 +479,20 @@ class OcclusionFixed(BaseProtocol):
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
         multicall.load_stim(**bar_parameters, hold=True)
         multicall.load_stim(**occluder_parameters, hold=True)
-        # Fictrac
-        if self.run_parameters['do_fictrac']:
-            multicall.ft_sleep(self.run_parameters['pre_time'])
         multicall()
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         sleep(self.run_parameters['pre_time'])
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        # stim time
-        multicall.start_stim(append_stim_frames=append_stim_frames)
-        multicall.start_corner_square()
         # Fictrac
         if self.run_parameters['do_fictrac']:
             if self.convenience_parameters['current_closed_loop']:
-                multicall.ft_set_pos_0()
-                multicall.ft_update_pos_for(self.convenience_parameters['current_stim_duration'], update_theta=True, update_x=False, update_y=False)
-            else:
-                multicall.ft_sleep(self.convenience_parameters['current_stim_duration'])
+                multicall.ft_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True)
+                multicall.ft_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
+                multicall.ft_loop_start_closed_loop()
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
         multicall()
         
         sleep(self.convenience_parameters['current_stim_duration'])
@@ -507,7 +503,7 @@ class OcclusionFixed(BaseProtocol):
         multicall.black_corner_square()
         # Fictrac
         if self.run_parameters['do_fictrac']:
-            multicall.ft_sleep(self.run_parameters['tail_time'])
+            multicall.ft_loop_stop_closed_loop()
         multicall()
 
         sleep(self.run_parameters['tail_time'])
