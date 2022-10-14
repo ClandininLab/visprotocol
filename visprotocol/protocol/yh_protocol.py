@@ -1835,7 +1835,7 @@ class OptoStimulus(BaseProtocol):
         if self.convenience_parameters['opto_stim']:
             sleep(self.run_parameters['pre_time'])
             #sleep(self.run_parameters['pre_time']-self.protocol_parameters['opto_time'])
-            client.niusb_device.outputStep(output_channel='ctr1',
+            client.daq_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
                                            high_time=self.protocol_parameters['opto_time'],
                                            initial_delay=0.0)

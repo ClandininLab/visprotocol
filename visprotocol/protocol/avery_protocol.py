@@ -477,7 +477,7 @@ class FlickerWithOpto(BaseProtocol):
             # |--current_opto_start_time--|--opto_time--|--(pre_time-opto_time-current_opto_start_time)
             sleep(self.convenience_parameters['current_opto_start_time'])  # sleep until opto start time
             # deliver opto pulse
-            client.niusb_device.outputStep(output_channel='ctr1',
+            client.daq_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
                                            high_time=self.protocol_parameters['opto_time'],
                                            initial_delay=0.0)
@@ -622,7 +622,7 @@ class MedullaTuningSuite(BaseProtocol):
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         if self.convenience_parameters['opto_stim']:
-            client.niusb_device.outputStep(output_channel='ctr1',
+            client.daq_device.outputStep(output_channel='ctr1',
                                            low_time=0.001,
                                            high_time=self.protocol_parameters['opto_time'],
                                            initial_delay=0.0)

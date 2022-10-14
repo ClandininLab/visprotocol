@@ -74,9 +74,9 @@ class EpochRun():
         if save_metadata_flag:
             data.createEpoch(protocol_object)
 
-        # Send triggering TTL through the NI-USB device (if device is set)
-        if client.niusb_device is not None:
-            client.niusb_device.sendTrigger()
+        # Send triggering TTL through the DAQ device (if device is set)
+        if client.daq_device is not None:
+            client.daq_device.sendTrigger()
 
         # Use the protocol object to send the stimulus to flystim
         protocol_object.loadStimuli(client)

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import os
 
 from ftutil.ft_managers import FtClosedLoopManager
+from visprotocol.device import daq
 
 def get_subscreen(dir):
     # Define screen(s) for the rig. Units in meters
@@ -99,10 +100,19 @@ def main():
     manager.register_function_on_root(ft_manager.update_pos_for, "ft_update_pos_for")
     ####
 
+    #### Set up Labjack
+    daq_device = daq.LabJackTSeries(serial_number="440017544", trigger_channels=["FI04"])
+    manager.register_function_on_root(daq_device.sendTrigger, "daq_sendTrigger")
+    manager.register_function_on_root(daq_device.outputStep, "daq_outputStep")
+    ####
+
     manager.black_corner_square()
     manager.set_idle_background(0)
 
     manager.loop()
+
+    daq_device.close()
+    ft_manager.close()
 
 if __name__ == '__main__':
     main()
