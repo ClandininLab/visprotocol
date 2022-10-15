@@ -61,7 +61,6 @@ class Client():
               draw_screens(aux_screen)
             self.manager = launch_stim_server(aux_screen)
 
-        self.manager.register_function_on_root(lambda x: print(x), "print_on_server")
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
 
