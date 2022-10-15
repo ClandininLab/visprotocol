@@ -493,6 +493,7 @@ class OcclusionFixed(BaseProtocol):
         # stim time
         multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
+        multicall.print_on_server(str({k[8:]:v for k,v in self.convenience_parameters.items()}))
         multicall()
         
         sleep(self.convenience_parameters['current_stim_duration'])
