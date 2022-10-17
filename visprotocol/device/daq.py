@@ -6,6 +6,7 @@ DAQ (data acquisition) device classes
 @author: mhturner and minseung
 """
 
+from re import S
 import numpy as np
 import time
 
@@ -35,16 +36,21 @@ class DAQonServer(DAQ):
             self.manager.daq_outputStep(**kwargs)
 
 class LabJackTSeries(DAQ):
-    def __init__(self, dev=None, trigger_channel=['FIO4']):
+    def __init__(self, dev=None, trigger_channel=['FIO4'], init_device=True):
         super().__init__()  # call the parent class init method
-        serial_number = dev
+        self.serial_number = dev
         self.trigger_channel = trigger_channel
 
+        self.init_device()
+
+    def init_device(self):
         # Initialize ljm T4/T7 handle
-        self.handle = ljm.openS("TSERIES", "ANY", "ANY" if serial_number is None else serial_number)
+        self.handle = ljm.openS("TSERIES", "ANY", "ANY" if self.serial_number is None else self.serial_number)
         self.info = ljm.getHandleInfo(self.handle)
         self.deviceType = self.info[0]
         self.serial_number = self.info[2]
+
+        self.is_open = True
         
         if self.deviceType == ljm.constants.dtT4:
             # LabJack T4 configuration
@@ -72,6 +78,9 @@ class LabJackTSeries(DAQ):
         numFrames = len(aNames)
         ljm.eWriteNames(self.handle, numFrames, aNames, aValues)
 
+    def set_trigger_channel(self, trigger_channel):
+        self.trigger_channel = trigger_channel
+
     def write(self, names, vals):
         ljm.eWriteNames(self.handle, len(names), names, vals)
 
@@ -96,7 +105,9 @@ class LabJackTSeries(DAQ):
         self.write(output_channel, (write_states*0).tolist())
 
     def close(self):
-        ljm.close(self.handle)
+        if self.is_open:
+            ljm.close(self.handle)
+            self.is_open = False
 
 class NIUSB6210(DAQ):
     """

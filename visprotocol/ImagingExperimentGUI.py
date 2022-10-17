@@ -46,7 +46,8 @@ class ImagingExperimentGUI(QWidget):
         self.cfg['draw_screens'] = self.draw_screens
 
         rig_config = self.cfg['rig_config'][self.rig_name]
-        self.cfg['fictrac_avail'] = 'fictrac' in rig_config and rig_config['fictrac']
+        self.cfg['server_data_directory'] = rig_config['server_data_directory'] if 'server_data_directory' in rig_config else None
+        self.cfg['loco_avail'] = 'locomotion' in rig_config and rig_config['locomotion']
 
         # start a client
         self.client = Client(self.cfg)
@@ -102,13 +103,13 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(protocol_label, 1, 0)
         self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
 
-        # Fictrac checkbox:
-        if self.cfg['fictrac_avail']:
-            fictrac_label = QLabel('Fictrac:')
-            self.protocol_grid.addWidget(fictrac_label, 1, 2)
-            self.fictrac_checkbox = QCheckBox()
-            self.fictrac_checkbox.setChecked(False)
-            self.protocol_grid.addWidget(self.fictrac_checkbox, 1, 3)
+        # loco checkbox:
+        if self.cfg['loco_avail']:
+            loco_label = QLabel('Locomotion:')
+            self.protocol_grid.addWidget(loco_label, 1, 2)
+            self.loco_checkbox = QCheckBox()
+            self.loco_checkbox.setChecked(False)
+            self.protocol_grid.addWidget(self.loco_checkbox, 1, 3)
         
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
@@ -645,9 +646,6 @@ class ImagingExperimentGUI(QWidget):
             else: # QLineEdit
                 self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
 
-        if self.cfg['fictrac_avail']:
-            self.protocol_object.run_parameters['do_fictrac'] = self.fictrac_checkbox.isChecked() # FicTrac
-
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
@@ -662,6 +660,9 @@ class ImagingExperimentGUI(QWidget):
                     self.protocol_object.protocol_parameters[key] = to_a_list
                 else:
                     self.protocol_object.protocol_parameters[key] = float(new_param_entry)
+
+        if self.cfg['loco_avail']:
+            self.data.cfg['do_loco'] = self.loco_checkbox.isChecked() # loco
 
     def populateGroups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')

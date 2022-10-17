@@ -6,8 +6,10 @@ import matplotlib.pyplot as plt
 from flystim.screen import Screen, SubScreen
 from flystim.draw import draw_screens
 
-from visprotocol.device import daq
 from visprotocol.server.clandinin_server import Server
+
+from visprotocol.device import daq
+from ftutil.ft_managers import FtClosedLoopManager
 
 def get_subscreen(dir):
     # Define screen(s) for the rig. Units in meters
@@ -66,23 +68,22 @@ def main():
     # screens = [left_screen, center_screen, right_screen]
     # draw_screens(screens); plt.show()
 
-    do_fictrac = True
-    fictrac_kwargs = {
-        'cwd': os.path.expanduser('~'),
-        'ft_bin': "/home/clandinin/src/fictrac/bin/fictrac",
-        'ft_config': "/home/clandinin/src/fictrac/config.txt", 
-        'ft_host': '127.0.0.1', 
-        'ft_port': 33334, 
-        'ft_theta_idx': 16, 
-        'ft_x_idx': 14, 
-        'ft_y_idx': 15, 
+    loco_class = FtClosedLoopManager
+    loco_kwargs = {
+        'ft_bin':           "/home/clandinin/src/fictrac/bin/fictrac",
+        'ft_config':        "/home/clandinin/src/fictrac/config.txt", 
+        'ft_host':          '127.0.0.1', 
+        'ft_port':          33334, 
+        'ft_theta_idx':     16, 
+        'ft_x_idx':         14, 
+        'ft_y_idx':         15, 
         'ft_frame_num_idx': 0, 
         'ft_timestamp_idx': 21
     }
     daq_class = daq.LabJackTSeries
     daq_kwargs = {'dev':"440017544", 'trigger_channel':["FIO4", "FIO5", "FIO6"]}
     
-    server = Server(screens = screens, do_fictrac=do_fictrac, fictrac_kwargs=fictrac_kwargs, daq_class=daq_class, daq_kwargs=daq_kwargs)
+    server = Server(screens = screens, loco_class=loco_class, loco_kwargs=loco_kwargs, daq_class=daq_class, daq_kwargs=daq_kwargs)
     server.loop()
 
 if __name__ == '__main__':

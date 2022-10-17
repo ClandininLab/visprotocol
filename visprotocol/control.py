@@ -6,6 +6,7 @@ EpochRun object controls presentation of a sequence of epochs ("epoch run")
 
 from PyQt5.QtWidgets import QApplication
 from time import sleep
+import os
 
 class EpochRun():
     def __init__(self):
@@ -35,10 +36,16 @@ class EpochRun():
         self.pause = False
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
         
-        if 'do_fictrac' in protocol_object.run_parameters and protocol_object.run_parameters['do_fictrac']:
-            client.manager.ft_start()
-            sleep(2) # Give Fictrac time to load
-            client.manager.ft_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
+        if 'do_loco' in protocol_object.data.cfg and protocol_object.data.cfg['do_loco']:
+            if save_metadata_flag:
+                if self.cfg['server_data_directory'] is not None:
+                    server_experiment_dir = os.path.join(data.cfg['server_data_directory'], data.experiment_file_name, data.series_count)
+                    client.manager.loco_set_save_directory(server_experiment_dir)
+                else:
+                    print("Locomotion data can't be saved on server without server_data_directory specified in config.yaml.")
+            client.manager.loco_start()
+            sleep(2) # Give loco time to load
+            client.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
 
         if save_metadata_flag:
             data.createEpochRun(protocol_object)
@@ -64,8 +71,8 @@ class EpochRun():
                 self.startEpoch(protocol_object, data, client, save_metadata_flag=save_metadata_flag)
                 # print("CONTROL AFTER START EPOCH")
 
-        if 'do_fictrac' in protocol_object.run_parameters and protocol_object.run_parameters['do_fictrac']:
-            client.manager.ft_close()
+        if 'do_loco' in protocol_object.data.cfg and protocol_object.data.cfg['do_loco']:
+            client.manager.loco_close()
         # # # Epoch run loop # # #
 
     def startEpoch(self, protocol_object, data, client, save_metadata_flag=True):
