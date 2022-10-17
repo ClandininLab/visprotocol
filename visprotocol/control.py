@@ -36,10 +36,10 @@ class EpochRun():
         self.pause = False
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
         
-        if 'do_loco' in protocol_object.data.cfg and protocol_object.data.cfg['do_loco']:
+        if 'do_loco' in data.cfg and data.cfg['do_loco']:
             if save_metadata_flag:
-                if self.cfg['server_data_directory'] is not None:
-                    server_experiment_dir = os.path.join(data.cfg['server_data_directory'], data.experiment_file_name, data.series_count)
+                if data.cfg['server_data_directory'] is not None:
+                    server_experiment_dir = os.path.join(data.cfg['server_data_directory'], data.experiment_file_name, str(data.series_count))
                     client.manager.loco_set_save_directory(server_experiment_dir)
                 else:
                     print("Locomotion data can't be saved on server without server_data_directory specified in config.yaml.")
@@ -71,7 +71,7 @@ class EpochRun():
                 self.startEpoch(protocol_object, data, client, save_metadata_flag=save_metadata_flag)
                 # print("CONTROL AFTER START EPOCH")
 
-        if 'do_loco' in protocol_object.data.cfg and protocol_object.data.cfg['do_loco']:
+        if 'do_loco' in data.cfg and data.cfg['do_loco']:
             client.manager.loco_close()
         # # # Epoch run loop # # #
 

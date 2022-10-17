@@ -485,7 +485,7 @@ class OcclusionFixed(BaseProtocol):
         sleep(self.run_parameters['pre_time'])
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         # Fictrac
-        if self.run_parameters['do_loco']:
+        if self.cfg['do_loco']:
             if self.convenience_parameters['current_closed_loop']:
                 multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True)
                 multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
@@ -503,7 +503,7 @@ class OcclusionFixed(BaseProtocol):
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
         # Fictrac
-        if self.run_parameters['do_loco']:
+        if self.cfg['do_loco']:
             multicall.loco_loop_stop_closed_loop()
         multicall()
 
