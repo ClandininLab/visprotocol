@@ -1,16 +1,16 @@
-import os
+import signal, sys
 
 from flystim.screen import Screen
-from flystim.stim_server import launch_stim_server
+from flystim.stim_server import launch_stim_server, StimServer
 
 from ftutil.ft_managers import FtClosedLoopManager
 
 from visprotocol.device import daq
 
 class Server():
-    def __init__(self, manager=None, do_fictrac=False, fictrac_kwargs={}, daq_class=None, daq_kwargs={}):
-        if manager is not None:
-            self.manager = manager
+    def __init__(self, screens=[], do_fictrac=False, fictrac_kwargs={}, daq_class=None, daq_kwargs={}):
+        if screens:
+            self.manager = StimServer(screens=screens, host='', port=60629, auto_stop=False)
         else:
             self.manager = launch_stim_server(Screen(fullscreen=False, server_number=0, id=0, vsync=False))
         
@@ -20,10 +20,17 @@ class Server():
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
 
+        def signal_handler(sig, frame):
+            print('Closing server after Ctrl+C...')
+            self.close()
+            # sys.exit(0)
+        signal.signal(signal.SIGINT, signal_handler)
+
     def loop(self):
         self.manager.loop()
 
     def close(self):
+        self.manager.shutdown_flag.set()
         self.ft_manager.close()
         self.daq_device.close()
 
