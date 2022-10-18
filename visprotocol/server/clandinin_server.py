@@ -3,10 +3,6 @@ import signal, sys
 from flystim.screen import Screen
 from flystim.stim_server import launch_stim_server, StimServer
 
-from ftutil.ft_managers import FtClosedLoopManager
-
-from visprotocol.device import daq
-
 class Server():
     def __init__(self, screens=[], loco_class=False, loco_kwargs={}, daq_class=None, daq_kwargs={}):
         if screens:
@@ -34,7 +30,7 @@ class Server():
         self.loco_manager.close()
         self.daq_device.close()
 
-    def __set_up_loco__(self, loco_class=FtClosedLoopManager, **kwargs):
+    def __set_up_loco__(self, loco_class, **kwargs):
         self.loco_manager = loco_class(fs_manager=self.manager, start_at_init=False, **kwargs)
         self.manager.register_function_on_root(self.loco_manager.set_save_directory, "loco_set_save_directory")
         self.manager.register_function_on_root(self.loco_manager.start, "loco_start")
@@ -49,7 +45,7 @@ class Server():
         # self.manager.register_function_on_root(self.loco_manager.update_pos, "loco_update_pos")
         # self.manager.register_function_on_root(self.loco_manager.update_pos_for, "loco_update_pos_for")
 
-    def __set_up_daq__(self, daq_class=daq.LabJackTSeries, **kwargs):
+    def __set_up_daq__(self, daq_class, **kwargs):
         self.daq_device = daq_class(**kwargs)
         self.manager.register_function_on_root(self.daq_device.sendTrigger, "daq_sendTrigger")
         self.manager.register_function_on_root(self.daq_device.outputStep, "daq_outputStep")

@@ -8,7 +8,7 @@ from flystim.draw import draw_screens
 
 from visprotocol.server.clandinin_server import Server
 
-from visprotocol.device import daq
+from visprotocol.device.daq.labjack import LabJackTSeries
 from ftutil.ft_managers import FtClosedLoopManager
 
 def get_subscreen(dir):
@@ -80,7 +80,7 @@ def main():
         'ft_frame_num_idx': 0, 
         'ft_timestamp_idx': 21
     }
-    daq_class = daq.LabJackTSeries
+    daq_class = LabJackTSeries
     daq_kwargs = {'dev':"440017544", 'trigger_channel':["FIO4", "FIO5", "FIO6"]}
     
     server = Server(screens = screens, loco_class=loco_class, loco_kwargs=loco_kwargs, daq_class=daq_class, daq_kwargs=daq_kwargs)

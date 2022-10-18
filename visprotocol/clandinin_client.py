@@ -24,13 +24,13 @@ class Client():
             self.server_options = {'host': '171.65.17.126',
                                    'port': 60629,
                                    'use_server': True}
-            self.daq_device = daq.NIUSB6001(dev='Dev1', trigger_channel='port2/line0')
+            self.daq_device = daq.nidaq.NIUSB6001(dev='Dev1', trigger_channel='port2/line0')
 
         elif socket.gethostname() == 'USERBRU-I10P5LO':  # Bruker
             self.server_options = {'host': '171.65.17.246',
                                    'port': 60629,
                                    'use_server': True}
-            self.daq_device = daq.NIUSB6210(dev='Dev5', trigger_channel='ctr0')
+            self.daq_device = daq.nidaq.NIUSB6210(dev='Dev5', trigger_channel='ctr0')
         elif socket.gethostname() == 'clandinin-ballbehavior':  # 24HrFitness
             self.server_options = {'host': '0.0.0.0',
                                    'port': 60629,
