@@ -522,6 +522,104 @@ class FlickerWithOpto(BaseProtocol):
                                'idle_color': 0.5}
 
 
+# %% Full field white noise with opto
+
+class WhiteNoiseWithOpto(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        # # # Visual stimulus parameters # # #
+        # Adjust protocol_parameters['center'] according to rig screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        # # # Opto parameters # # #
+        # Error checking: opto_mode has to be one of these three options
+        self.convenience_parameters = {}
+        assert self.protocol_parameters['opto_mode'] in ['on', 'off', 'alternating']
+
+        if self.protocol_parameters['opto_mode'] == 'on':
+            self.convenience_parameters['opto_stim'] = True
+            start_seed = int(np.random.choice(range(int(1e6))))
+
+        elif self.protocol_parameters['opto_mode'] == 'off':
+            self.convenience_parameters['opto_stim'] = False
+            start_seed = int(np.random.choice(range(int(1e6))))
+
+        elif self.protocol_parameters['opto_mode'] == 'alternating':
+            if np.mod(self.num_epochs_completed, 2) == 0:
+                self.convenience_parameters['opto_stim'] = False
+            else:
+                self.convenience_parameters['opto_stim'] = True
+            # Find seed s.t. subsequent trials share a seed. Increment seed every 2 trials
+            start_seed = 0 + (self.num_epochs_completed//2)
+        else:
+            print('Unrecognized opto_mode string. Allowable: [on, off, alternating]')
+
+        # Random distribution dictionary. See flystim.distribution
+        distribution_data = {'name': 'Ternary',
+                             'args': [],
+                             'kwargs': {'rand_min': 0,
+                                        'rand_max': 1}}
+
+        # epoch_parameters dictionary. Defines the flystim stimulus for this epoch.
+        # See flystim.stimuli
+        self.epoch_parameters = {'name': 'UniformWhiteNoise',
+                                 'width': self.protocol_parameters['width'],
+                                 'height': self.protocol_parameters['height'],
+                                 'sphere_radius': 1,
+                                 'start_seed': start_seed,
+                                 'update_rate': self.protocol_parameters['update_rate'],
+                                 'distribution_data': distribution_data,
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1],
+                                 'angle': 0}
+
+        self.convenience_parameters['start_seed'] = start_seed
+
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        if self.convenience_parameters['opto_stim']:
+            client.daq_device.outputStep(output_channel='ctr1',
+                                         low_time=0.001,
+                                         high_time=self.protocol_parameters['opto_time'],
+                                         initial_delay=0.0)
+            sleep(self.run_parameters['pre_time']-self.protocol_parameters['opto_time'])
+        else:
+            sleep(self.run_parameters['pre_time'])
+
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.run_parameters['stim_time'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        multicall()
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 180.0,
+                                    'width': 180.0,
+                                    'center': [0, 0],
+                                    'update_rate': 20.0,  # Noise update rate, Hz
+                                    'opto_mode': 'alternating',  # 'on', 'off', 'alternating'
+                                    'opto_time': 1.0,  # sec
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'WhiteNoiseWithOpto',
+                               'num_epochs': 150,  # 2/10/2 & 150 trials = 25 min total noise (12.5 each opto). Total series time = 35 min.
+                               'pre_time': 2.0,
+                               'stim_time': 10.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
 # %%
 """
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
