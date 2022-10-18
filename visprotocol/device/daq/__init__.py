@@ -1,1 +1,1 @@
-from daq import DAQ, DAQonServer
+from .daq import DAQ, DAQonServer
