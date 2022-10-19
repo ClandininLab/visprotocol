@@ -12,6 +12,7 @@ setup(
         'PyQT5',
         'numpy',
         'nidaqmx',
+        'labjack-ljm',
         'h5py',
         'scipy',
         'nptdms',
