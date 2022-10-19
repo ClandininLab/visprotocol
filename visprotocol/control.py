@@ -71,6 +71,10 @@ class EpochRun():
                 self.startEpoch(protocol_object, data, client, save_metadata_flag=save_metadata_flag)
                 # print("CONTROL AFTER START EPOCH")
 
+        # Set screens to dark
+        client.manager.black_corner_square()
+        client.manager.set_idle_background(0)
+
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             client.manager.loco_close()
         # # # Epoch run loop # # #
