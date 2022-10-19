@@ -476,6 +476,7 @@ class OcclusionFixed(BaseProtocol):
     
         bg = self.run_parameters.get('idle_color')
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.set_global_theta_offset(self.protocol_parameters['fly_heading'])
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
         multicall.load_stim(**bar_parameters, hold=True)
         multicall.load_stim(**occluder_parameters, hold=True)
@@ -529,6 +530,7 @@ class OcclusionFixed(BaseProtocol):
                                     'render_on_cylinder': True,
                                     'bar_surface_radius': 3.0,
                                     'occluder_surface_radius': 2.0,
+                                    'fly_heading': 0.0,
                                     'randomize_order': True,}
 
     def getRunParameterDefaults(self):
@@ -903,6 +905,16 @@ class FlickeringVertBars(BaseProtocol):
                                        'current_temporal_frequency': current_temporal_frequency, 
                                        'current_theta_loc': current_theta_loc}
 
+    def loadStimuli(self, client):
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.set_global_theta_offset(self.protocol_parameters['fly_heading'])
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
+        passedParameters = self.epoch_parameters.copy()
+        multicall.load_stim(**passedParameters, hold=True)
+        multicall()
+
     def getParameterDefaults(self):
         self.protocol_parameters = {'angle': [0.0],
                                     'height': 150.0,
@@ -912,6 +924,7 @@ class FlickeringVertBars(BaseProtocol):
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'temporal_frequency': [10.0],
+                                    'fly_heading': 0.0,
                                     'render_on_cylinder': True,
                                     'randomize_order': True}
 
@@ -1190,6 +1203,16 @@ class MovingRectangle(BaseProtocol):
         self.convenience_parameters = {'current_angle': current_angle,
                                        'current_intensity': current_intensity}
 
+    def loadStimuli(self, client):
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.set_global_theta_offset(self.protocol_parameters['fly_heading'])
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
+        passedParameters = self.epoch_parameters.copy()
+        multicall.load_stim(**passedParameters, hold=True)
+        multicall()
+
     def getParameterDefaults(self):
         self.protocol_parameters = {'width': 5.0,
                                     'height': 50.0,
@@ -1197,6 +1220,7 @@ class MovingRectangle(BaseProtocol):
                                     'center': [0, 0],
                                     'speed': 80.0,
                                     'angle': [0.0, 180.0],
+                                    'fly_heading': 0.0,
                                     'render_on_cylinder': True,
                                     'randomize_order': True}
 
@@ -1254,6 +1278,16 @@ class TernaryBars(BaseProtocol):
                                        'current_theta_offset': current_theta_offset,
                                        'current_angle': current_angle}
 
+    def loadStimuli(self, client):
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.set_global_theta_offset(self.protocol_parameters['fly_heading'])
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
+        passedParameters = self.epoch_parameters.copy()
+        multicall.load_stim(**passedParameters, hold=True)
+        multicall()
+
     def getParameterDefaults(self):
         self.protocol_parameters = {'period': [5.0],
                                     # 'width': 5.0,
@@ -1264,6 +1298,7 @@ class TernaryBars(BaseProtocol):
                                     'rand_max': 1.0,
                                     'update_rate': 4.0,
                                     'angle': [0.0],
+                                    'fly_heading': 0.0,
                                     'render_on_cylinder': True,
                                     'randomize_order': True}
 
