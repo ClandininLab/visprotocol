@@ -146,6 +146,82 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
+class StationaryRectangle(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_intensity, current_angle, current_theta_pos, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta_pos'],  self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        
+        self.epoch_parameters = self.getMovingPatchParameters(center=[current_theta_pos,0], speed=0, angle=current_angle, color=current_intensity)
+
+        self.convenience_parameters = {'current_angle': current_angle,
+                                       'current_intensity': current_intensity,
+                                       'current_theta_pos': current_theta_pos,
+                                       'current_closed_loop': current_closed_loop}
+    def loadStimuli(self, client):    
+        bg = self.run_parameters.get('idle_color')
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
+
+        passedParameters = self.epoch_parameters.copy()
+        multicall.load_stim(**passedParameters, hold=True)
+
+        multicall.print_on_server(str({k[8:]:v for k,v in self.convenience_parameters.items()}))
+        multicall()
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        sleep(self.run_parameters['pre_time'])
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # Fictrac
+        if 'do_loco' in self.cfg and self.cfg['do_loco']:
+            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True)
+            if self.convenience_parameters['current_closed_loop']:
+                multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
+                multicall.loco_loop_start_closed_loop()
+                
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()
+        
+        sleep(self.run_parameters['stim_time'])
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        # Fictrac
+        if 'do_loco' in self.cfg and self.cfg['do_loco']:
+            multicall.loco_loop_stop_closed_loop()
+        multicall()
+
+        sleep(self.run_parameters['tail_time'])
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'width': 15.0,
+                                    'height': 170.0,
+                                    'intensity': [1.0],
+                                    'theta_pos': [0.0],
+                                    'angle': [0.0],
+                                    'closed_loop': [0],
+                                    'render_on_cylinder': True,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'MovingRectangle',
+                               'num_epochs': 40,
+                               'pre_time': 1.0,
+                               'stim_time': 20.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0}
+
+
+
 class MovingRectangle(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -178,10 +254,11 @@ class MovingRectangle(BaseProtocol):
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         # Fictrac
         if 'do_loco' in self.cfg and self.cfg['do_loco']:
+            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True)
             if self.convenience_parameters['current_closed_loop']:
-                multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True)
                 multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
                 multicall.loco_loop_start_closed_loop()
+                
         # stim time
         multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
