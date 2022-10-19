@@ -1217,8 +1217,6 @@ class TernaryBars(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        stimulus_ID = 'RandomBars'
-
         current_period, current_theta_offset, current_angle = self.selectParametersFromLists((self.protocol_parameters['period'], self.protocol_parameters['theta_offset'], self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
         start_seed = int(np.random.choice(range(int(1e6))))
         
@@ -1226,19 +1224,34 @@ class TernaryBars(BaseProtocol):
                              'args': [],
                              'kwargs': {'rand_min': self.protocol_parameters['rand_min'],
                                         'rand_max': self.protocol_parameters['rand_max']}}
+        if self.protocol_parameters['render_on_cylinder']:
+            self.epoch_parameters = {'name': 'RandomBars',
+                                    'period': current_period,
+                                    'width': current_period,
+                                    'vert_extent': self.protocol_parameters['vert_extent'],
+                                    'theta_offset': current_theta_offset,
+                                    'background': 0.0,
+                                    'update_rate': self.protocol_parameters['update_rate'],
+                                    'angle': current_angle,
+                                    'start_seed': start_seed,
+                                    'distribution_data': distribution_data}
+        else:
+            self.epoch_parameters = {'name': 'RandomGridOnSphericalPatch',
+                                    'patch_width': current_period,
+                                    'patch_height': self.protocol_parameters['vert_extent'],
+                                    'height': self.protocol_parameters['vert_extent'],
+                                    'width': 360,
+                                    'theta': current_theta_offset,
+                                    'phi': 0,
+                                    'angle': current_angle,
+                                    'update_rate': self.protocol_parameters['update_rate'],
+                                    'start_seed': start_seed,
+                                    'distribution_data': distribution_data}
 
-        self.epoch_parameters = {'name': stimulus_ID,
-                                 'period': current_period,
-                                 'width': current_period,
-                                 'vert_extent': self.protocol_parameters['vert_extent'],
-                                 'theta_offset': current_theta_offset,
-                                 'background': 0.0,
-                                 'update_rate': self.protocol_parameters['update_rate'],
-                                 'angle': current_angle,
-                                 'start_seed': start_seed,
-                                 'distribution_data': distribution_data}
         
         self.convenience_parameters = {'start_seed': start_seed,
+                                       'current_period': current_period,
+                                       'current_theta_offset': current_theta_offset,
                                        'current_angle': current_angle}
 
     def getParameterDefaults(self):
@@ -1251,6 +1264,7 @@ class TernaryBars(BaseProtocol):
                                     'rand_max': 1.0,
                                     'update_rate': 4.0,
                                     'angle': [0.0],
+                                    'render_on_cylinder': True,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
