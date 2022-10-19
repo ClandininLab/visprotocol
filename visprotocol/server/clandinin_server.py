@@ -26,9 +26,9 @@ class Server():
         self.manager.loop()
 
     def close(self):
-        # self.manager.shutdown_flag.set()
         self.loco_manager.close()
         self.daq_device.close()
+        self.manager.shutdown_flag.set()
 
     def __set_up_loco__(self, loco_class, **kwargs):
         self.loco_manager = loco_class(fs_manager=self.manager, start_at_init=False, **kwargs)
