@@ -479,6 +479,7 @@ class OcclusionFixed(BaseProtocol):
         multicall.load_stim(name='ConstantBackground', color=[bg,bg,bg,1], side_length=200)
         multicall.load_stim(**bar_parameters, hold=True)
         multicall.load_stim(**occluder_parameters, hold=True)
+        multicall.print_on_server(str({k[8:]:v for k,v in self.convenience_parameters.items()}))
         multicall()
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
@@ -493,7 +494,6 @@ class OcclusionFixed(BaseProtocol):
         # stim time
         multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
-        multicall.print_on_server(str({k[8:]:v for k,v in self.convenience_parameters.items()}))
         multicall()
         
         sleep(self.convenience_parameters['current_stim_duration'])
