@@ -36,6 +36,7 @@ class Server():
         self.manager.register_function_on_root(self.loco_manager.start, "loco_start")
         self.manager.register_function_on_root(self.loco_manager.close, "loco_close")
         self.manager.register_function_on_root(self.loco_manager.set_pos_0, "loco_set_pos_0")
+        self.manager.register_function_on_root(self.loco_manager.write_to_log, "loco_write_to_log")
         self.manager.register_function_on_root(self.loco_manager.loop_start, "loco_loop_start")
         self.manager.register_function_on_root(self.loco_manager.loop_stop, "loco_loop_stop")
         self.manager.register_function_on_root(self.loco_manager.loop_start_closed_loop, "loco_loop_start_closed_loop")
