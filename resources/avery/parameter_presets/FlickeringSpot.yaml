@@ -9,7 +9,7 @@ Medullar Mapping:
   protocol_parameters:
     diameter: 50.0
     center:
-    - -20.0
+    - 40.0
     - 0.0
     contrast: 1.0
     mean: 0.5
