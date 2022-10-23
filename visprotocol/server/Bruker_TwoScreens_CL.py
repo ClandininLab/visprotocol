@@ -8,7 +8,7 @@ from math import pi
 import matplotlib.pyplot as plt
 
 from visprotocol.server.clandinin_server import Server
-from ftutil.ft_managers import FtClosedLoopManager
+from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
 
 def main():
     # Put lightcrafter(s) in pattern mode
@@ -46,10 +46,10 @@ def main():
 
     loco_class = FtClosedLoopManager
     loco_kwargs = {
+        'host':          '127.0.0.1', 
+        'port':          33334, 
         'ft_bin':           "/home/clandininlab/lib/fictrac211/bin/fictrac",
         'ft_config':        "/home/clandininlab/lib/fictrac211/config_210617.txt", 
-        'ft_host':          '127.0.0.1', 
-        'ft_port':          33334, 
         'ft_theta_idx':     16, 
         'ft_x_idx':         14, 
         'ft_y_idx':         15, 

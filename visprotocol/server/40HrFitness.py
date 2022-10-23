@@ -9,7 +9,7 @@ from flystim.draw import draw_screens
 from visprotocol.server.clandinin_server import Server
 
 from visprotocol.device.daq.labjack import LabJackTSeries
-from ftutil.ft_managers import FtClosedLoopManager
+from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
 
 def get_subscreen(dir):
     # Define screen(s) for the rig. Units in meters
@@ -70,10 +70,10 @@ def main():
 
     loco_class = FtClosedLoopManager
     loco_kwargs = {
+        'host':          '127.0.0.1', 
+        'port':          33334, 
         'ft_bin':           "/home/clandinin/src/fictrac/bin/fictrac",
         'ft_config':        "/home/clandinin/src/fictrac/config.txt", 
-        'ft_host':          '127.0.0.1', 
-        'ft_port':          33334, 
         'ft_theta_idx':     16, 
         'ft_x_idx':         14, 
         'ft_y_idx':         15, 
