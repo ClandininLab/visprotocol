@@ -542,61 +542,6 @@ class SphericalCheckerboardWhiteNoise(BaseProtocol):
 
 # %%
 
-
-# class ContrastReversingGrating(BaseProtocol):
-#     def __init__(self, cfg):
-#         super().__init__(cfg)
-#
-#         self.getRunParameterDefaults()
-#         self.getParameterDefaults()
-#
-#     def getEpochParameters(self):
-#         # TODO: center size with aperture (center and center_size): maybe parent class aperture method?
-#         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
-#
-#         # Make the contrast trajectory
-#         contrast_traj = {'name': 'Sinusoid',
-#                          'temporal_frequency': current_temporal_frequency,
-#                          'amplitude': self.protocol_parameters['contrast'],
-#                          'offset': 0}
-#
-#         self.epoch_parameters = {'name': 'CylindricalGrating',
-#                                  'period': self.protocol_parameters['spatial_period'],
-#                                  'color': [1, 1, 1, 1],
-#                                  'mean': self.protocol_parameters['mean'],
-#                                  'contrast': contrast_traj,
-#                                  'angle': self.protocol_parameters['angle'],
-#                                  'offset': 0.0,
-#                                  'cylinder_radius': 1.0,
-#                                  'cylinder_height': 10.0,
-#                                  'profile': 'square',
-#                                  'theta': self.screen_center[0]}
-#
-#         self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
-#
-#         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
-#                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
-#
-#     def getParameterDefaults(self):
-#         self.protocol_parameters = {'spatial_period': 20.0,
-#                                     'contrast': 1.0,
-#                                     'mean': 0.5,
-#                                     'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
-#                                     'center': [0, 0],
-#                                     'center_size': 40.0,
-#                                     'angle': 0.0,
-#                                     'randomize_order': True}
-#
-#     def getRunParameterDefaults(self):
-#         self.run_parameters = {'protocol_ID': 'ContrastReversingGrating',
-#                                'num_epochs': 40,
-#                                'pre_time': 1.0,
-#                                'stim_time': 4.0,
-#                                'tail_time': 1.0,
-#                                'idle_color': 0.5}
-
-# %%
-
 class ExpandingEdges(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -648,6 +593,7 @@ class ExpandingEdges(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+# %%
 
 class DriftingSquareGrating(BaseProtocol):
     def __init__(self, cfg):
@@ -887,7 +833,7 @@ class FlickeringVertBars(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
-
+# %%
 
 class FlickeringPatch(BaseProtocol):
     def __init__(self, cfg):
@@ -949,7 +895,6 @@ class FlickeringPatch(BaseProtocol):
 
 # %%
 
-
 class LoomingSpot(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -999,7 +944,6 @@ class LoomingSpot(BaseProtocol):
                                'stim_time': 1.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-
 
 # %%
 
@@ -1070,7 +1014,6 @@ class MovingSpotOnDriftingGrating(BaseProtocol):
 
 # %%
 
-
 class SurroundGratingTuning(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -1137,7 +1080,6 @@ class SurroundGratingTuning(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
-
 # %%
 
 class MovingRectangle(BaseProtocol):
@@ -1186,6 +1128,7 @@ class MovingRectangle(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+# %%
 
 class TernaryBars(BaseProtocol):
     def __init__(self, cfg):
@@ -1264,6 +1207,7 @@ class TernaryBars(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
 # %%
 
 class UniformFlash(BaseProtocol):

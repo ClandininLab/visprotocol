@@ -33,6 +33,7 @@ class BaseProtocol():
         self.user_name = cfg.get('user_name')
         self.rig_name = cfg.get('rig_name')
         self.cfg = cfg
+        self.save_metadata_flag = False
 
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'parameter_presets')
 
@@ -85,7 +86,7 @@ class BaseProtocol():
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
 
-    def loadStimuli(self, client, multicall=None, save_metadata_flag=False):
+    def loadStimuli(self, client, multicall=None):
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
 
@@ -100,11 +101,11 @@ class BaseProtocol():
 
         multicall()
 
-    def startStimuli(self, client, append_stim_frames=False, print_profile=True, multicall=None, save_metadata_flag=False):
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True, multicall=None):
 
         do_loco = 'do_loco' in self.cfg and self.cfg['do_loco']
         do_closed_loop = do_loco and 'current_closed_loop' in self.convenience_parameters and self.convenience_parameters['current_closed_loop']
-        save_pos_history = do_closed_loop and save_metadata_flag
+        save_pos_history = do_closed_loop and self.save_metadata_flag
 
         sleep(self.run_parameters['pre_time'])
         
@@ -114,7 +115,7 @@ class BaseProtocol():
         # stim time
         # Locomotion / closed-loop
         if do_loco:
-            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True, write_log=save_metadata_flag)
+            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True, write_log=self.save_metadata_flag)
             if do_closed_loop:
                 multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
                 multicall.loco_loop_start_closed_loop()

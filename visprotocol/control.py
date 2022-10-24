@@ -35,6 +35,7 @@ class EpochRun():
         """
         self.stop = False
         self.pause = False
+        protocol_object.save_metadata_flag = save_metadata_flag
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
         
         self.server_series_dir = None
@@ -100,10 +101,10 @@ class EpochRun():
             client.daq_device.sendTrigger()
 
         # Use the protocol object to send the stimulus to flystim
-        protocol_object.loadStimuli(client, save_metadata_flag=save_metadata_flag)
+        protocol_object.loadStimuli(client)
         # print("CONTROL START EPOCH LOADED STIM")
 
-        protocol_object.startStimuli(client, save_metadata_flag=save_metadata_flag)
+        protocol_object.startStimuli(client)
         # print("CONTROL START EPOCH STARTED STIM")
 
         protocol_object.advanceEpochCounter()
