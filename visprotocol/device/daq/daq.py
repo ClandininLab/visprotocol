@@ -3,8 +3,10 @@
 """
 DAQ (data acquisition) device classes
 
-@author: mhturner and minseung
+@author: minseung
 """
+
+from flyrpc.multicall import MyMultiCall
 
 class DAQ():
     def __init__(self):
@@ -20,10 +22,16 @@ class DAQonServer(DAQ):
         self.manager = None
     def set_manager(self, manager):
         self.manager = manager
-    def sendTrigger(self, **kwargs):
+    def sendTrigger(self, multicall=None, **kwargs):
+        if multicall is not None and isinstance(multicall, MyMultiCall):
+            multicall.daq_sendTrigger(**kwargs)
+            return multicall
         if self.manager is not None:
             self.manager.daq_sendTrigger(**kwargs)
-    def outputStep(self, **kwargs):
+    def outputStep(self, multicall=None, **kwargs):
+        if multicall is not None and isinstance(multicall, MyMultiCall):
+            multicall.daq_outputStep(**kwargs)
+            return multicall
         if self.manager is not None:
             self.manager.daq_outputStep(**kwargs)
 

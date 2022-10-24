@@ -94,6 +94,7 @@ class LocoClosedLoopManager():
         self.socket_manager.connect()
         
         if self.save_directory is not None:
+            os.makedirs(self.save_directory, exist_ok=True)
             log_path = os.path.join(self.save_directory, 'log.txt')
             self.log_file = open(log_path, "a")
 
