@@ -1161,10 +1161,12 @@ class TernaryBars(BaseProtocol):
                                     'patch_width': current_period,
                                     'patch_height': self.protocol_parameters['vert_extent'],
                                     'height': self.protocol_parameters['vert_extent'],
-                                    'width': 360,
+                                    'width': self.protocol_parameters['horiz_extent'],
                                     'theta': current_theta_offset,
                                     'phi': 0,
                                     'angle': current_angle,
+                                    'n_steps_x': 16,
+                                    'n_steps_y': 14,
                                     'update_rate': self.protocol_parameters['update_rate'],
                                     'start_seed': start_seed,
                                     'distribution_data': distribution_data}
@@ -1188,8 +1190,8 @@ class TernaryBars(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'period': [5.0],
-                                    # 'width': 5.0,
-                                    'vert_extent': 120.0,
+                                    'vert_extent': 90.0,
+                                    'horiz_extent': 180.0,
                                     'theta_offset': [0.0],
                                     # 'background': 0.0,
                                     'rand_min': 0.0,
