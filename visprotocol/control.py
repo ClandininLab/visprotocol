@@ -83,7 +83,7 @@ class EpochRun():
 
         # Set screens to dark
         client.manager.black_corner_square()
-        client.manager.set_idle_background(0)
+        # client.manager.set_idle_background(0)
 
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             client.manager.loco_close()
