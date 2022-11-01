@@ -554,7 +554,10 @@ class WhiteNoiseWithOpto(BaseProtocol):
             else:
                 self.convenience_parameters['opto_stim'] = True
             # Find seed s.t. subsequent trials share a seed. Increment seed every 2 trials
-            start_seed = 0 + (self.num_epochs_completed//2)
+            if self.num_epochs_completed == 0:
+                self.fly_start_seed = int(np.random.choice(range(int(1e6))))
+
+            start_seed = self.fly_start_seed + (self.num_epochs_completed//2)
         else:
             print('Unrecognized opto_mode string. Allowable: [on, off, alternating]')
 
