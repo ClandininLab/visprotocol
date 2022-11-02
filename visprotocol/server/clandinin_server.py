@@ -9,7 +9,10 @@ class Server():
             self.manager = StimServer(screens=screens, host='', port=60629, auto_stop=False)
         else:
             self.manager = launch_stim_server(Screen(fullscreen=False, server_number=0, id=0, vsync=False))
-        
+
+        self.loco_manager = None
+        self.daq_device = None        
+
         if loco_class is not None:    self.__set_up_loco__(loco_class, **loco_kwargs)
         if daq_class is not None:     self.__set_up_daq__(daq_class, **daq_kwargs)
 
@@ -26,8 +29,10 @@ class Server():
         self.manager.loop()
 
     def close(self):
-        self.loco_manager.close()
-        self.daq_device.close()
+        if self.loco_manager is not None:
+            self.loco_manager.close()
+        if self.daq_device is not None:
+            self.daq_device.close()
         self.manager.shutdown_flag.set()
 
     def __set_up_loco__(self, loco_class, **kwargs):
