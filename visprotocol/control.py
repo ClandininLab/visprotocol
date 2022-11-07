@@ -55,6 +55,7 @@ class EpochRun():
         # print("START RUN")
 
         # # # Epoch run loop # # #
+        client.manager.print_on_server("Starting run.")
         protocol_object.num_epochs_completed = 0
         while protocol_object.num_epochs_completed < protocol_object.run_parameters['num_epochs']:
             print('COMPLETED {} / {} EPOCHS'.format(protocol_object.num_epochs_completed, protocol_object.run_parameters['num_epochs']))
@@ -77,6 +78,8 @@ class EpochRun():
 
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             client.manager.loco_close()
+        
+        client.manager.print_on_server('Stopping run.')
         # # # Epoch run loop # # #
 
     def startEpoch(self, protocol_object, data, client, save_metadata_flag=True):
@@ -90,12 +93,16 @@ class EpochRun():
         if client.daq_device is not None:
             client.daq_device.sendTrigger()
 
+        client.manager.print_on_server(f'Epoch {protocol_object.num_epochs_completed}')
+        
         # Use the protocol object to send the stimulus to flystim
         protocol_object.loadStimuli(client)
         # print("CONTROL START EPOCH LOADED STIM")
 
         protocol_object.startStimuli(client)
         # print("CONTROL START EPOCH STARTED STIM")
+        
+        client.manager.print_on_server('Epoch completed.')
 
         protocol_object.advanceEpochCounter()
         # print("CONTROL START EPOCH ADVANCED COUNTER")
