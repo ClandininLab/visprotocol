@@ -9,7 +9,10 @@ class Server():
             self.manager = StimServer(screens=screens, host='', port=60629, auto_stop=False)
         else:
             self.manager = launch_stim_server(Screen(fullscreen=False, server_number=0, id=0, vsync=False))
-        
+
+        self.loco_manager = None
+        self.daq_device = None        
+
         if loco_class is not None:    self.__set_up_loco__(loco_class, **loco_kwargs)
         if daq_class is not None:     self.__set_up_daq__(daq_class, **daq_kwargs)
 
@@ -26,8 +29,10 @@ class Server():
         self.manager.loop()
 
     def close(self):
-        self.loco_manager.close()
-        self.daq_device.close()
+        if self.loco_manager is not None:
+            self.loco_manager.close()
+        if self.daq_device is not None:
+            self.daq_device.close()
         self.manager.shutdown_flag.set()
 
     def __set_up_loco__(self, loco_class, **kwargs):
@@ -36,6 +41,7 @@ class Server():
         self.manager.register_function_on_root(self.loco_manager.start, "loco_start")
         self.manager.register_function_on_root(self.loco_manager.close, "loco_close")
         self.manager.register_function_on_root(self.loco_manager.set_pos_0, "loco_set_pos_0")
+        self.manager.register_function_on_root(self.loco_manager.write_to_log, "loco_write_to_log")
         self.manager.register_function_on_root(self.loco_manager.loop_start, "loco_loop_start")
         self.manager.register_function_on_root(self.loco_manager.loop_stop, "loco_loop_stop")
         self.manager.register_function_on_root(self.loco_manager.loop_start_closed_loop, "loco_loop_start_closed_loop")

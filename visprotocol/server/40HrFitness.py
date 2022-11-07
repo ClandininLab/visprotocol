@@ -9,7 +9,7 @@ from flystim.draw import draw_screens
 from visprotocol.server.clandinin_server import Server
 
 from visprotocol.device.daq.labjack import LabJackTSeries
-from ftutil.ft_managers import FtClosedLoopManager
+from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
 
 def get_subscreen(dir):
     # Define screen(s) for the rig. Units in meters
@@ -59,9 +59,9 @@ def get_subscreen(dir):
     return SubScreen(pa=pa, pb=pb, pc=pc, viewport_ll=viewport_ll, viewport_width=viewport_width, viewport_height=viewport_height)
 
 def main():
-    left_screen = Screen(subscreens=[get_subscreen('l')], server_number=1, id=1, fullscreen=True, vsync=True, square_size=(0.03, 0.08), square_loc=(-1, -1), name='Left', horizontal_flip=False)
-    center_screen = Screen(subscreens=[get_subscreen('c')], server_number=1, id=2, fullscreen=True, vsync=True, square_size=(0.035, 0.08), square_loc=(-1, -1), name='Center', horizontal_flip=False)
-    right_screen = Screen(subscreens=[get_subscreen('r')], server_number=1, id=3, fullscreen=True, vsync=True, square_size=(0.04, 0.08), square_loc=(-1, +0.92), name='Right', horizontal_flip=False)
+    left_screen = Screen(subscreens=[get_subscreen('l')], server_number=1, id=1, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, -1), name='Left', horizontal_flip=False)
+    center_screen = Screen(subscreens=[get_subscreen('c')], server_number=1, id=2, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, -1), name='Center', horizontal_flip=False)
+    right_screen = Screen(subscreens=[get_subscreen('r')], server_number=1, id=3, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, +0.90), name='Right', horizontal_flip=False)
     aux_screen = Screen(subscreens=[get_subscreen('aux')], server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
     screens = [left_screen, center_screen, right_screen, aux_screen]
@@ -70,10 +70,10 @@ def main():
 
     loco_class = FtClosedLoopManager
     loco_kwargs = {
+        'host':          '127.0.0.1', 
+        'port':          33334, 
         'ft_bin':           "/home/clandinin/src/fictrac/bin/fictrac",
         'ft_config':        "/home/clandinin/src/fictrac/config.txt", 
-        'ft_host':          '127.0.0.1', 
-        'ft_port':          33334, 
         'ft_theta_idx':     16, 
         'ft_x_idx':         14, 
         'ft_y_idx':         15, 

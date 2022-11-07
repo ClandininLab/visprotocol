@@ -21,7 +21,7 @@ import flyrpc.multicall
 import visprotocol
 
 
-class BaseProtocol(): # EJ - Where the meat of all the base protocol code is at 
+class BaseProtocol():
     def __init__(self, cfg):
         self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
@@ -33,6 +33,7 @@ class BaseProtocol(): # EJ - Where the meat of all the base protocol code is at
         self.user_name = cfg.get('user_name')
         self.rig_name = cfg.get('rig_name')
         self.cfg = cfg
+        self.save_metadata_flag = False
 
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'parameter_presets')
 
@@ -43,6 +44,9 @@ class BaseProtocol(): # EJ - Where the meat of all the base protocol code is at
     def adjustCenter(self, relative_center):
         absolute_center = [sum(x) for x in zip(relative_center, self.screen_center)]
         return absolute_center
+
+    def getEpochParameters(self):
+        pass
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': '',
@@ -82,20 +86,40 @@ class BaseProtocol(): # EJ - Where the meat of all the base protocol code is at
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
 
-    def loadStimuli(self, client):
+    def loadStimuli(self, client, multicall=None):
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+
         bg = self.run_parameters.get('idle_color')
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
 
-        passedParameters = self.epoch_parameters.copy()
-        multicall.load_stim(**passedParameters, hold=True)
+        if isinstance(self.epoch_parameters, list):
+            for ep in self.epoch_parameters:
+                multicall.load_stim(**ep.copy(), hold=True)
+        else:
+            multicall.load_stim(**self.epoch_parameters.copy(), hold=True)
+
         multicall()
 
-    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True, multicall=None):
+
+        do_loco = 'do_loco' in self.cfg and self.cfg['do_loco']
+        do_closed_loop = do_loco and 'current_closed_loop' in self.convenience_parameters and self.convenience_parameters['current_closed_loop']
+        save_pos_history = do_closed_loop and self.save_metadata_flag
+
         sleep(self.run_parameters['pre_time'])
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+
         # stim time
-        multicall.start_stim(append_stim_frames=append_stim_frames)
+        # Locomotion / closed-loop
+        if do_loco:
+            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_last_data_line=True, write_log=self.save_metadata_flag)
+            if do_closed_loop:
+                multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
+                multicall.loco_loop_start_closed_loop()
+        multicall.start_stim(save_pos_history=save_pos_history, append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
         multicall()
         sleep(self.run_parameters['stim_time'])
@@ -104,6 +128,11 @@ class BaseProtocol(): # EJ - Where the meat of all the base protocol code is at
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
+        # Locomotion / closed-loop
+        if do_closed_loop:
+            multicall.loco_loop_stop_closed_loop()
+        if save_pos_history:
+            multicall.save_pos_history_to_file(epoch_id=f'{self.num_epochs_completed:03d}')
         multicall()
 
         sleep(self.run_parameters['tail_time'])

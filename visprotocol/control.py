@@ -7,6 +7,7 @@ EpochRun object controls presentation of a sequence of epochs ("epoch run")
 from PyQt5.QtWidgets import QApplication
 from time import sleep
 import os
+import posixpath
 
 class EpochRun():
     def __init__(self):
@@ -34,13 +35,22 @@ class EpochRun():
         """
         self.stop = False
         self.pause = False
+        protocol_object.save_metadata_flag = save_metadata_flag
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
+        
+        self.server_series_dir = None
+        if save_metadata_flag and ('server_data_directory' in data.cfg) and (data.cfg['server_data_directory'] is not None):
+            self.server_series_dir = posixpath.join(data.cfg['server_data_directory'], data.experiment_file_name, str(data.series_count))
+            
+            # set directory in which to save animal positions from each screen.
+            server_pos_history_dir = posixpath.join(self.server_series_dir, 'flystim_pos')
+            client.manager.set_save_pos_history_dir(server_pos_history_dir)
         
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             if save_metadata_flag:
-                if data.cfg['server_data_directory'] is not None:
-                    server_experiment_dir = os.path.join(data.cfg['server_data_directory'], data.experiment_file_name, str(data.series_count))
-                    client.manager.loco_set_save_directory(server_experiment_dir)
+                if ('server_data_directory' in data.cfg) and (data.cfg['server_data_directory'] is not None):
+                    server_loco_dir = posixpath.join(self.server_series_dir, 'loco')
+                    client.manager.loco_set_save_directory(server_loco_dir)
                 else:
                     print("Locomotion data can't be saved on server without server_data_directory specified in config.yaml.")
             client.manager.loco_start()
@@ -74,7 +84,7 @@ class EpochRun():
 
         # Set screens to dark
         client.manager.black_corner_square()
-        client.manager.set_idle_background(0)
+        # client.manager.set_idle_background(0)
 
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             client.manager.loco_close()
