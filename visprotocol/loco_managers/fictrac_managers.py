@@ -42,10 +42,17 @@ class FtManager(LocoManager):
             self.p = subprocess.Popen([self.ft_bin, self.ft_config, "-v","ERR"], cwd=self.cwd, start_new_session=True)
             self.started = True
 
-    def close(self):
+    def close(self, timeout=5):
         if self.started:
             self.p.send_signal(signal.SIGINT)
-            sleep(0.5) # time for fictrac to wrap up writing
+            
+            try:
+                self.p.wait(timeout=timeout)
+            except:
+                print("Timeout expired for closing Fictrac. Killing process...")
+                self.p.kill()
+                self.p.terminate()
+
             self.p = None
             self.started = False
 
@@ -56,9 +63,7 @@ class FtManager(LocoManager):
                 while os.listdir(self.cwd):
                     for fn in os.listdir(self.cwd):
                         shutil.move(os.path.join(self.cwd, fn), self.save_directory)
-                shutil.rmtree(self.cwd)
-            #self.p.kill()
-            #self.p.terminate()
+                shutil.rmtree(self.cwd)            
 
         else:
             print("Fictrac hasn't been started yet. Cannot be closed.")
@@ -87,9 +92,8 @@ class FtClosedLoopManager(LocoClosedLoopManager):
         super().close()
         self.ft_manager.close()
 
-    def __parse_line(self, line):
+    def _parse_line(self, line):
         toks = line.split(", ")
-        self.data_prev = toks
 
         # Fictrac lines always starts with FT
         if toks.pop(0) != "FT":
