@@ -59,13 +59,15 @@ def get_subscreen(dir):
     return SubScreen(pa=pa, pb=pb, pc=pc, viewport_ll=viewport_ll, viewport_width=viewport_width, viewport_height=viewport_height)
 
 def main():
-    left_screen = Screen(subscreens=[get_subscreen('l')], server_number=1, id=1, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, -1), name='Left', horizontal_flip=False)
-    center_screen = Screen(subscreens=[get_subscreen('c')], server_number=1, id=2, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, -1), name='Center', horizontal_flip=False)
-    right_screen = Screen(subscreens=[get_subscreen('r')], server_number=1, id=3, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, +0.90), name='Right', horizontal_flip=False)
+    square_max_color = 0.5
+    left_screen = Screen(subscreens=[get_subscreen('l')], server_number=1, id=1, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, -1), square_max_color=square_max_color, name='Left', horizontal_flip=False)
+    center_screen = Screen(subscreens=[get_subscreen('c')], server_number=1, id=2, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, -1), square_max_color=square_max_color, name='Center', horizontal_flip=False)
+    right_screen = Screen(subscreens=[get_subscreen('r')], server_number=1, id=3, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, +0.90), square_max_color=square_max_color, name='Right', horizontal_flip=False)
     aux_screen = Screen(subscreens=[get_subscreen('aux')], server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
-    screens = [left_screen, center_screen, right_screen, aux_screen]
-    # screens = [left_screen, center_screen, right_screen]
+    # screens = [left_screen, center_screen, right_screen, aux_screen]
+    screens = [left_screen, center_screen, right_screen]
+    # screens = [left_screen]
     # draw_screens(screens); plt.show()
 
     loco_class = FtClosedLoopManager

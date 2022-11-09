@@ -3,7 +3,7 @@ import socket, select
 import threading
 import json
 from math import degrees
-from time import time
+from time import time, sleep
 
 class LocoManager():
     def __init__(self) -> None:
@@ -36,17 +36,38 @@ class LocoSocketManager():
         if self.sock is not None:
             self.sock.close()
 
-    def get_line(self, wait_for=0):
+    def get_line(self, wait_for=None):
         '''
         Assumes that lines are separated by '\n'
         '''
         if self.sock is None:
             return
         
+        ##
+        # if wait_for is None:
+        #     ready = select.select([self.sock], [], [])[0]
+        # else:
+        #     ready = select.select([self.sock], [], [], wait_for)[0]
+
+        # if ready:
+        #     new_data = self.sock.recv(4096)
+        # else:
+        #     return self.get_line(wait_for=wait_for)
+        ##
+
+        ##
         ready = []
         while not ready:
-            ready = select.select([self.sock], [], [], wait_for)[0]
+            if self.sock == -1:
+                print('\nSocket disconnected.')
+                return None
+            if wait_for is None:
+                ready = select.select([self.sock], [], [])[0]
+            else:
+                ready = select.select([self.sock], [], [], wait_for)[0]
         new_data = self.sock.recv(4096)
+        ##
+
         if not new_data and not self.udp: # TCP and blank new_data...
             print('\nDisconnected from TCP server.')
             return None
@@ -72,6 +93,7 @@ class LocoClosedLoopManager():
         self.save_directory = save_directory
         self.log_file = None
 
+        self.data_prev = []
         self.pos_0 = {'theta': 0, 'x': 0, 'y': 0, 'z': 0}
 
         self.loop_attrs = {
@@ -101,6 +123,9 @@ class LocoClosedLoopManager():
         self.started = True
 
     def close(self):
+        if self.is_looping():
+            self.loop_stop()
+
         self.socket_manager.close()
         
         if self.log_file is not None:
@@ -109,17 +134,21 @@ class LocoClosedLoopManager():
             
         self.started = False
 
-    def get_data(self, wait_for=0):
+    def get_data(self, wait_for=None):
         line = self.socket_manager.get_line(wait_for=wait_for)
         
-        return self.__parse_line(self, line)
+        data = self._parse_line(line)
+        self.data_prev = data
+
+        return data
     
-    def __parse_line(self, line):
+    def _parse_line(self, line):
         # TODO: Check line and parse line
 
         toks = line.split(", ")
-        self.data_prev = toks
-                 
+        
+        print("Please implement __parse_line in the inheriting class!")
+
         theta = 0
         x = 0
         y = 0
