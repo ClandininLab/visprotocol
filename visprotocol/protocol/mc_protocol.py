@@ -519,6 +519,55 @@ class OcclusionFixed(BaseProtocol):
 
 # %%
 
+class StripeFixation(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        current_intensity, current_angle, current_theta, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.convenience_parameters = {'current_angle': current_angle,
+                                       'current_intensity': current_intensity,
+                                       'current_theta': current_theta,
+                                       'current_closed_loop': current_closed_loop}
+        
+        theta_trajectory = {'name': 'tv_pairs',
+                        'tv_pairs': [(0, current_theta), (1, current_theta)],
+                        'kind': 'linear'}
+
+        self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
+                            'width': self.protocol_parameters['width'],
+                            'height': self.protocol_parameters['height'],
+                            'color': current_intensity,
+                            'theta': current_theta,
+                            'angle': current_angle}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'width': 5.0,
+                                    'height': 50.0,
+                                    'intensity': [0.0, 1.0],
+                                    'center': [0, 0],
+                                    'angle': [0.0],
+                                    'theta': [0.0],
+                                    'closed_loop': [0],
+                                    'render_on_cylinder': True,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'MovingRectangle',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
+
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
