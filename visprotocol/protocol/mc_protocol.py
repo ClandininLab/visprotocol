@@ -536,10 +536,6 @@ class StripeFixation(BaseProtocol):
                                        'current_theta': current_theta,
                                        'current_closed_loop': current_closed_loop}
         
-        theta_trajectory = {'name': 'tv_pairs',
-                        'tv_pairs': [(0, current_theta), (1, current_theta)],
-                        'kind': 'linear'}
-
         self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
                             'width': self.protocol_parameters['width'],
                             'height': self.protocol_parameters['height'],
