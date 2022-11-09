@@ -527,27 +527,26 @@ class StripeFixation(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        current_width, current_height, current_intensity, current_angle, current_theta, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['height'], self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        current_intensity, current_angle, current_theta, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
-
-        self.convenience_parameters = {'current_angle': current_angle,
+        self.convenience_parameters = {'current_width': current_width,
+                                       'current_height': current_height,
+                                       'current_angle': current_angle,
                                        'current_intensity': current_intensity,
                                        'current_theta': current_theta,
                                        'current_closed_loop': current_closed_loop}
         
         self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
-                            'width': self.protocol_parameters['width'],
-                            'height': self.protocol_parameters['height'],
+                            'width': current_width,
+                            'height': current_angle,
                             'color': current_intensity,
                             'theta': current_theta,
                             'angle': current_angle}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'width': 5.0,
-                                    'height': 50.0,
+        self.protocol_parameters = {'width': [5.0],
+                                    'height': [50.0],
                                     'intensity': [0.0, 1.0],
-                                    'center': [0, 0],
                                     'angle': [0.0],
                                     'theta': [0.0],
                                     'closed_loop': [0],
