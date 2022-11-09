@@ -538,7 +538,7 @@ class StripeFixation(BaseProtocol):
         
         self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
                             'width': current_width,
-                            'height': current_angle,
+                            'height': current_height,
                             'color': current_intensity,
                             'theta': current_theta,
                             'angle': current_angle}
