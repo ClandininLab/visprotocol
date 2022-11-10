@@ -14,6 +14,7 @@ import numpy as np
 from time import sleep
 
 import os.path
+import os
 import yaml
 import inspect
 import flyrpc.multicall
@@ -36,6 +37,7 @@ class BaseProtocol():
         self.save_metadata_flag = False
 
         self.parameter_preset_directory = os.path.join(inspect.getfile(visprotocol).split('visprotocol')[0], 'visprotocol', 'resources', self.user_name, 'parameter_presets')
+        os.makedirs(self.parameter_preset_directory, exist_ok=True)
 
         # Rig-specific screen center
         self.screen_center = self.cfg.get('rig_config').get(self.rig_name).get('screen_center', [0, 0])
@@ -72,7 +74,7 @@ class BaseProtocol():
         new_preset = {'run_parameters': self.run_parameters,
                       'protocol_parameters': self.protocol_parameters}
         self.parameter_presets[name] = new_preset
-        with open(os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID'] + '.yaml'), 'w') as ymlfile:
+        with open(os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID'] + '.yaml'), 'w+') as ymlfile:
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
     def selectProtocolPreset(self, name):
