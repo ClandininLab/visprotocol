@@ -21,7 +21,7 @@ class LabJackTSeries(DAQ):
         self.serial_number = self.info[2]
 
         self.is_open = True
-        
+
         if self.deviceType == ljm.constants.dtT4:
             # LabJack T4 configuration
 
@@ -42,7 +42,7 @@ class LabJackTSeries(DAQ):
             # Enabling internally-clocked stream.
             ljm.eWriteName(self.handle, "STREAM_CLOCK_SOURCE", 0)
 
-            # All analog input ranges are +/-1 V, stream settling is 6 
+            # All analog input ranges are +/-1 V, stream settling is 6
             # and stream resolution index is 0 (default).
             aNames = ["AIN_ALL_RANGE", "STREAM_SETTLING_US", "STREAM_RESOLUTION_INDEX", "AIN_ALL_NEGATIVE_CH"]
             aValues = [10.0, 6, 0, 199]
@@ -78,8 +78,27 @@ class LabJackTSeries(DAQ):
             time.sleep(high_time)
         self.write(output_channel, (write_states*0).tolist())
 
+    def analogOutputStep(self, output_channel='DAC0', low_time=0.001, high_time=1, initial_delay=0.00):
+        # TODO: finish this make it a step of param amp and timing
+        # t0 = time.time()
+
+        if not isinstance(output_channel, list):
+            output_channel = [output_channel]
+
+        write_states = np.ones(len(output_channel), dtype=int)
+        if initial_delay > 0:
+            time.sleep(initial_delay)
+        if low_time > 0:
+            self.write(output_channel, (write_states*0).tolist())
+            time.sleep(low_time)
+        if high_time > 0:
+            self.write(output_channel, (write_states*1).tolist())
+            time.sleep(high_time)
+        self.write(output_channel, (write_states*0).tolist())
+
+        # print('dt={:3f}'.format(time.time()-t0))
+
     def close(self):
         if self.is_open:
             ljm.close(self.handle)
             self.is_open = False
-

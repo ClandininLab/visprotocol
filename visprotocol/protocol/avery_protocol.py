@@ -8,6 +8,8 @@ import os
 import flyrpc.multicall
 import inspect
 from time import sleep
+import threading
+from visprotocol.device.daq import labjack
 
 import visprotocol
 from visprotocol.protocol import clandinin_protocol
@@ -415,6 +417,84 @@ class UniformFlash(BaseProtocol):
                                'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
+
+# %% FlashWithOpto
+
+class FlashWithOpto(BaseProtocol):
+    # TODO: add custom startStimuli() with threaded labjack.analogOutputStep()
+    # something like...
+    # dev = labjack.LabJackTSeries()
+    # t = threading.Thread(target=d.analogOutputStep, args=(0,1,11,1))
+    # t.start()
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'], randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.epoch_parameters = {'name': 'MovingPatch',
+                                 'width': self.protocol_parameters['width'],
+                                 'height': self.protocol_parameters['height'],
+                                 'sphere_radius': 1,
+                                 'color': current_intensity,
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1],
+                                 'angle': 0}
+        self.convenience_parameters = {'current_intensity': current_intensity}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 120.0,
+                                    'width': 120.0,
+                                    'center': [0, 0],
+                                    'intensity': [1.0, 0.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'FlashWithOpto',
+                               'num_epochs': 10,
+                               'pre_time': 1.0,
+                               'stim_time': 0.5,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        # Start the labjack device
+        # TODO: pass the right params to LabJackTSeries init
+        labjack_dev = labjack.LabJackTSeries()
+
+        # Create the thread
+        # TODO: pass the right params to analogOutputStep
+        # TODO: update the analogOutputStep fxn
+        labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep, args=(0,1,11,1))
+
+        # start the thread
+        labjack_thread.start()
+        # pre time
+        sleep(self.run_parameters['pre_time'])
+
+        # The rest of this is standard visual stim stuff...
+        # Multicall starts multiple stims simultaneously
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_stim(append_stim_frames=append_stim_frames)
+        multicall.start_corner_square()
+        multicall()  # multicall starts stim and corner square at the same time
+        sleep(self.run_parameters['stim_time'])  # sleep during the stim time
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+        multicall()   # multicall to stop stim + corner square at the same time
+
+        sleep(self.run_parameters['tail_time'])  # sleep during tail time
 
 
 # %% Flickering full field with opto
