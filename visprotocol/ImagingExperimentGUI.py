@@ -797,7 +797,11 @@ class InitializeExperimentGUI(QWidget):
             self.parent.close()
 
     def onPressedDirectoryButton(self):
-        filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        if os.path.isdir(self.experimentGuiObject.data.data_directory):
+            filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory", self.experimentGuiObject.data.data_directory))
+        else:
+            filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        
         self.le_DataDirectory.setText(filePath)
 
 class InitializeRigGUI(QWidget):
