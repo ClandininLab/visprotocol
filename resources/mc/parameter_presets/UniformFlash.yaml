@@ -43,3 +43,20 @@ impulse_smallfield:
     - 0.0
     - 0.0
     intensity: 1.0
+hold 0.5:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 30.0
+    pre_time: 1.0
+    stim_time: 10.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 170.0
+    width: 190.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 0.5
+    randomize_order: true

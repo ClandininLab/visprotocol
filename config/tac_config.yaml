@@ -1,7 +1,7 @@
 experimenter: TAC
 prep_choices: [Medulla]
-driver_choices: [nsyb]
-indicator_choices: [GCaMP6f, TdTomato]
+driver_choices: [nsyb-SIx, nsyb-SI2, nsyb-SSx, VGAT-SIx, GAD1-SIx, VGlut-SIx, ChAT-SIx, ple-SIx]
+indicator_choices: [GCaMP8m, GCaMP8m-P2A-tdTomato, GCaMP6f, TdTomato]
 
 rig_config:
 
