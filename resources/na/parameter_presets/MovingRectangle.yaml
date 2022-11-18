@@ -1,24 +1,4 @@
-left_optic_lobe_mapping_v0:
-  run_parameters:
-    protocol_ID: MovingRectangle
-    num_epochs: 40.0
-    pre_time: 0.5
-    stim_time: 3.0
-    tail_time: 1.0
-    idle_color: 0.0
-  protocol_parameters:
-    width: 15.0
-    height: 150.0
-    intensity:
-    - 1.0
-    center:
-    - 45.0
-    - 0.0
-    speed: 45.0
-    angle:
-    - 0.0
-    randomize_order: true
-initial_fixation_sweep:
+initial_fixation_test:
   run_parameters:
     protocol_ID: MovingRectangle
     num_epochs: 60.0
