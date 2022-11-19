@@ -57,13 +57,15 @@ class FtManager(LocoManager):
             self.started = False
 
             if self.save_directory is None or self.save_directory=="":
+                print("Deleting Fictrac files from preview.")
                 shutil.rmtree(self.cwd)
             else:
+                print("Moving Fictrac files then deleting.")
                 os.makedirs(self.save_directory, exist_ok=True)
                 while os.listdir(self.cwd):
                     for fn in os.listdir(self.cwd):
                         shutil.move(os.path.join(self.cwd, fn), self.save_directory)
-                shutil.rmtree(self.cwd)            
+                shutil.rmtree(self.cwd)
 
         else:
             print("Fictrac hasn't been started yet. Cannot be closed.")
@@ -83,6 +85,10 @@ class FtClosedLoopManager(LocoClosedLoopManager):
         self.ft_manager = FtManager(ft_bin=ft_bin, ft_config=ft_config, save_directory=save_directory, start_at_init=False)
 
         if start_at_init:    self.start()
+
+    def set_save_directory(self, save_directory):
+        self.save_directory = save_directory
+        self.ft_manager.set_save_directory(save_directory)
 
     def start(self):
         super().start()
