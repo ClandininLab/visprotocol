@@ -463,23 +463,29 @@ class FlashWithOpto(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
-
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
-        # Start the labjack device
-        # TODO: pass the right params to LabJackTSeries init
+        # Create the labjack device
+        # TODO: check to see if it makes more sense to not re-create device each epoch
         labjack_dev = labjack.LabJackTSeries()
 
         # Create the thread
-        # TODO: pass the right params to analogOutputStep
-        # TODO: update the analogOutputStep fxn
-        labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep, args=(0,1,11,1))
+        args_dict = {'output_channel': 'DAC0',
+                     'pre_time': 0.5,  # sec
+                     'step_time': 1.0,  # sec
+                     'tail_time': 0.5,  # sec
+                     'step_amp': 1,  # V
+                     'dt': 0.01,  # sec
+                     }
+        labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep,
+                                          args=tuple(args_dict.values()))
 
         # start the thread
         labjack_thread.start()
+
+        # Vis stimulus stuff follows...
         # pre time
         sleep(self.run_parameters['pre_time'])
 
-        # The rest of this is standard visual stim stuff...
         # Multicall starts multiple stims simultaneously
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
         # stim time
@@ -495,6 +501,9 @@ class FlashWithOpto(BaseProtocol):
         multicall()   # multicall to stop stim + corner square at the same time
 
         sleep(self.run_parameters['tail_time'])  # sleep during tail time
+
+        # close the labjack device
+        labjack_dev.close()
 
 
 # %% Flickering full field with opto

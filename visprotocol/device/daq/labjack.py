@@ -78,25 +78,33 @@ class LabJackTSeries(DAQ):
             time.sleep(high_time)
         self.write(output_channel, (write_states*0).tolist())
 
-    def analogOutputStep(self, output_channel='DAC0', low_time=0.001, high_time=1, initial_delay=0.00):
-        # TODO: finish this make it a step of param amp and timing
-        # t0 = time.time()
+    def analogOutputStep(self, output_channel='DAC0', pre_time=0.5, step_time=1, tail_time=0.5, step_amp=0.5, dt=0.01):
+        """
+        Generate a voltage step with defined amplitude
+            Step comes on at pre_time and goes off at pre_time+step_time
 
-        if not isinstance(output_channel, list):
-            output_channel = [output_channel]
+        output_channel: (str) name of analog output channel on device
+        pre_time: (sec) time duration before the step comes on (v=0)
+        step_time: (sec) duration that step is on
+        tail_time: (sec) duration after step (v=0)
+        step_amp: (V) amplitude of output step
+        dt: (sec) time step size used to generate waveform
 
-        write_states = np.ones(len(output_channel), dtype=int)
-        if initial_delay > 0:
-            time.sleep(initial_delay)
-        if low_time > 0:
-            self.write(output_channel, (write_states*0).tolist())
-            time.sleep(low_time)
-        if high_time > 0:
-            self.write(output_channel, (write_states*1).tolist())
-            time.sleep(high_time)
-        self.write(output_channel, (write_states*0).tolist())
+        """
+        t0 = time.time()  # TODO: remove
+        total_time = pre_time + step_time + tail_time
+        for t in np.arange(0, total_time, dt):
+            if t < pre_time:
+                value = 0
+            elif t > pre_time and t <= (pre_time+step_time):
+                value = step_amp
+            elif t > (pre_time+step_time):
+                value = 0
+            else:
+                value = 0
+            ljm.eWriteName(self.handle, self.output_channel, value)
 
-        # print('dt={:3f}'.format(time.time()-t0))
+        print('dt={:3f}'.format(time.time()-t0))  # TODO: remove
 
     def close(self):
         if self.is_open:
