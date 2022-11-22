@@ -443,7 +443,10 @@ class ImagingExperimentGUI(QWidget):
             self.populateGroups()
 
         elif sender.text() == 'Load experiment':
-            filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
+            if os.path.isdir(self.data.data_directory):
+                filePath, _ = QFileDialog.getOpenFileName(self, "Open file", self.data.data_directory)
+            else:
+                filePath, _ = QFileDialog.getOpenFileName(self, "Open file")
             self.data.experiment_file_name = os.path.split(filePath)[1].split('.')[0]
             self.data.data_directory = os.path.split(filePath)[0]
 
