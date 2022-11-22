@@ -1,6 +1,5 @@
 import numpy as np
 import time
-
 from visprotocol.device.daq import DAQ
 
 from labjack import ljm
@@ -91,20 +90,25 @@ class LabJackTSeries(DAQ):
         dt: (sec) time step size used to generate waveform
 
         """
-        t0 = time.time()  # TODO: remove
+
         total_time = pre_time + step_time + tail_time
-        for t in np.arange(0, total_time, dt):
-            if t < pre_time:
+        t0 = time.time()
+        clock_time = time.time() - t0  # sec since t0
+        while clock_time < total_time:
+            clock_time = time.time() - t0  # sec since t0
+            if clock_time < pre_time:
                 value = 0
-            elif t > pre_time and t <= (pre_time+step_time):
+            elif clock_time > pre_time and clock_time <= (pre_time+step_time):
                 value = step_amp
-            elif t > (pre_time+step_time):
+            elif clock_time > (pre_time+step_time):
                 value = 0
             else:
                 value = 0
-            ljm.eWriteName(self.handle, self.output_channel, value)
+            ljm.eWriteName(self.handle, output_channel, value)
+            time.sleep(dt)
 
-        print('dt={:3f}'.format(time.time()-t0))  # TODO: remove
+    def setAnalogOutputToZero(self, output_channel='DAC0'):
+        ljm.eWriteName(self.handle, output_channel, 0)
 
     def close(self):
         if self.is_open:

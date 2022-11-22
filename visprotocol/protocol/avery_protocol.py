@@ -427,7 +427,7 @@ class OptoStepSeries(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_led_intensity, current_led_duration = self.selectParametersFromLists((self.protocol_parameters['led_intensity'], 
+        current_led_intensity, current_led_duration = self.selectParametersFromLists((self.protocol_parameters['led_intensity'],
                                                                                       self.protocol_parameters['led_duration']),
                                                                                      randomize_order=self.protocol_parameters['randomize_order'])
 
@@ -442,18 +442,18 @@ class OptoStepSeries(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {
-                                    'led_duration': [0.5, 1.0, 2.0, 4.0],  # sec, duration
-                                    'led_intensity': [0.1, 0.2, 0.4, 0.8, 1.6],  # V
+                                    'led_duration': [0.25, 0.5, 2.0, 4.0],  # sec, duration. Must be shorter than stim_time
+                                    'led_intensity': [0.25, 0.5, 1, 2, 4],  # V
                                     'randomize_order': True
                                     }
 
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'OptoStepSeries',
-                               'num_epochs': 50,
+                               'num_epochs': 150,
                                'pre_time': 2,
-                               'stim_time': 4,
-                               'tail_time': 8,
+                               'stim_time': 5,
+                               'tail_time': 10,
                                'idle_color': 0.5}
 
 
@@ -465,20 +465,22 @@ class OptoStepSeries(BaseProtocol):
 
         # Create the thread
         args_dict = {'output_channel': 'DAC0',
-                     'pre_time': self.run_parameters['pre_time'],  # sec
+                     'pre_time': 0,  # sec
                      'step_time': self.convenience_parameters['current_led_duration'],  # sec
-                     'tail_time': self.run_parameters['stim_time'] - self.convenience_parameters['current_led_duration'] - self.run_parameters['pre_time'],  # sec
+                     'tail_time': 0,  # sec
                      'step_amp': self.convenience_parameters['current_led_intensity'],  # V
                      'dt': 0.01,  # sec
                      }
         labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep,
                                           args=tuple(args_dict.values()))
 
-        # start the thread
-        labjack_thread.start()
+        assert self.convenience_parameters['current_led_duration'] < self.run_parameters['stim_time'], "led_duration must be shorter than stim_time"
 
         # Vis stimulus stuff follows. Just do flickering corner to give stim timing, I guess.
         sleep(self.run_parameters['pre_time'])
+
+        # start the thread
+        labjack_thread.start()
 
         # Multicall starts multiple stims simultaneously
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
@@ -495,9 +497,10 @@ class OptoStepSeries(BaseProtocol):
         sleep(self.run_parameters['tail_time'])  # sleep during tail time
 
         # close the labjack device
+        labjack_dev.setAnalogOutputToZero(output_channel='DAC0')
         labjack_dev.close()
 
-    
+
 
 # %% FlashSeriesWithOptoStep
 
@@ -552,15 +555,15 @@ class FlashSeriesWithOptoStep(BaseProtocol):
                                     'flash_intensity': 1,
 
                                     'led_time': 2,  # sec, onset
-                                    'led_duration': 6,  # sec, duration
+                                    'led_duration': 6,  # sec, duration. Must be shorter than stim_time
 
-                                    'led_intensity': [0.1, 0.2, 0.4, 0.8, 1.6],  # V
+                                    'led_intensity': [0.25, 0.5, 1, 2, 4],  # V
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'FlashSeriesWithOptoStep',
-                               'num_epochs': 50,
-                               'pre_time': 1,
+                               'num_epochs': 100,
+                               'pre_time': 2,
                                'stim_time': 15,
                                'tail_time': 2,
                                'idle_color': 0.5}
@@ -582,12 +585,13 @@ class FlashSeriesWithOptoStep(BaseProtocol):
         labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep,
                                           args=tuple(args_dict.values()))
 
-        # start the thread
-        labjack_thread.start()
+        assert self.protocol_parameters['led_duration'] < self.run_parameters['stim_time'], "led_duration must be shorter than stim_time"
 
-        # Vis stimulus stuff follows...
         # pre time
         sleep(self.run_parameters['pre_time'])
+
+        # start the thread
+        labjack_thread.start()
 
         # Multicall starts multiple stims simultaneously
         multicall = flyrpc.multicall.MyMultiCall(client.manager)
@@ -606,6 +610,7 @@ class FlashSeriesWithOptoStep(BaseProtocol):
         sleep(self.run_parameters['tail_time'])  # sleep during tail time
 
         # close the labjack device
+        labjack_dev.setAnalogOutputToZero(output_channel='DAC0')
         labjack_dev.close()
 
 
