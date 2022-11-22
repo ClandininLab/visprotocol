@@ -131,6 +131,7 @@ class LocoClosedLoopManager():
         if self.log_file is not None:
             self.log_file.flush()
             self.log_file.close()
+            self.log_file = None
             
         self.started = False
 

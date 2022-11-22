@@ -1,0 +1,18 @@
+Update40:
+  run_parameters:
+    protocol_ID: WhiteNoiseWithOpto
+    num_epochs: 150.0
+    pre_time: 2.0
+    stim_time: 10.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    update_rate: 40.0
+    opto_mode: alternating
+    opto_time: 1.0
+    randomize_order: true

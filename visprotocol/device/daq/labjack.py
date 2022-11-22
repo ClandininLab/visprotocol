@@ -21,7 +21,7 @@ class LabJackTSeries(DAQ):
         self.serial_number = self.info[2]
 
         self.is_open = True
-        
+
         if self.deviceType == ljm.constants.dtT4:
             # LabJack T4 configuration
 
@@ -42,7 +42,7 @@ class LabJackTSeries(DAQ):
             # Enabling internally-clocked stream.
             ljm.eWriteName(self.handle, "STREAM_CLOCK_SOURCE", 0)
 
-            # All analog input ranges are +/-1 V, stream settling is 6 
+            # All analog input ranges are +/-1 V, stream settling is 6
             # and stream resolution index is 0 (default).
             aNames = ["AIN_ALL_RANGE", "STREAM_SETTLING_US", "STREAM_RESOLUTION_INDEX", "AIN_ALL_NEGATIVE_CH"]
             aValues = [10.0, 6, 0, 199]
@@ -78,8 +78,35 @@ class LabJackTSeries(DAQ):
             time.sleep(high_time)
         self.write(output_channel, (write_states*0).tolist())
 
+    def analogOutputStep(self, output_channel='DAC0', pre_time=0.5, step_time=1, tail_time=0.5, step_amp=0.5, dt=0.01):
+        """
+        Generate a voltage step with defined amplitude
+            Step comes on at pre_time and goes off at pre_time+step_time
+
+        output_channel: (str) name of analog output channel on device
+        pre_time: (sec) time duration before the step comes on (v=0)
+        step_time: (sec) duration that step is on
+        tail_time: (sec) duration after step (v=0)
+        step_amp: (V) amplitude of output step
+        dt: (sec) time step size used to generate waveform
+
+        """
+        t0 = time.time()  # TODO: remove
+        total_time = pre_time + step_time + tail_time
+        for t in np.arange(0, total_time, dt):
+            if t < pre_time:
+                value = 0
+            elif t > pre_time and t <= (pre_time+step_time):
+                value = step_amp
+            elif t > (pre_time+step_time):
+                value = 0
+            else:
+                value = 0
+            ljm.eWriteName(self.handle, self.output_channel, value)
+
+        print('dt={:3f}'.format(time.time()-t0))  # TODO: remove
+
     def close(self):
         if self.is_open:
             ljm.close(self.handle)
             self.is_open = False
-
