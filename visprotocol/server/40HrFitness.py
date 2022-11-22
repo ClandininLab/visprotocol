@@ -7,9 +7,10 @@ from flystim.screen import Screen, SubScreen
 from flystim.draw import draw_screens
 
 from visprotocol.server.clandinin_server import Server
-
 from visprotocol.device.daq.labjack import LabJackTSeries
 from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
+
+from jackfish.devices.cameras.flir import FlirCam
 
 def get_subscreen(dir):
     # Define screen(s) for the rig. Units in meters
@@ -69,6 +70,10 @@ def main():
     screens = [left_screen, center_screen, right_screen]
     # screens = [left_screen]
     # draw_screens(screens); plt.show()
+
+    # Initialize camera with proper settings
+    jf_cam = FlirCam(serial_number='20243355', attrs_json_fn='/home/clandinin/src/jackfish/presets/cam_20243355.json')
+    jf_cam.close()
 
     loco_class = FtClosedLoopManager
     loco_kwargs = {
