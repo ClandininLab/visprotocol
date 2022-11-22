@@ -543,6 +543,23 @@ class StripeFixation(BaseProtocol):
                             'theta': current_theta,
                             'angle': current_angle}
 
+    def loadStimuli(self, client, multicall=None):
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+
+        multicall.print_on_server(f'Epoch {self.convenience_parameters}')
+
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
+        if isinstance(self.epoch_parameters, list):
+            for ep in self.epoch_parameters:
+                multicall.load_stim(**ep.copy(), hold=True)
+        else:
+            multicall.load_stim(**self.epoch_parameters.copy(), hold=True)
+
+        multicall()
+
     def getParameterDefaults(self):
         self.protocol_parameters = {'width': [5.0],
                                     'height': [50.0],
