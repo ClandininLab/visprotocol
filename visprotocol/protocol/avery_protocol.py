@@ -417,16 +417,16 @@ class UniformFlash(BaseProtocol):
                                'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+# %%
+
+# class OptoStepSeries(BaseProtocol):
 
 
-# %% FlashWithOpto
+# %% FlashSeriesWithOptoStep
 
-class FlashWithOpto(BaseProtocol):
-    # TODO: add custom startStimuli() with threaded labjack.analogOutputStep()
-    # something like...
-    # dev = labjack.LabJackTSeries()
-    # t = threading.Thread(target=d.analogOutputStep, args=(0,1,11,1))
-    # t.start()
+class FlashSeriesWithOptoStep(BaseProtocol):
+    # TODO: double check timing
+    # TODO: TEST on rig
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -436,44 +436,70 @@ class FlashWithOpto(BaseProtocol):
     def getEpochParameters(self):
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
 
-        current_intensity = self.selectParametersFromLists(self.protocol_parameters['intensity'], randomize_order=self.protocol_parameters['randomize_order'])
+        current_led_intensity = self.selectParametersFromLists(self.protocol_parameters['led_intensity'], randomize_order=self.protocol_parameters['randomize_order'])
+
+        time_intensity_tuples = [(0, 0.5)]  # (time (sec), intensity)
+        for ft in self.protocol_parameters['flash_times']:
+            # flash on
+            new_tv = (ft, self.protocol_parameters['flash_intensity'])
+            time_intensity_tuples.append(new_tv)
+
+            # flash off
+            new_tv = (ft+self.protocol_parameters['flash_width'], 0.5)
+            time_intensity_tuples.append(new_tv)
+
+        end_tv = (self.run_parameters['stim_time'], 0.5)
+        time_intensity_tuples.append(end_tv)
+
+        intensity_trajectory = {'name': 'tv_pairs',
+                                'tv_pairs': time_intensity_tuples,
+                                'kind': 'previous'}
 
         self.epoch_parameters = {'name': 'MovingPatch',
                                  'width': self.protocol_parameters['width'],
                                  'height': self.protocol_parameters['height'],
                                  'sphere_radius': 1,
-                                 'color': current_intensity,
+                                 'color': intensity_trajectory,
                                  'theta': adj_center[0],
                                  'phi': adj_center[1],
                                  'angle': 0}
-        self.convenience_parameters = {'current_intensity': current_intensity}
+
+        self.convenience_parameters = {'current_led_intensity': current_led_intensity}
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'height': 120.0,
                                     'width': 120.0,
                                     'center': [0, 0],
-                                    'intensity': [1.0, 0.0],
+                                    'flash_width': 0.5,  # sec
+                                    'flash_times': [1, 3, 7, 9, 13],  # sec, flash onsets, into stim time
+                                    'flash_intensity': 1,
+
+                                    'led_time': 2,  # sec, onset
+                                    'led_duration': 6,  # sec, duration
+
+                                    'led_intensity': [0.1, 0.2, 0.4, 0.8, 1.6],  # V
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'FlashWithOpto',
-                               'num_epochs': 10,
-                               'pre_time': 1.0,
-                               'stim_time': 0.5,
-                               'tail_time': 1.0,
+        self.run_parameters = {'protocol_ID': 'FlashSeriesWithOptoStep',
+                               'num_epochs': 50,
+                               'pre_time': 1,
+                               'stim_time': 15,
+                               'tail_time': 2,
                                'idle_color': 0.5}
 
     def startStimuli(self, client, append_stim_frames=False, print_profile=True):
         # Create the labjack device
         # TODO: check to see if it makes more sense to not re-create device each epoch
+        # TODO double check LED timing
         labjack_dev = labjack.LabJackTSeries()
 
         # Create the thread
         args_dict = {'output_channel': 'DAC0',
-                     'pre_time': 0.5,  # sec
-                     'step_time': 1.0,  # sec
-                     'tail_time': 0.5,  # sec
-                     'step_amp': 1,  # V
+                     'pre_time': self.protocol_parameters['led_time'],  # sec
+                     'step_time': self.protocol_parameters['led_duration'],  # sec
+                     'tail_time': self.run_parameters['stim_time'] - self.protocol_parameters['led_duration'] - self.protocol_parameters['led_time'],  # sec
+                     'step_amp': self.convenience_parameters['current_led_intensity'],  # V
                      'dt': 0.01,  # sec
                      }
         labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep,
