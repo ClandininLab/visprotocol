@@ -419,8 +419,85 @@ class UniformFlash(BaseProtocol):
                                'idle_color': 0.5}
 # %%
 
-# class OptoStepSeries(BaseProtocol):
+class OptoStepSeries(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_led_intensity, current_led_duration = self.selectParametersFromLists((self.protocol_parameters['led_intensity'], 
+                                                                                      self.protocol_parameters['led_duration']),
+                                                                                     randomize_order=self.protocol_parameters['randomize_order'])
+
+
+        self.convenience_parameters = {'current_led_intensity': current_led_intensity,
+                                        'current_led_duration': current_led_duration}
+
+        self.epoch_parameters = None
+
+    def loadStimuli(self, client, multicall=None):
+        pass
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {
+                                    'led_duration': [0.5, 1.0, 2.0, 4.0],  # sec, duration
+                                    'led_intensity': [0.1, 0.2, 0.4, 0.8, 1.6],  # V
+                                    'randomize_order': True
+                                    }
+
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OptoStepSeries',
+                               'num_epochs': 50,
+                               'pre_time': 2,
+                               'stim_time': 4,
+                               'tail_time': 8,
+                               'idle_color': 0.5}
+
+
+    def startStimuli(self, client, append_stim_frames=False, print_profile=True):
+        # Create the labjack device
+        # TODO: check to see if it makes more sense to not re-create device each epoch
+        # TODO double check LED timing
+        labjack_dev = labjack.LabJackTSeries()
+
+        # Create the thread
+        args_dict = {'output_channel': 'DAC0',
+                     'pre_time': self.run_parameters['pre_time'],  # sec
+                     'step_time': self.convenience_parameters['current_led_duration'],  # sec
+                     'tail_time': self.run_parameters['stim_time'] - self.convenience_parameters['current_led_duration'] - self.run_parameters['pre_time'],  # sec
+                     'step_amp': self.convenience_parameters['current_led_intensity'],  # V
+                     'dt': 0.01,  # sec
+                     }
+        labjack_thread = threading.Thread(target=labjack_dev.analogOutputStep,
+                                          args=tuple(args_dict.values()))
+
+        # start the thread
+        labjack_thread.start()
+
+        # Vis stimulus stuff follows. Just do flickering corner to give stim timing, I guess.
+        sleep(self.run_parameters['pre_time'])
+
+        # Multicall starts multiple stims simultaneously
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        # stim time
+        multicall.start_corner_square()
+        multicall()  # multicall starts corner square
+        sleep(self.run_parameters['stim_time'])  # sleep during the stim time
+
+        # tail time
+        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall.black_corner_square()
+        multicall()   # multicall to stop stim + corner square at the same time
+
+        sleep(self.run_parameters['tail_time'])  # sleep during tail time
+
+        # close the labjack device
+        labjack_dev.close()
+
+    
 
 # %% FlashSeriesWithOptoStep
 
