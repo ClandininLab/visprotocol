@@ -54,13 +54,21 @@ class EpochRun():
                 else:
                     print("Locomotion data can't be saved on server without server_data_directory specified in config.yaml.")
             client.manager.loco_start()
-            sleep(2) # Give loco time to load
-            client.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
+            sleep(3) # Give loco time to load
 
         if save_metadata_flag:
             data.createEpochRun(protocol_object)
         else:
             print('Warning - you are not saving your metadata!')
+
+        # Trigger acquisition of scope and cameras by send triggering TTL through the DAQ device (if device is set)
+        if client.daq_device is not None:
+            print("Triggering acquisition devices.")
+            client.daq_device.sendTrigger()
+
+        if 'do_loco' in data.cfg and data.cfg['do_loco']:
+            sleep(2) # Give loco time to start acquiring
+            client.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
 
         # print("START RUN")
 
@@ -88,6 +96,7 @@ class EpochRun():
 
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             client.manager.loco_close()
+            client.manager.loco_set_save_directory(None)
         
         client.manager.print_on_server('Stopping run.')
         # # # Epoch run loop # # #
