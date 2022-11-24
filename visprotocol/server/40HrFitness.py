@@ -72,7 +72,7 @@ def main():
     # draw_screens(screens); plt.show()
 
     # Initialize camera with proper settings
-    jf_cam = FlirCam(serial_number='20243355', attrs_json_fn='/home/clandinin/src/jackfish/presets/cam_20243355.json')
+    jf_cam = FlirCam(serial_number='20243355', attrs_json_fn='/home/clandinin/src/jackfish/presets/MC/cam_20243355.json')
     jf_cam.close()
 
     loco_class = FtClosedLoopManager
