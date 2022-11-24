@@ -109,7 +109,7 @@ class FtClosedLoopManager(LocoClosedLoopManager):
         frame_num = int(toks[self.ft_frame_num_idx])
         ts = float(toks[self.ft_timestamp_idx])
 
-        theta = float(toks[self.ft_theta_idx])
+        theta = -float(toks[self.ft_theta_idx])
         x = float(toks[self.ft_x_idx])
         y = float(toks[self.ft_y_idx])
         z = 0
