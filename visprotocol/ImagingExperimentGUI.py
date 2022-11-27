@@ -9,7 +9,8 @@ import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
-                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem)
+                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem,
+                             QScrollArea, QSizePolicy)
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
@@ -75,6 +76,12 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_tab = QWidget()
         self.protocol_grid = QGridLayout()
         self.protocol_grid.setSpacing(10)
+        self.protocol_tab.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
+                                                    QSizePolicy.MinimumExpanding))
+
+        self.protocol_scroll = QScrollArea()
+        self.protocol_scroll.setWidget(self.protocol_tab)
+        self.protocol_scroll.setWidgetResizable(True)
 
         self.data_tab = QWidget()
         self.data_grid = QFormLayout()
@@ -86,7 +93,7 @@ class ImagingExperimentGUI(QWidget):
         self.file_grid.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.file_grid.setLabelAlignment(QtCore.Qt.AlignCenter)
 
-        self.tabs.addTab(self.protocol_tab, "Main")
+        self.tabs.addTab(self.protocol_scroll, "Main")
         self.tabs.addTab(self.data_tab, "Fly")
         self.tabs.addTab(self.file_tab, "File")
 
@@ -339,12 +346,17 @@ class ImagingExperimentGUI(QWidget):
 
         self.file_grid.addRow(self.tableAttributes)
 
-        # Add all layouts to window and show
+        # Add all layouts to window
         self.layout.addWidget(self.tabs)
         self.protocol_tab.setLayout(self.protocol_grid)
         self.data_tab.setLayout(self.data_grid)
         self.file_tab.setLayout(self.file_grid)
         self.setWindowTitle('Visprotocol')
+
+        # Resize window based on protocol tab
+        self.updateWindowWidth()
+    
+        # Show
         self.show()
 
     def onChangedDataType(self, text):
@@ -372,6 +384,7 @@ class ImagingExperimentGUI(QWidget):
         self.updateParameterPresetSelector()
         self.updateProtocolParametersInput()
         self.updaterunParametersInput()
+        self.updateWindowWidth()
         self.show()
 
     def onPressedButton(self):
@@ -747,6 +760,11 @@ class ImagingExperimentGUI(QWidget):
         # update attr in file
         h5io.changeAttribute(file_path, group_path, attr_key, attr_val)
         print('Changed attr {} to = {}'.format(attr_key, attr_val))
+
+    def updateWindowWidth(self):
+        self.resize(100, self.height())
+        window_width = self.protocol_tab.sizeHint().width() + self.protocol_scroll.verticalScrollBar().sizeHint().width() + 40
+        self.resize(window_width, self.height())
 
 # # # Other accessory classes. For data file initialization and threading # # # #
 
