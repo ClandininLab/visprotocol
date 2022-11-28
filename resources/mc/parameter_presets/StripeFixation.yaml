@@ -1,6 +1,6 @@
 initial_fixation_test:
   run_parameters:
-    protocol_ID: MovingRectangle
+    protocol_ID: StripeFixation
     num_epochs: 60.0
     pre_time: 1.0
     stim_time: 30.0

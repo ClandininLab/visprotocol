@@ -571,7 +571,7 @@ class StripeFixation(BaseProtocol):
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'MovingRectangle',
+        self.run_parameters = {'protocol_ID': 'StripeFixation',
                                'num_epochs': 40,
                                'pre_time': 0.5,
                                'stim_time': 3.0,

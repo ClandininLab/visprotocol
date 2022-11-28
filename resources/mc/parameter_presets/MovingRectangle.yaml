@@ -18,29 +18,3 @@ left_optic_lobe_mapping_v0:
     angle:
     - 0.0
     randomize_order: true
-initial_fixation_sweep:
-  run_parameters:
-    protocol_ID: MovingRectangle
-    num_epochs: 60.0
-    pre_time: 1.0
-    stim_time: 30.0
-    tail_time: 1.0
-    idle_color: 0.5
-  protocol_parameters:
-    width:
-    - 10.0
-    - 15.0
-    height:
-    - 50.0
-    - 150.0
-    intensity:
-    - 0.0
-    - 1.0
-    angle:
-    - 0.0
-    theta:
-    - 0.0
-    closed_loop:
-    - 1.0
-    render_on_cylinder: true
-    randomize_order: true
