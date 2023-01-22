@@ -88,6 +88,9 @@ class BaseProtocol():
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
 
+    def precomputeEpochParameters(self):
+        pass
+
     def loadStimuli(self, client, multicall=None):
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)

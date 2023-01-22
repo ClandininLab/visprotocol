@@ -38,6 +38,8 @@ class EpochRun():
         protocol_object.save_metadata_flag = save_metadata_flag
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
 
+        protocol_object.precomputeEpochParameters()
+
         self.server_series_dir = None
         if save_metadata_flag and ('server_data_directory' in data.cfg) and (data.cfg['server_data_directory'] is not None):
             self.server_series_dir = posixpath.join(data.cfg['server_data_directory'], data.experiment_file_name, str(data.series_count))
