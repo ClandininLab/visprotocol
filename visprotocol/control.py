@@ -70,6 +70,10 @@ class EpochRun():
             sleep(2) # Give loco time to start acquiring
             client.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
 
+        # # # Pre-run Time # # #
+        if 'pre_run_time' in protocol_object.run_parameters:
+            sleep(protocol_object.run_parameters['pre_run_time'])
+
         # # # Epoch run loop # # #
         client.manager.print_on_server("Starting run.")
         protocol_object.num_epochs_completed = 0
