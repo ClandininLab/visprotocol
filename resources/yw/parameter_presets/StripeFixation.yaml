@@ -1,0 +1,23 @@
+30sView:
+  run_parameters:
+    protocol_ID: StripeFixation
+    num_epochs: 1.0
+    pre_time: 1.0
+    stim_time: 30.0
+    tail_time: 1.0
+    idle_color: 0.0
+  protocol_parameters:
+    width:
+    - 15.0
+    height:
+    - 150.0
+    intensity:
+    - 1.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    closed_loop:
+    - 1.0
+    render_on_cylinder: true
+    randomize_order: true

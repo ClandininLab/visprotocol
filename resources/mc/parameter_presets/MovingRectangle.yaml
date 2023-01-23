@@ -1,4 +1,4 @@
-left_optic_lobe_mapping_v0:
+left_optic_lobe_mapping_v1:
   run_parameters:
     protocol_ID: MovingRectangle
     num_epochs: 40.0
@@ -17,4 +17,7 @@ left_optic_lobe_mapping_v0:
     speed: 45.0
     angle:
     - 0.0
+    closed_loop:
+    - 0.0
+    render_on_cylinder: true
     randomize_order: true
