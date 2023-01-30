@@ -93,7 +93,7 @@ class ImagingExperimentGUI(QWidget):
         self.file_grid.setLabelAlignment(QtCore.Qt.AlignCenter)
 
         self.tabs.addTab(self.protocol_tab, "Main")
-        self.tabs.addTab(self.data_tab, "Fly")
+        self.tabs.addTab(self.data_tab, "Animal")
         self.tabs.addTab(self.file_tab, "File")
 
         self.tabs.resize(450, 500)
@@ -196,96 +196,49 @@ class ImagingExperimentGUI(QWidget):
         self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
         self.protocol_grid.addWidget(self.series_counter_input, self.run_params_ct+2, 3)
 
-        # # # TAB 2: Current FLY metadata information
-        # # Fly info:
-        # Load any existing fly metadata in this file
-        newLabel = QLabel('Load existing fly')
-        self.existing_fly_input = QComboBox()
-        self.existing_fly_input.activated[int].connect(self.onSelectedExistingFly)
-        self.data_grid.addRow(newLabel, self.existing_fly_input)
-        self.updateExistingFlyInput()
+        # # # TAB 2: Current animal metadata information
+        # # Animal info:
+        # Load any existing animal metadata in this file
+        newLabel = QLabel('Load existing animal')
+        self.existing_animal_input = QComboBox()
+        self.existing_animal_input.activated[int].connect(self.onSelectedExistingAnimal)
+        self.data_grid.addRow(newLabel, self.existing_animal_input)
+        self.updateExistingAnimalInput()
 
-        newLabel = QLabel('Current fly info:')
+        newLabel = QLabel('Current animal info:')
         newLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.data_grid.addRow(newLabel)
 
-        # Fly ID:
-        newLabel = QLabel('Fly ID:')
-        self.fly_id_input = QLineEdit()
-        self.data_grid.addRow(newLabel, self.fly_id_input)
-        # Sex:
-        newLabel = QLabel('Sex:')
-        self.fly_sex_input = QComboBox()
-        self.fly_sex_input.addItems(['Female', 'Male'])
-        self.data_grid.addRow(newLabel, self.fly_sex_input)
-        # Age:
-        newLabel = QLabel('Age:')
-        self.fly_age_input = QSpinBox()
-        self.fly_age_input.setMinimum(0)
-        self.fly_age_input.setValue(1)
-        self.data_grid.addRow(newLabel, self.fly_age_input)
-        # Prep ID:
-        newLabel = QLabel('Prep:')
-        self.fly_prep_input = QComboBox()
-        self.fly_prep_input.addItem("")
-        for choiceID in self.data.prepChoices:
-            self.fly_prep_input.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_prep_input)
-        # Driver1:
-        newLabel = QLabel('Driver_1:')
-        self.fly_driver_1 = QComboBox()
-        self.fly_driver_1.addItem("")
-        for choiceID in self.data.driverChoices:
-            self.fly_driver_1.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_driver_1)
-        # Indicator1:
-        newLabel = QLabel('Indicator_1:')
-        self.fly_indicator_1 = QComboBox()
-        self.fly_indicator_1.addItem("")
-        for choiceID in self.data.indicatorChoices:
-            self.fly_indicator_1.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_indicator_1)
-        # Effector1:
-        newLabel = QLabel('Effector_1:')
-        self.fly_effector_1 = QComboBox()
-        self.fly_effector_1.addItem("")
-        for choiceID in self.data.effectorChoices:
-            self.fly_effector_1.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_effector_1)
-        # Driver2:
-        newLabel = QLabel('Driver_2:')
-        self.fly_driver_2 = QComboBox()
-        self.fly_driver_2.addItem("")
-        for choiceID in self.data.driverChoices:
-            self.fly_driver_2.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_driver_2)
-        # Indicator2:
-        newLabel = QLabel('Indicator_2:')
-        self.fly_indicator_2 = QComboBox()
-        self.fly_indicator_2.addItem("")
-        for choiceID in self.data.indicatorChoices:
-            self.fly_indicator_2.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_indicator_2)
-        # Effector2:
-        newLabel = QLabel('Effector_2:')
-        self.fly_effector_2 = QComboBox()
-        self.fly_effector_2.addItem("")
-        for choiceID in self.data.effectorChoices:
-            self.fly_effector_2.addItem(choiceID)
-        self.data_grid.addRow(newLabel, self.fly_effector_2)
-        # Fly genotype:
-        newLabel = QLabel('Genotype:')
-        self.fly_genotype_input = QLineEdit()
-        self.data_grid.addRow(newLabel, self.fly_genotype_input)
+        # Animal ID:
+        newLabel = QLabel('Animal ID:')
+        self.animal_id_input = QLineEdit()
+        self.data_grid.addRow(newLabel, self.animal_id_input)
 
-        # Create fly button
+        newLabel = QLabel('Age:')
+        self.animal_age_input = QSpinBox()
+        self.animal_age_input.setMinimum(0)
+        self.animal_age_input.setValue(1)
+        self.data_grid.addRow(newLabel, self.animal_age_input)
+
+        # Use user cfg to populate other metadata options
+        self.animal_metadata_inputs = {}
+        for key in self.cfg['animal_metadata']:
+            newLabel = QLabel(key)
+            new_input = QComboBox()
+            new_input.addItem("")
+            for choiceID in self.cfg['animal_metadata'][key]:
+               new_input.addItem(choiceID)
+            self.data_grid.addRow(newLabel, new_input)
+            self.animal_metadata_inputs[key] = new_input
+            
+        # Create animal button
         new_separator_line = QFrame()
         new_separator_line.setFrameShape(new_separator_line.HLine)
         self.data_grid.addRow(new_separator_line)
 
-        createFlyButton = QPushButton("Create fly", self)
-        createFlyButton.clicked.connect(self.onCreatedFly)
-        self.data_grid.addRow(createFlyButton)
+        createAnimalButton = QPushButton("Create animal", self)
+        createAnimalButton.clicked.connect(self.onCreatedAnimal)
+        self.data_grid.addRow(createAnimalButton)
 
         # # # TAB 3: FILE tab - init, load, close etc. h5 file
         # Data file info
@@ -383,15 +336,15 @@ class ImagingExperimentGUI(QWidget):
     def onPressedButton(self):
         sender = self.sender()
         if sender.text() == 'Record':
-            if (self.data.experimentFileExists() and self.data.currentFlyExists()):
+            if (self.data.experimentFileExists() and self.data.currentAnimalExists()):
                 self.sendRun(save_metadata_flag=True)
             else:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
-                msg.setText("You have not initialized a data file and/or fly yet")
+                msg.setText("You have not initialized a data file and/or animal yet")
                 msg.setInformativeText("You can show stimuli by clicking the View button, but no metadata will be saved")
-                msg.setWindowTitle("No experiment file and/or fly")
-                msg.setDetailedText("Initialize or load both an experiment file and a fly if you'd like to save your metadata")
+                msg.setWindowTitle("No experiment file and/or animal")
+                msg.setDetailedText("Initialize or load both an experiment file and a animal if you'd like to save your metadata")
                 msg.setStandardButtons(QMessageBox.Ok)
                 msg.exec_()
 
@@ -445,7 +398,7 @@ class ImagingExperimentGUI(QWidget):
             self.data.data_directory = dialog.ui.le_DataDirectory.text()
             self.data.experimenter = dialog.ui.le_Experimenter.text()
 
-            self.updateExistingFlyInput()
+            self.updateExistingAnimalInput()
             self.populateGroups()
 
         elif sender.text() == 'Load experiment':
@@ -461,27 +414,22 @@ class ImagingExperimentGUI(QWidget):
                 # update series count to reflect already-collected series
                 self.data.reloadSeriesCount()
                 self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
-                self.updateExistingFlyInput()
+                self.updateExistingAnimalInput()
                 self.populateGroups()
 
         elif sender.text() == 'Check epochs:':
             self.epoch_count.setText(str(self.protocol_object.num_epochs_completed))
 
-    def onCreatedFly(self):
-        # Populate fly metadata from fly data fields
-        fly_metadata = {'fly_id': self.fly_id_input.text(),
-                        'sex': self.fly_sex_input.currentText(),
-                        'age': self.fly_age_input.value(),
-                        'prep': self.fly_prep_input.currentText(),
-                        'driver_1': self.fly_driver_1.currentText(),
-                        'indicator_1': self.fly_indicator_1.currentText(),
-                        'effector_1': self.fly_effector_1.currentText(),
-                        'driver_2': self.fly_driver_2.currentText(),
-                        'indicator_2': self.fly_indicator_2.currentText(),
-                        'effector_2': self.fly_effector_2.currentText(),
-                        'genotype': self.fly_genotype_input.text()}
-        self.data.createFly(fly_metadata)  # creates new fly and selects it as the current fly
-        self.updateExistingFlyInput()
+    def onCreatedAnimal(self):
+        # Populate animal metadata from animal data fields
+        animal_metadata = {}
+        animal_metadata['animal_id'] = self.animal_id_input.text()
+        animal_metadata['age'] = self.animal_age_input.value()
+        for key in self.animal_metadata_inputs:
+            animal_metadata[key] = self.animal_metadata_inputs[key].currentText()
+
+        self.data.createAnimal(animal_metadata)  # creates new animal and selects it as the current animal
+        self.updateExistingAnimalInput()
 
     def resetLayout(self):
         for ii in range(len(self.protocol_object.protocol_parameters.items())):
@@ -530,30 +478,24 @@ class ImagingExperimentGUI(QWidget):
         self.updaterunParametersInput()
         self.show()
 
-    def onSelectedExistingFly(self, index):
-        fly_data = self.data.getExistingFlyData()
-        self.populateFlyMetadataFields(fly_data[index])
-        self.data.current_fly = fly_data[index].get('fly_id')
+    def onSelectedExistingAnimal(self, index):
+        animal_data = self.data.getExistingAnimalData()
+        self.populateAnimalMetadataFields(animal_data[index])
+        self.data.current_animal = animal_data[index].get('animal_id')
 
-    def updateExistingFlyInput(self):
-        self.existing_fly_input.clear()
-        for fly_data in self.data.getExistingFlyData():
-            self.existing_fly_input.addItem(fly_data['fly_id'])
-        index = self.existing_fly_input.findText(self.data.current_fly)
+    def updateExistingAnimalInput(self):
+        self.existing_animal_input.clear()
+        for animal_data in self.data.getExistingAnimalData():
+            self.existing_animal_input.addItem(animal_data['animal_id'])
+        index = self.existing_animal_input.findText(self.data.current_animal)
         if index >= 0:
-            self.existing_fly_input.setCurrentIndex(index)
+            self.existing_animal_input.setCurrentIndex(index)
 
-    def populateFlyMetadataFields(self, fly_data_dict):
-        self.fly_id_input.setText(fly_data_dict['fly_id'])
-        self.fly_sex_input.setCurrentText(fly_data_dict['sex'])
-        self.fly_age_input.setValue(fly_data_dict['age'])
-        self.fly_driver_1.setCurrentText(fly_data_dict['driver_1'])
-        self.fly_indicator_1.setCurrentText(fly_data_dict['indicator_1'])
-        self.fly_effector_1.setCurrentText(fly_data_dict['effector_1'])
-        self.fly_driver_2.setCurrentText(fly_data_dict['driver_2'])
-        self.fly_indicator_2.setCurrentText(fly_data_dict['indicator_2'])
-        self.fly_effector_1.setCurrentText(fly_data_dict['effector_2'])
-        self.fly_genotype_input.setText(fly_data_dict['genotype'])
+    def populateAnimalMetadataFields(self, animal_data_dict):
+        self.animal_id_input.setText(animal_data_dict['animal_id'])
+        self.animal_age_input.setValue(animal_data_dict['age'])
+        for key in self.animal_metadata_inputs:
+            self.animal_metadata_inputs[key].setCurrentText(animal_data_dict[key])
 
     def updaterunParametersInput(self):
         self.run_params_ct = 0
@@ -642,7 +584,7 @@ class ImagingExperimentGUI(QWidget):
         self.status_label.setText('Ready')
         self.pauseButton.setText('Pause')
         if save_metadata_flag:
-            self.updateExistingFlyInput()
+            self.updateExistingAnimalInput()
             # Advance the series_count:
             self.data.advanceSeriesCount()
             self.series_counter_input.setValue(self.data.getSeriesCount())

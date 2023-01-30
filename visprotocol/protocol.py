@@ -16,7 +16,6 @@ from time import sleep
 import os.path
 import os
 import yaml
-import inspect
 import flyrpc.multicall
 from visprotocol.util import config_tools
 
