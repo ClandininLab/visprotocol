@@ -692,7 +692,12 @@ class DriftingSquareGrating(BaseProtocol):
 
     def getEpochParameters(self):
         # TODO: center size with aperture (center and center_size)
-        current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+        current_angle, current_height = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['height']), randomize_order = self.protocol_parameters['randomize_order'])
+
+        height_in_radians = np.deg2rad(current_height)
+
+        radius_in_meters = 1
+        height_in_meters = 2 * radius_in_meters * np.tan(height_in_radians / 2)
 
         self.epoch_parameters = {'name': 'RotatingGrating',
                                  'period': self.protocol_parameters['period'],
@@ -703,8 +708,8 @@ class DriftingSquareGrating(BaseProtocol):
                                  'contrast': self.protocol_parameters['contrast'],
                                  'angle': current_angle,
                                  'offset': 0.0,
-                                 'cylinder_radius': 1,
-                                 'cylinder_height': 10,
+                                 'cylinder_radius': radius_in_meters,
+                                 'cylinder_height': height_in_meters,
                                  'profile': 'square',
                                  'theta': self.screen_center[0]}
 
@@ -719,6 +724,7 @@ class DriftingSquareGrating(BaseProtocol):
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'angle': [0.0, 180.0],
+                                    'height': [90.0],
                                     'hold_duration': 0.550,
                                     'center': [0, 0],
                                     'center_size': 180.0,
