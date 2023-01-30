@@ -14,6 +14,8 @@ rig_config:
     data_directory: E:/Minseung/FlystimData
     screen_center: [0, -30]
     rig: Bruker
+    server_data_directory: /home/clandininlab/minseung/visprotocol/fictrac
+    locomotion: True
 
   24HrFitness:
     data_directory: /home/clandinin/minseung/ballrig_data/FlystimData
@@ -31,4 +33,3 @@ rig_config:
     data_directory: /Volumes/GoogleDrive/My\ Drive/research/clandinin_lab/data/FlystimData
     screen_center: [0, 0]
     rig: (testing)
-

@@ -3,7 +3,7 @@
 
 from visprotocol.protocol import clandinin_protocol
 import flyrpc.multicall
-
+import numpy as np
 
 class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self, cfg):
@@ -20,6 +20,56 @@ Each protocol class should define these methods:
 It may define/overwrite these methods that are typically handled by the parent class
 
 """
+
+class LoomRandomlySpaced(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+    
+    def precomputeEpochParameters(self):
+        # Calculate ITIs probabilistically (tail_time)
+        # Randomly spaced ITIs, drawn from a uniform distribution between avg_iti - 1 and avg_iti + 1
+        total_loom_dur = self.run_parameters['num_epochs'] * self.run_parameters['stim_time']
+        num_itis = self.run_parameters['num_epochs'] - 1
+        avg_iti = (self.run_parameters['run_time'] - total_loom_dur) / num_itis
+        iti_lo = max(avg_iti - 1, 0)
+        iti_hi = min(avg_iti + 1, self.run_parameters['run_time'])
+        self.itis = np.random.uniform(iti_lo, iti_hi, self.run_parameters['num_epochs'])
+    
+    def getEpochParameters(self):
+        current_color = self.selectParametersFromLists(self.protocol_parameters['color'], randomize_order = self.protocol_parameters['randomize_order'])
+
+        loom_trajectory = {'name': 'Loom2', 'rv_ratio': self.protocol_parameters['rv_ratio'], 'start_size': self.protocol_parameters['start_size'], 'end_size': self.protocol_parameters['end_size']}
+
+        self.epoch_parameters = {'name': 'MovingSpot',
+                                 'radius': loom_trajectory,
+                                 'sphere_radius': 1,
+                                 'color': current_color,
+                                 'phi': 0,
+                                 'theta': 0}
+
+        iti = self.itis[self.num_epochs_completed]
+        self.run_parameters['tail_time'] = iti
+
+        self.convenience_parameters = {'current_color': current_color, 'current_tail_time': iti}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'rv_ratio': 0.04,
+                                    'start_size': 10.0,
+                                    'end_size': 100.0,
+                                    'color': [0.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'Loom',
+                               'num_epochs': 40,
+                               'pre_time': 0.0,
+                               'stim_time': 0.5,
+                               'run_time': 300.0,
+                               'pre_run_time': 300.0,
+                               'idle_color': 0.5}
 
 class LoomPlusGrating(BaseProtocol):
     def __init__(self, cfg):

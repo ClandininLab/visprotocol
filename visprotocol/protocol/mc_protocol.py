@@ -136,7 +136,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
 # %%
 
-    def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_prime_color=None, bar_probe_color=None, bar_speed=None, occluder_height=None, occluder_color=None, 
+    def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_prime_color=None, bar_probe_color=None, bar_speed=None, occluder_height=None, occluder_color=None,
                                         preprime_duration=None, prime_duration=None, occlusion_duration=None, pause_duration=None, probe_duration=None, render_on_cylinder=None, bar_surface_radius=None, occluder_surface_radius=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if start_theta is None: start_theta = self.protocol_parameters['start_theta'] #negative value starts from the opposite side of bar direction
@@ -247,10 +247,10 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 
 # %%
 
-    def getOcclusionFixedParameters(self, center=None, bar_start_theta=None, bar_end_theta=None, bar_width=None, bar_height=None, 
-                                    bar_prime_color=None, bar_probe_color=None, bar_speed=None, 
-                                    occluder_theta=None, occluder_width=None, occluder_height=None, occluder_color=None, 
-                                    preprime_duration=None, pause_duration=None, render_on_cylinder=None, 
+    def getOcclusionFixedParameters(self, center=None, bar_start_theta=None, bar_end_theta=None, bar_width=None, bar_height=None,
+                                    bar_prime_color=None, bar_probe_color=None, bar_speed=None,
+                                    occluder_theta=None, occluder_width=None, occluder_height=None, occluder_color=None,
+                                    preprime_duration=None, pause_duration=None, render_on_cylinder=None,
                                     bar_surface_radius=None, occluder_surface_radius=None, angle=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if angle is None: angle = self.protocol_parameters['angle']
@@ -278,7 +278,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         bar_start_theta *= np.sign(bar_speed)
         bar_end_theta *= np.sign(bar_speed)
         occluder_theta *= np.sign(bar_speed)
-        
+
 
         # Bar
         theta_distance = np.abs(bar_end_theta - bar_start_theta)
@@ -291,7 +291,7 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
         stim_duration = preprime_duration + bar_duration_w_pause
 
         # Bar trajectory
-        time =       [0, 
+        time =       [0,
                       preprime_duration,
                       preprime_duration+prime_duration,
                       preprime_duration+prime_duration+pause_duration,
@@ -385,7 +385,7 @@ class OcclusionWithPause(BaseProtocol):
 
     def loadStimuli(self, client, multicall=None):
         self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
-    
+
         bg = self.run_parameters.get('idle_color')
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
@@ -449,7 +449,7 @@ class OcclusionFixed(BaseProtocol):
 
     def loadStimuli(self, client, multicall=None):
         self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
-    
+
         bg = self.run_parameters.get('idle_color')
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
@@ -473,7 +473,7 @@ class OcclusionFixed(BaseProtocol):
         multicall.start_stim(append_stim_frames=append_stim_frames)
         multicall.start_corner_square()
         multicall()
-        
+
         sleep(self.convenience_parameters['current_stim_duration'])
 
         # tail time
@@ -535,7 +535,7 @@ class StripeFixation(BaseProtocol):
                                        'current_intensity': current_intensity,
                                        'current_theta': current_theta,
                                        'current_closed_loop': current_closed_loop}
-        
+
         self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
                             'width': current_width,
                             'height': current_height,
@@ -744,7 +744,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
     def loadStimuli(self, client, multicall=None):
         passed_parameters_0 = self.epoch_parameters_0.copy()
         passed_parameters_1 = self.epoch_parameters_1.copy()
-    
+
         bg = self.run_parameters.get('idle_color')
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
@@ -859,7 +859,7 @@ class FlickeringVertBars(BaseProtocol):
 
     def getEpochParameters(self):
         current_angle, current_temporal_frequency, current_theta_loc = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta_loc']), randomize_order=self.protocol_parameters['randomize_order'])
-        
+
         # make color trajectory
         color_traj = {'name': 'Sinusoid',
                       'temporal_frequency': current_temporal_frequency,
@@ -886,7 +886,7 @@ class FlickeringVertBars(BaseProtocol):
                                     'angle': current_angle}
 
         self.convenience_parameters = {'current_angle': current_angle,
-                                       'current_temporal_frequency': current_temporal_frequency, 
+                                       'current_temporal_frequency': current_temporal_frequency,
                                        'current_theta_loc': current_theta_loc}
 
     def loadStimuli(self, client, multicall=None):
@@ -932,7 +932,7 @@ class FlickeringPatch(BaseProtocol):
 
     def getEpochParameters(self):
         current_temporal_frequency, current_center = self.selectParametersFromLists((self.protocol_parameters['temporal_frequency'], self.protocol_parameters['center']), randomize_order=self.protocol_parameters['randomize_order'])
-        
+
         adj_center = self.adjustCenter(current_center)
 
         # make color trajectory
@@ -960,7 +960,7 @@ class FlickeringPatch(BaseProtocol):
                                     'phi': adj_center[1],
                                     'angle': 0}
 
-        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency, 
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency,
                                        'current_center': current_center}
 
     def getParameterDefaults(self):
@@ -1178,23 +1178,29 @@ class MovingRectangle(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_intensity, current_angle = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_intensity, current_angle, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle'],  self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        
+
         self.epoch_parameters = self.getMovingPatchParameters(angle=current_angle, color=current_intensity)
 
         self.convenience_parameters = {'current_angle': current_angle,
-                                       'current_intensity': current_intensity}
-
+                                       'current_intensity': current_intensity,
+                                       'current_closed_loop': current_closed_loop}
     def loadStimuli(self, client, multicall=None):
-        bg = self.run_parameters.get('idle_color')
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        multicall.set_global_theta_offset(self.protocol_parameters['fly_heading'])
+
+        multicall.print_on_server(str({k[8:]:v for k,v in self.convenience_parameters.items()}))
+
+        bg = self.run_parameters.get('idle_color')
         multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
 
-        passedParameters = self.epoch_parameters.copy()
-        multicall.load_stim(**passedParameters, hold=True)
+        if isinstance(self.epoch_parameters, list):
+            for ep in self.epoch_parameters:
+                multicall.load_stim(**ep.copy(), hold=True)
+        else:
+            multicall.load_stim(**self.epoch_parameters.copy(), hold=True)
+
         multicall()
 
     def getParameterDefaults(self):
@@ -1204,7 +1210,7 @@ class MovingRectangle(BaseProtocol):
                                     'center': [0, 0],
                                     'speed': 80.0,
                                     'angle': [0.0, 180.0],
-                                    'fly_heading': 0.0,
+                                    'closed_loop': [0],
                                     'render_on_cylinder': True,
                                     'randomize_order': True}
 
@@ -1228,7 +1234,7 @@ class TernaryBars(BaseProtocol):
     def getEpochParameters(self):
         current_period, current_theta_offset, current_angle = self.selectParametersFromLists((self.protocol_parameters['period'], self.protocol_parameters['theta_offset'], self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
         start_seed = int(np.random.choice(range(int(1e6))))
-        
+
         distribution_data = {'name': 'Ternary',
                              'args': [],
                              'kwargs': {'rand_min': self.protocol_parameters['rand_min'],
@@ -1259,7 +1265,7 @@ class TernaryBars(BaseProtocol):
                                     'start_seed': start_seed,
                                     'distribution_data': distribution_data}
 
-        
+
         self.convenience_parameters = {'start_seed': start_seed,
                                        'current_period': current_period,
                                        'current_theta_offset': current_theta_offset,
@@ -1336,4 +1342,3 @@ class UniformFlash(BaseProtocol):
                                'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-

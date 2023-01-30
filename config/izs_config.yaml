@@ -1,13 +1,22 @@
 experimenter: izs
-prep_choices: [Optic lobe, Whole brain]
+prep_choices: [Behavior, Optic lobe, Whole brain]
 driver_choices: [L2, nSyb-Gal4]
 indicator_choices: [TdTomato, GCaMP7f, GCaMP6f]
 
 rig_config:
-  AODscope_OneScreen:
-    data_directory: E:/path/to/FlystimData
-    screen_center: [180, 0]
-    rig: AODscope
+  24HrFitness:
+    data_directory: /home/clandinin/ilana/VPdata
+    screen_center: [0, 0]
+    rig: 24HrFitness
+    server_data_directory: /home/clandinin/ilana/VPdata/fictrac
+    locomotion: True
+
+  40HrFitness:
+    data_directory: /home/clandinin/ilana/VPdata
+    screen_center: [0, 0]
+    rig: 40HrFitness
+    server_data_directory: /home/clandinin/ilana/VPdata/fictrac
+    locomotion: True
 
   Bruker_LeftScreen:
     data_directory: E:/path/to/FlystimData

@@ -547,8 +547,8 @@ class FlashSeriesWithOptoStep(BaseProtocol):
         self.convenience_parameters = {'current_led_intensity': current_led_intensity}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 120.0,
-                                    'width': 120.0,
+        self.protocol_parameters = {'height': 240.0,
+                                    'width': 240.0,
                                     'center': [0, 0],
                                     'flash_width': 0.5,  # sec
                                     'flash_times': [1, 3, 7, 9, 13],  # sec, flash onsets, into stim time

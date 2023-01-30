@@ -38,6 +38,8 @@ class EpochRun():
         protocol_object.save_metadata_flag = save_metadata_flag
         client.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
 
+        protocol_object.precomputeEpochParameters()
+
         self.server_series_dir = None
         if save_metadata_flag and ('server_data_directory' in data.cfg) and (data.cfg['server_data_directory'] is not None):
             self.server_series_dir = posixpath.join(data.cfg['server_data_directory'], data.experiment_file_name, str(data.series_count))
@@ -69,6 +71,10 @@ class EpochRun():
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             sleep(2) # Give loco time to start acquiring
             client.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
+
+        # # # Pre-run Time # # #
+        if 'pre_run_time' in protocol_object.run_parameters:
+            sleep(protocol_object.run_parameters['pre_run_time'])
 
         # # # Epoch run loop # # #
         client.manager.print_on_server("Starting run.")
