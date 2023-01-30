@@ -110,7 +110,46 @@ class LabJackTSeries(DAQ):
     def setAnalogOutputToZero(self, output_channel='DAC0'):
         ljm.eWriteName(self.handle, output_channel, 0)
 
+    def analogPeriodicOutput(self, output_channel='DAC0', pre_time=0.5, stim_time=1, waveform=[0], scanRate=5000, scansPerRead = 1000):
+        """
+        Repeat waveform for a defined duration.
+            stim comes on at pre_time and goes off at pre_time+stim_time
+        
+        output_channel: (str) name of analog output channel on device
+        pre_time: (sec) time duration before the stim comes on (v=0)
+        stim_time: (sec) duration that stim is on
+        waveform: (V) waveform to output repeatedly
+        scanRate: (Hz) sampling rate of waveform
+        scansPerRead: (int) number of samples to read at a time
+        """
+
+        ljm.periodicStreamOut(self.handle, ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
+        time.sleep(pre_time)
+        actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, 1, [ljm.nameToAddress("STREAM_OUT0")[0]], scanRate)
+        time.sleep(stim_time)
+        ljm.eStreamStop(self.handle)
+        ljm.eWriteName(self.handle, output_channel, 0)
+    
+    def squareWave(self, output_channel='DAC0', pre_time=0.5, stim_time=1, freq=100, amp=2.5, scanRate=5000, scansPerRead = 1000):
+        """
+        Generate a square wave with defined frequency and amplitude
+            stim comes on at pre_time and goes off at pre_time+stim_time
+        
+        output_channel: (str) name of analog output channel on device
+        pre_time: (sec) time duration before the stim comes on (v=0)
+        stim_time: (sec) duration that stim is on
+        freq: (Hz) frequency of output square wave
+        amp: (V) amplitude of output square wave
+        scanRate: (Hz) sampling rate of waveform
+        scansPerRead: (int) number of samples to read at a time
+        """
+
+        waveform = np.zeros(int(scanRate/freq))
+        waveform[0:int(scanRate/(2*freq))] = amp
+        self.analogPeriodicOutput(output_channel=output_channel, pre_time=pre_time, stim_time=stim_time, waveform=waveform, scanRate=scanRate, scansPerRead=scansPerRead)
+
     def close(self):
         if self.is_open:
             ljm.close(self.handle)
             self.is_open = False
+
