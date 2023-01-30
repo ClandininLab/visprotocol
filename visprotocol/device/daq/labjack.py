@@ -1,5 +1,7 @@
 import numpy as np
 import time
+import threading
+
 from visprotocol.device.daq import DAQ
 
 from labjack import ljm
@@ -9,6 +11,8 @@ class LabJackTSeries(DAQ):
         super().__init__()  # call the parent class init method
         self.serial_number = dev
         self.trigger_channel = trigger_channel
+
+        self.stream_thread = None
 
         self.init_device()
 
@@ -110,6 +114,49 @@ class LabJackTSeries(DAQ):
     def setAnalogOutputToZero(self, output_channel='DAC0'):
         ljm.eWriteName(self.handle, output_channel, 0)
 
+    def setupPeriodicStreamOut(self, output_channel='DAC0', waveform=[0], scanRate=5000):
+        """
+        Setup periodic stream out for a defined waveform
+
+        output_channel: (str) name of analog output channel on device
+        waveform: (V) waveform to output repeatedly
+        scanRate: (Hz) sampling rate of waveform
+        """
+
+        ljm.periodicStreamOut(self.handle, ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
+
+    def setupPulseWaveStreamOut(self, output_channel='DAC0', freq=1, amp=2.5, pulse_width=0.1, scanRate=5000):
+        """
+        Setup periodic stream out for a defined waveform
+
+        output_channel: (str) name of analog output channel on device
+        freq: (Hz) frequency of waveform
+        amp: (V) amplitude of waveform
+        pulse_width: (sec) width of pulse in waveform
+        scanRate: (Hz) sampling rate of waveform
+        scansPerRead: (int) number of samples to read at a time
+        """
+
+        waveform = np.zeros(int(scanRate/freq))
+        waveform[0:int(scanRate*pulse_width)] = amp
+        self.setupPeriodicStreamOut(output_channel=output_channel, waveform=waveform, scanRate=scanRate)
+
+    def startStream(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000):
+        scanList = ljm.namesToAddresses(scanListNames)[0]
+        actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, len(scanList), scanList, scanRate)
+    
+    def stopStream(self):
+        ljm.eStreamStop(self.handle)
+
+    def streamWithTiming(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000, pre_time=0.5, stim_time=1):
+        def timing_helper():
+            time.sleep(pre_time)
+            self.startStream(scanListNames=scanListNames, scanRate=scanRate, scansPerRead=scansPerRead)
+            time.sleep(stim_time)
+            self.stopStream()
+        self.stream_thread = threading.Thread(target=timing_helper, daemon=True)
+        self.stream_thread.start()
+
     def analogPeriodicOutput(self, output_channel='DAC0', pre_time=0.5, stim_time=1, waveform=[0], scanRate=5000, scansPerRead = 1000):
         """
         Repeat waveform for a defined duration.
@@ -123,14 +170,14 @@ class LabJackTSeries(DAQ):
         scansPerRead: (int) number of samples to read at a time
         """
 
-        ljm.periodicStreamOut(self.handle, ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
+        self.setupPeriodicStreamOut(output_channel=output_channel, waveform=waveform, scanRate=scanRate)
         time.sleep(pre_time)
         actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, 1, [ljm.nameToAddress("STREAM_OUT0")[0]], scanRate)
         time.sleep(stim_time)
         ljm.eStreamStop(self.handle)
         ljm.eWriteName(self.handle, output_channel, 0)
     
-    def squareWave(self, output_channel='DAC0', pre_time=0.5, stim_time=1, freq=100, amp=2.5, scanRate=5000, scansPerRead = 1000):
+    def squareWave(self, output_channel='DAC0', pre_time=0.5, stim_time=1, freq=1, amp=2.5, scanRate=5000, scansPerRead = 1000):
         """
         Generate a square wave with defined frequency and amplitude
             stim comes on at pre_time and goes off at pre_time+stim_time
@@ -144,8 +191,25 @@ class LabJackTSeries(DAQ):
         scansPerRead: (int) number of samples to read at a time
         """
 
+        self.pulseWave(output_channel=output_channel, pre_time=pre_time, stim_time=stim_time, pulse_width=0.5/freq, freq=freq, amp=amp, scanRate=scanRate, scansPerRead=scansPerRead)
+
+    def pulseWave(self, output_channel='DAC0', pre_time=0.5, stim_time=1, freq=1, amp=2.5, pulse_width=0.1, scanRate=5000, scansPerRead = 1000):
+        """
+        Generate a square wave with defined frequency and amplitude
+            stim comes on at pre_time and goes off at pre_time+stim_time
+        
+        output_channel: (str) name of analog output channel on device
+        pre_time: (sec) time duration before the stim comes on (v=0)
+        stim_time: (sec) duration that stim is on
+        freq: (Hz) frequency of output square wave
+        amp: (V) amplitude of output square wave
+        pulse_width: (sec) duration of pulse
+        scanRate: (Hz) sampling rate of waveform
+        scansPerRead: (int) number of samples to read at a time
+        """
+
         waveform = np.zeros(int(scanRate/freq))
-        waveform[0:int(scanRate/(2*freq))] = amp
+        waveform[0:int(scanRate*pulse_width)] = amp
         self.analogPeriodicOutput(output_channel=output_channel, pre_time=pre_time, stim_time=stim_time, waveform=waveform, scanRate=scanRate, scansPerRead=scansPerRead)
 
     def close(self):
