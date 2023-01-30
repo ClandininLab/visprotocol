@@ -1,4 +1,5 @@
 import h5py
+import numpy as np
 
 # H5io fxns
 def getHierarchy(file_path, additional_exclusions=None):

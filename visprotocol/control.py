@@ -62,9 +62,9 @@ class EpochRun():
             print('Warning - you are not saving your metadata!')
 
         # Trigger acquisition of scope and cameras by send triggering TTL through the DAQ device (if device is set)
-        if client.daq_device is not None:
+        if client.trigger_device is not None:
             print("Triggering acquisition devices.")
-            client.daq_device.sendTrigger()
+            client.trigger_device.sendTrigger()
 
         if 'do_loco' in data.cfg and data.cfg['do_loco']:
             sleep(2) # Give loco time to start acquiring
@@ -103,8 +103,8 @@ class EpochRun():
             data.createEpoch(protocol_object)
 
         # Send triggering TTL through the DAQ device (if device is set)
-        if client.daq_device is not None:
-            client.daq_device.sendTrigger()
+        if client.trigger_device is not None:
+            client.trigger_device.sendTrigger()
 
         client.manager.print_on_server(f'Epoch {protocol_object.num_epochs_completed}')
 
