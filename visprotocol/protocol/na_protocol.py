@@ -791,7 +791,7 @@ class DriftingSquareGrating(BaseProtocol):
                                  'profile': 'square',
                                  'theta': self.screen_center[0]}
 
-        self.convenience_parameters = {'current_angle': current_angle}
+        self.convenience_parameters = {'current_angle': current_angle, 'current_height': current_height}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
