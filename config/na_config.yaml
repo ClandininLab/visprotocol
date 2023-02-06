@@ -16,3 +16,8 @@ rig_config:
     data_directory: /home/clandinin/Niyathi/ballrig_data/FlystimData
     screen_center: [0, 0]
     rig: 24HrFitness
+
+  Laptop:
+    data_directory: /Users/niyathisa
+    screen_center: [0, 0]
+    rig: (testing)
