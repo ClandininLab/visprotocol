@@ -110,7 +110,7 @@ class BaseProtocol():
 
         do_loco = 'do_loco' in self.cfg and self.cfg['do_loco']
         do_closed_loop_epoch = ('current_closed_loop' in self.convenience_parameters and self.convenience_parameters['current_closed_loop']) or \
-                                    ('closed_loop' in self.epoch_parameters and self.epoch_parameters['closed_loop']==1)
+                                    ('closed_loop' in self.protocol_parameters and self.protocol_parameters['closed_loop']==1)
         do_closed_loop = do_loco and do_closed_loop_epoch
         save_pos_history = do_closed_loop and self.save_metadata_flag
 
