@@ -658,6 +658,70 @@ class StripeFixation(BaseProtocol):
 
 
 # %%
+class SwitchingDriftingSquareGrating(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        # TODO: center size with aperture (center and center_size)
+        current_angle, current_height = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['height']), randomize_order = self.protocol_parameters['randomize_order'])
+
+        height_in_radians = np.deg2rad(current_height)
+
+        radius_in_meters = 1
+        height_in_meters = 2 * radius_in_meters * np.tan(height_in_radians / 2)
+
+        rate_trajectory = {'name': 'tv_pairs',
+                           'tv_pairs': [(0, self.protocol_parameters['rate']), 
+                                        (self.protocol_parameters['switch_time'], -self.protocol_parameters['rate'])],
+                           'kind': 'previous'}
+
+        self.epoch_parameters = {'name': 'RotatingGrating',
+                                 'period': self.protocol_parameters['period'],
+                                 'rate': rate_trajectory,
+                                 'hold_duration': self.protocol_parameters['hold_duration'],
+                                 'color': [1, 1, 1, 1],
+                                 'mean': self.protocol_parameters['mean'],
+                                 'contrast': self.protocol_parameters['contrast'],
+                                 'angle': current_angle,
+                                 'offset': np.rad2deg(np.random.uniform(0, 2*np.pi)) if self.protocol_parameters['random_offset'] else 0,
+                                 'cylinder_radius': radius_in_meters,
+                                 'cylinder_height': height_in_meters,
+                                 'profile': 'square',
+                                 'theta': self.screen_center[0]}
+
+        self.convenience_parameters = {'current_angle': current_angle, 'current_height': current_height}
+
+        self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
+                                'center': self.adjustCenter(self.protocol_parameters['center'])}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period': 60.0,
+                                    'rate': 60.0,
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'angle': [0.0],
+                                    'height': [170.0],
+                                    'hold_duration': 0.0,
+                                    'switch_time': 3.0,
+                                    'center': [0, 0],
+                                    'center_size': 180.0,
+                                    'random_offset': False,
+                                    'closed_loop': False,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SwitchingDriftingSquareGrating',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 4.0,
+                               'tail_time': 0.5,
+                               'idle_color': 0.5}
+
+# %%
 
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
     def __init__(self, cfg):
