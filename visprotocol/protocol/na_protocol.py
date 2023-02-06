@@ -527,7 +527,76 @@ class OcclusionFixed(BaseProtocol):
                                'stim_time': 5.5}
 
 # %%
+class PatchFixation(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_width, current_height, current_intensity, current_angle, current_theta, current_closed_loop, current_opto_pre_time, current_opto_stim_time, current_opto_freq, current_opto_amp, current_opto_pulse_width = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['height'], self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop'], self.protocol_parameters['opto_pre_time'], self.protocol_parameters['opto_stim_time'], self.protocol_parameters['opto_freq'], self.protocol_parameters['opto_amp'], self.protocol_parameters['opto_pulse_width']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.convenience_parameters = {'current_width': current_width,
+                                       'current_height': current_height,
+                                       'current_angle': current_angle,
+                                       'current_intensity': current_intensity,
+                                       'current_theta': current_theta,
+                                       'current_closed_loop': current_closed_loop,
+                                       'current_opto_pre_time': current_opto_pre_time,
+                                       'current_opto_stim_time': current_opto_stim_time,
+                                       'current_opto_freq': current_opto_freq,
+                                       'current_opto_amp': current_opto_amp,
+                                       'current_opto_pulse_width': current_opto_pulse_width}
+
+        self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
+                            'width': current_width,
+                            'height': current_height,
+                            'color': current_intensity,
+                            'theta': current_theta,
+                            'angle': current_angle}
+
+    def loadStimuli(self, client, multicall=None):
+
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        
+        # set up opto pulse wave
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
+                                              freq=self.convenience_parameters['current_opto_freq'], 
+                                              amp=self.convenience_parameters['current_opto_amp'], 
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+                                              scanRate=5000)
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+                                       stim_time=self.convenience_parameters['current_opto_stim_time'],
+                                       scanRate=5000, scansPerRead=1000)
+
+        super().loadStimuli(client, multicall)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'width': [25.0],
+                                    'height': [15.0],
+                                    'intensity': [0.0],
+                                    'angle': [0.0],
+                                    'theta': [0.0],
+                                    'closed_loop': [0],
+                                    'opto_pre_time': [0.0],
+                                    'opto_stim_time': [1.0],
+                                    'opto_freq': [1.0],
+                                    'opto_amp': [2.5],
+                                    'opto_pulse_width': [0.1],
+                                    'render_on_cylinder': True,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'PatchFixation',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
 class StripeFixation(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
