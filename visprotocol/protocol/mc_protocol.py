@@ -600,7 +600,11 @@ class PatchFixation(BaseProtocol):
                                        'current_opto_amp': current_opto_amp,
                                        'current_opto_pulse_width': current_opto_pulse_width}
 
-        self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
+        if self.protocol_parameters['ellipse']:
+            flystim_stim_name = 'MovingEllipseOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingEllipse'
+        else:
+            flystim_stim_name = 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch'
+        self.epoch_parameters = {'name': flystim_stim_name,
                             'width': current_width,
                             'height': current_height,
                             'color': current_intensity,
@@ -612,6 +616,9 @@ class PatchFixation(BaseProtocol):
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
         
+        conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
+        multicall.print_on_server(f'{conv_params_to_print}')
+
         # set up opto pulse wave
         multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
                                               freq=self.convenience_parameters['current_opto_freq'], 
@@ -636,6 +643,7 @@ class PatchFixation(BaseProtocol):
                                     'opto_freq': [1.0],
                                     'opto_amp': [2.5],
                                     'opto_pulse_width': [0.1],
+                                    'ellipse': True,
                                     'render_on_cylinder': True,
                                     'randomize_order': True}
 
