@@ -785,13 +785,13 @@ class DriftingSquareGrating(BaseProtocol):
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
                                  'angle': current_angle,
-                                 'offset': 0.0,
+                                 'offset': np.rad2deg(np.random.uniform(0, 2*np.pi)) if self.protocol_parameters['random_offset'] else 0,
                                  'cylinder_radius': radius_in_meters,
                                  'cylinder_height': height_in_meters,
                                  'profile': 'square',
                                  'theta': self.screen_center[0]}
 
-        self.convenience_parameters = {'current_angle': current_angle}
+        self.convenience_parameters = {'current_angle': current_angle, 'current_height': current_height}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
@@ -806,6 +806,7 @@ class DriftingSquareGrating(BaseProtocol):
                                     'hold_duration': 0.550,
                                     'center': [0, 0],
                                     'center_size': 180.0,
+                                    'random_offset': False,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
@@ -840,6 +841,8 @@ class SplitDriftingSquareGrating(BaseProtocol):
     def getEpochParameters(self):
         # TODO: center size with aperture (center and center_size)
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+                                 
+        offset = np.rad2deg(np.random.uniform(0, 2*np.pi)) if self.protocol_parameters['random_offset'] else 0
 
         self.epoch_parameters_0 = {'name': 'RotatingGrating',
                                  'period': self.protocol_parameters['period'],
@@ -848,7 +851,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
                                  'angle': current_angle,
-                                 'offset': 0.0,
+                                 'offset': offset,
                                  'cylinder_radius': 1,
                                  'cylinder_location': (self.protocol_parameters['cylinder_xshift'],0,0),
                                  'cylinder_height': 10,
@@ -861,7 +864,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
                                  'angle': current_angle+180.0, #remove
-                                 'offset': 0.0, #change this??
+                                 'offset': offset,
                                  'cylinder_radius': 1,
                                  'cylinder_location': (self.protocol_parameters['cylinder_xshift'],0,0), #-
                                  'cylinder_height': 10,
@@ -885,6 +888,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
                                     'center': [0, 0],
                                     'center_size': 180.0,
                                     'cylinder_xshift': -0.001,
+                                    'random_offset': False,
                                     'randomize_order': True,
                                     }
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from flystim.screen import Screen, SubScreen
-from flystim.stim_server import StimServer
-from flystim.dlpc350 import make_dlpc350_objects
-from math import pi
+import os
+import matplotlib.pyplot as plt
 
-# Define screen(s) for the rig
+from flystim.screen import Screen, SubScreen
+from flystim.draw import draw_screens
+from flystim.dlpc350 import make_dlpc350_objects
+
+from visprotocol.server.clandinin_server import Server
+from visprotocol.device.daq.labjack import LabJackTSeries
+from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
 
 def get_subscreen(dir):
     '''
@@ -58,24 +62,39 @@ def get_subscreen(dir):
     return SubScreen(pa=pa, pb=pb, pc=pc, viewport_ll=viewport_ll, viewport_width=abs(viewport_width), viewport_height=abs(viewport_height))
 
 def main():
+    # Set lightcrafter and GL environment settings
+    os.system('export __GL_SYNC_TO_VBLANK=0; export __GL_MaxFramesAllowed=1; echo $__GL_SYNC_TO_VBLANK; echo $__GL_MaxFramesAllowed')
+
     # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
     for dlpc350_object in dlpc350_objects:
-         dlpc350_object.pattern_mode(fps=120, red=0, blue=2.1, green=2.1)
+         dlpc350_object.pattern_mode(fps=120, red=0, blue=0.9, green=0.9)
 
     aux_screen = Screen(subscreens=[get_subscreen('aux')], server_number=1, id=0, fullscreen=False, vsync=False, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
     projector_screen = Screen(subscreens=[get_subscreen('w'), get_subscreen('n'), get_subscreen('e')], server_number=1, id=1, fullscreen=True, square_loc=(0.75, -1.0), square_size=(0.25, 0.25), vsync=False, horizontal_flip=True)
 
-    port = 60629
-    host = ''
+    screens = [projector_screen, aux_screen]
 
-    manager = StimServer(screens=[projector_screen, aux_screen], host=host, port=port, auto_stop=False)
+    # Initialize camera with proper settings
+    # jf_cam = FlirCam(serial_number='20243355', attrs_json_fn='/home/clandinin/src/jackfish/presets/MC/cam_20243355.json')
+    # jf_cam.close()
 
+    loco_class = FtClosedLoopManager
+    loco_kwargs = {
+        'host':          '127.0.0.1',
+        'port':          33334,
+        'ft_bin':           "/home/clandinin/lib/fictrac211/bin/fictrac",
+        'ft_config':        "/home/clandinin/lib/fictrac211/config_MC.txt",
+        'ft_theta_idx':     16,
+        'ft_x_idx':         14,
+        'ft_y_idx':         15,
+        'ft_frame_num_idx': 0,
+        'ft_timestamp_idx': 21
+    }
 
-    manager.black_corner_square()
-    manager.set_idle_background(0)
-
-    manager.loop()
+    server = Server(screens = screens, loco_class=loco_class, loco_kwargs=loco_kwargs)
+    server.loop()
 
 if __name__ == '__main__':
     main()
+Z

@@ -27,7 +27,7 @@ class LoomRandomlySpaced(BaseProtocol):
 
         self.getRunParameterDefaults()
         self.getParameterDefaults()
-    
+
     def precomputeEpochParameters(self):
         # Calculate ITIs probabilistically (tail_time)
         # Randomly spaced ITIs, drawn from a uniform distribution between avg_iti - 1 and avg_iti + 1
@@ -36,8 +36,8 @@ class LoomRandomlySpaced(BaseProtocol):
         avg_iti = (self.run_parameters['run_time'] - total_loom_dur) / num_itis
         iti_lo = max(avg_iti - 1, 0)
         iti_hi = min(avg_iti + 1, self.run_parameters['run_time'])
-        self.itis = np.random.uniform(iti_lo, iti_hi, self.run_parameters['num_epochs'])
-    
+        self.itis = np.random.uniform(iti_lo, iti_hi, int(self.run_parameters['num_epochs']))
+
     def getEpochParameters(self):
         current_color = self.selectParametersFromLists(self.protocol_parameters['color'], randomize_order = self.protocol_parameters['randomize_order'])
 

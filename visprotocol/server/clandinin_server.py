@@ -2,6 +2,7 @@ import signal, sys
 
 from flystim.screen import Screen
 from flystim.stim_server import launch_stim_server, StimServer
+from visprotocol.device.daq.labjack import LabJackTSeries
 
 class Server():
     def __init__(self, screens=[], loco_class=False, loco_kwargs={}, daq_class=None, daq_kwargs={}):
@@ -56,3 +57,8 @@ class Server():
         self.manager.register_function_on_root(self.daq_device.sendTrigger, "daq_sendTrigger")
         self.manager.register_function_on_root(self.daq_device.outputStep, "daq_outputStep")
 
+        if daq_class == LabJackTSeries:
+            self.manager.register_function_on_root(self.daq_device.setupPulseWaveStreamOut, "daq_setupPulseWaveStreamOut")
+            self.manager.register_function_on_root(self.daq_device.startStream, "daq_startStream")
+            self.manager.register_function_on_root(self.daq_device.stopStream, "daq_stopStream")
+            self.manager.register_function_on_root(self.daq_device.streamWithTiming, "daq_streamWithTiming")

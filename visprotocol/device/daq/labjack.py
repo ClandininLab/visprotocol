@@ -114,7 +114,7 @@ class LabJackTSeries(DAQ):
     def setAnalogOutputToZero(self, output_channel='DAC0'):
         ljm.eWriteName(self.handle, output_channel, 0)
 
-    def setupPeriodicStreamOut(self, output_channel='DAC0', waveform=[0], scanRate=5000):
+    def setupPeriodicStreamOut(self, output_channel='DAC0', waveform=[0], streamOutIndex=0, scanRate=5000):
         """
         Setup periodic stream out for a defined waveform
 
@@ -122,10 +122,9 @@ class LabJackTSeries(DAQ):
         waveform: (V) waveform to output repeatedly
         scanRate: (Hz) sampling rate of waveform
         """
+        ljm.periodicStreamOut(self.handle, streamOutIndex, ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
 
-        ljm.periodicStreamOut(self.handle, ljm.nameToAddress(output_channel)[0], scanRate, len(waveform), waveform)
-
-    def setupPulseWaveStreamOut(self, output_channel='DAC0', freq=1, amp=2.5, pulse_width=0.1, scanRate=5000):
+    def setupPulseWaveStreamOut(self, output_channel='DAC0', freq=1, amp=2.5, pulse_width=0.1, streamOutIndex=0, scanRate=5000):
         """
         Setup periodic stream out for a defined waveform
 
@@ -137,16 +136,18 @@ class LabJackTSeries(DAQ):
         scansPerRead: (int) number of samples to read at a time
         """
 
+        self.stream_output_channel = output_channel
         waveform = np.zeros(int(scanRate/freq))
         waveform[0:int(scanRate*pulse_width)] = amp
         self.setupPeriodicStreamOut(output_channel=output_channel, waveform=waveform, scanRate=scanRate)
 
     def startStream(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000):
-        scanList = ljm.namesToAddresses(scanListNames)[0]
+        scanList = ljm.namesToAddresses(len(scanListNames), scanListNames)[0]
         actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, len(scanList), scanList, scanRate)
     
     def stopStream(self):
         ljm.eStreamStop(self.handle)
+        ljm.eWriteName(self.handle, self.stream_output_channel, 0)
 
     def streamWithTiming(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000, pre_time=0.5, stim_time=1):
         def timing_helper():

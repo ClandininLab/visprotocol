@@ -527,7 +527,76 @@ class OcclusionFixed(BaseProtocol):
                                'stim_time': 5.5}
 
 # %%
+class PatchFixation(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_width, current_height, current_intensity, current_angle, current_theta, current_closed_loop, current_opto_pre_time, current_opto_stim_time, current_opto_freq, current_opto_amp, current_opto_pulse_width = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['height'], self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop'], self.protocol_parameters['opto_pre_time'], self.protocol_parameters['opto_stim_time'], self.protocol_parameters['opto_freq'], self.protocol_parameters['opto_amp'], self.protocol_parameters['opto_pulse_width']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.convenience_parameters = {'current_width': current_width,
+                                       'current_height': current_height,
+                                       'current_angle': current_angle,
+                                       'current_intensity': current_intensity,
+                                       'current_theta': current_theta,
+                                       'current_closed_loop': current_closed_loop,
+                                       'current_opto_pre_time': current_opto_pre_time,
+                                       'current_opto_stim_time': current_opto_stim_time,
+                                       'current_opto_freq': current_opto_freq,
+                                       'current_opto_amp': current_opto_amp,
+                                       'current_opto_pulse_width': current_opto_pulse_width}
+
+        self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
+                            'width': current_width,
+                            'height': current_height,
+                            'color': current_intensity,
+                            'theta': current_theta,
+                            'angle': current_angle}
+
+    def loadStimuli(self, client, multicall=None):
+
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        
+        # set up opto pulse wave
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
+                                              freq=self.convenience_parameters['current_opto_freq'], 
+                                              amp=self.convenience_parameters['current_opto_amp'], 
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+                                              scanRate=5000)
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+                                       stim_time=self.convenience_parameters['current_opto_stim_time'],
+                                       scanRate=5000, scansPerRead=1000)
+
+        super().loadStimuli(client, multicall)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'width': [25.0],
+                                    'height': [15.0],
+                                    'intensity': [0.0],
+                                    'angle': [0.0],
+                                    'theta': [0.0],
+                                    'closed_loop': [0],
+                                    'opto_pre_time': [0.0],
+                                    'opto_stim_time': [1.0],
+                                    'opto_freq': [1.0],
+                                    'opto_amp': [2.5],
+                                    'opto_pulse_width': [0.1],
+                                    'render_on_cylinder': True,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'PatchFixation',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
 class StripeFixation(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -587,6 +656,70 @@ class StripeFixation(BaseProtocol):
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
+
+# %%
+class SwitchingDriftingSquareGrating(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        # TODO: center size with aperture (center and center_size)
+        current_angle, current_height = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['height']), randomize_order = self.protocol_parameters['randomize_order'])
+
+        height_in_radians = np.deg2rad(current_height)
+
+        radius_in_meters = 1
+        height_in_meters = 2 * radius_in_meters * np.tan(height_in_radians / 2)
+
+        rate_trajectory = {'name': 'tv_pairs',
+                           'tv_pairs': [(0, self.protocol_parameters['rate']), 
+                                        (self.protocol_parameters['switch_time'], -self.protocol_parameters['rate'])],
+                           'kind': 'previous'}
+
+        self.epoch_parameters = {'name': 'RotatingGrating',
+                                 'period': self.protocol_parameters['period'],
+                                 'rate': rate_trajectory,
+                                 'hold_duration': self.protocol_parameters['hold_duration'],
+                                 'color': [1, 1, 1, 1],
+                                 'mean': self.protocol_parameters['mean'],
+                                 'contrast': self.protocol_parameters['contrast'],
+                                 'angle': current_angle,
+                                 'offset': np.rad2deg(np.random.uniform(0, 2*np.pi)) if self.protocol_parameters['random_offset'] else 0,
+                                 'cylinder_radius': radius_in_meters,
+                                 'cylinder_height': height_in_meters,
+                                 'profile': 'square',
+                                 'theta': self.screen_center[0]}
+
+        self.convenience_parameters = {'current_angle': current_angle, 'current_height': current_height}
+
+        self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
+                                'center': self.adjustCenter(self.protocol_parameters['center'])}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period': 60.0,
+                                    'rate': 60.0,
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'angle': [0.0],
+                                    'height': [170.0],
+                                    'hold_duration': 0.0,
+                                    'switch_time': 3.0,
+                                    'center': [0, 0],
+                                    'center_size': 180.0,
+                                    'random_offset': False,
+                                    'closed_loop': False,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SwitchingDriftingSquareGrating',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 4.0,
+                               'tail_time': 0.5,
+                               'idle_color': 0.5}
 
 # %%
 
@@ -722,7 +855,7 @@ class DriftingSquareGrating(BaseProtocol):
                                  'profile': 'square',
                                  'theta': self.screen_center[0]}
 
-        self.convenience_parameters = {'current_angle': current_angle}
+        self.convenience_parameters = {'current_angle': current_angle, 'current_height': current_height}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
