@@ -42,3 +42,20 @@ tuning_suite:
     - 800.0
     - 1600.0
     randomize_order: true
+loom_10_left:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity: 0.0
+    center:
+    - 30.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio: 10.0
+    randomize_order: true
