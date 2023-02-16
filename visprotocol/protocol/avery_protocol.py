@@ -547,24 +547,36 @@ class FlashSeriesWithOptoStep(BaseProtocol):
         self.convenience_parameters = {'current_led_intensity': current_led_intensity}
 
     def getParameterDefaults(self):
+        # self.protocol_parameters = {'height': 240.0,
+        #                             'width': 240.0,
+        #                             'center': [0, 0],
+        #                             'flash_width': 0.5,  # sec
+        #                             'flash_times': [1, 3, 7, 9, 13],  # sec, flash onsets, into stim time
+        #                             'flash_intensity': 1,
+
+        #                             'led_time': 2,  # sec, onset
+        #                             'led_duration': 6,  # sec, duration. Must be shorter than stim_time
+
+        #                             'led_intensity': [0.25, 0.5, 1, 2, 4],  # V
+        #                             'randomize_order': True}       
         self.protocol_parameters = {'height': 240.0,
                                     'width': 240.0,
                                     'center': [0, 0],
                                     'flash_width': 0.5,  # sec
-                                    'flash_times': [1, 3, 7, 9, 13],  # sec, flash onsets, into stim time
+                                    'flash_times': [1, 3.2, 4.5, 6.2, 8.2, 10.2, 12.2],  # sec, flash onsets, into stim time
                                     'flash_intensity': 1,
 
-                                    'led_time': 2,  # sec, onset
-                                    'led_duration': 6,  # sec, duration. Must be shorter than stim_time
+                                    'led_time': 3,  # sec, onset
+                                    'led_duration': 3,  # sec, duration. Must be shorter than stim_time
 
-                                    'led_intensity': [0.25, 0.5, 1, 2, 4],  # V
+                                    'led_intensity': [0.25, 1, 4],  # V
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'FlashSeriesWithOptoStep',
-                               'num_epochs': 100,
+                               'num_epochs': 108,
                                'pre_time': 2,
-                               'stim_time': 15,
+                               'stim_time': 14,
                                'tail_time': 2,
                                'idle_color': 0.5}
 
