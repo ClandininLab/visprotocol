@@ -155,8 +155,14 @@ class LabJackTSeries(DAQ):
             self.startStream(scanListNames=scanListNames, scanRate=scanRate, scansPerRead=scansPerRead)
             time.sleep(stim_time)
             self.stopStream()
-        self.stream_thread = threading.Thread(target=timing_helper, daemon=True)
-        self.stream_thread.start()
+            self.stream_thread = None
+            
+        if self.stream_thread is not None:
+            self.stream_thread = threading.Thread(target=timing_helper, daemon=True)
+            self.stream_thread.start()
+        else:
+            # TODO: extend stream duration
+            pass
 
     def analogPeriodicOutput(self, output_channel='DAC0', pre_time=0.5, stim_time=1, waveform=[0], scanRate=5000, scansPerRead = 1000):
         """
