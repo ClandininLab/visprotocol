@@ -13,6 +13,7 @@ class LabJackTSeries(DAQ):
         self.trigger_channel = trigger_channel
 
         self.stream_thread = None
+        self.streaming = False
 
         self.init_device()
 
@@ -143,11 +144,13 @@ class LabJackTSeries(DAQ):
 
     def startStream(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000):
         scanList = ljm.namesToAddresses(len(scanListNames), scanListNames)[0]
+        self.streaming = True
         actualScanRate = ljm.eStreamStart(self.handle, scansPerRead, len(scanList), scanList, scanRate)
     
     def stopStream(self):
         ljm.eStreamStop(self.handle)
         ljm.eWriteName(self.handle, self.stream_output_channel, 0)
+        self.streaming = False
 
     def streamWithTiming(self, scanListNames=["STREAM_OUT0"], scanRate=5000, scansPerRead=1000, pre_time=0.5, stim_time=1):
         def timing_helper():

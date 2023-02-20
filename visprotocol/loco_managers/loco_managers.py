@@ -5,8 +5,6 @@ import json
 from math import degrees
 from time import time
 
-from visprotocol.device.daq.labjack import LabJackTSeries as daq
-
 class LocoManager():
     def __init__(self) -> None:
         pass
@@ -87,11 +85,13 @@ class LocoSocketManager():
         return line
 
 class LocoClosedLoopManager():
-    def __init__(self, fs_manager, host, port, save_directory=None, start_at_init=False, udp=True) -> None:
+    def __init__(self, fs_manager, host, port, daq_device=None, save_directory=None, start_at_init=False, udp=True) -> None:
         super().__init__()
         self.fs_manager = fs_manager
         self.socket_manager = LocoSocketManager(host=host, port=port, udp=udp)
         
+        self.daq = daq_device
+
         self.save_directory = save_directory
         self.log_file = None
 
@@ -236,6 +236,13 @@ class LocoClosedLoopManager():
         return self.loop_attrs['looping']
 
     def loop_start(self):
+        # Do opto with ft_data
+        self.daq.setupPulseWaveStreamOut(output_channel='DAC0', 
+                                            freq=10, 
+                                            amp=2.5, 
+                                            pulse_width=0.01, 
+                                            scanRate=5000)
+
         def loop_helper():
             self.loop_attrs['looping'] = True
             while self.loop_attrs['looping']:
@@ -251,16 +258,11 @@ class LocoClosedLoopManager():
                 def opto_trigger(ft_data):
                     theta = (degrees(float(ft_data['theta']) - self.pos_0['theta']) + 180) % 360 - 180
                     if theta > 0:
-                        if daq.stream_thread is None:
-                            daq.setupPulseWaveStreamOut(output_channel='DAC0', 
-                                                        freq=10, 
-                                                        amp=2.5, 
-                                                        pulse_width=0.01, 
-                                                        scanRate=5000)
-                            daq.startStream(scanRate=5000, scansPerRead=1000)
+                        if not self.daq.streaming:
+                            self.daq.startStream(scanRate=5000, scansPerRead=1000)
                     else:
-                        if daq.stream_thread is not None:
-                            daq.stopStream()
+                        if self.daq.streaming:
+                            self.daq.stopStream()
                 opto_trigger(ft_data)
 
         if self.loop_attrs['looping']:

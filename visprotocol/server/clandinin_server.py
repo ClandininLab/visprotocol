@@ -11,11 +11,11 @@ class Server():
         else:
             self.manager = launch_stim_server(Screen(fullscreen=False, server_number=0, id=0, vsync=False))
 
-        self.loco_manager = None
         self.daq_device = None        
+        self.loco_manager = None
 
-        if loco_class is not None:    self.__set_up_loco__(loco_class, **loco_kwargs)
         if daq_class is not None:     self.__set_up_daq__(daq_class, **daq_kwargs)
+        if loco_class is not None:    self.__set_up_loco__(loco_class, **loco_kwargs)
 
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
@@ -37,7 +37,7 @@ class Server():
         self.manager.shutdown_flag.set()
 
     def __set_up_loco__(self, loco_class, **kwargs):
-        self.loco_manager = loco_class(fs_manager=self.manager, start_at_init=False, **kwargs)
+        self.loco_manager = loco_class(fs_manager=self.manager, start_at_init=False, daq_device=self.daq_device, **kwargs)
         self.manager.register_function_on_root(self.loco_manager.set_save_directory, "loco_set_save_directory")
         self.manager.register_function_on_root(self.loco_manager.start, "loco_start")
         self.manager.register_function_on_root(self.loco_manager.close, "loco_close")

@@ -74,8 +74,8 @@ class FtManager(LocoManager):
         sleep(duration)
 
 class FtClosedLoopManager(LocoClosedLoopManager):
-    def __init__(self, fs_manager, host=FICTRAC_HOST, port=FICTRAC_PORT, save_directory=None, start_at_init=False, udp=True, ft_bin=FICTRAC_BIN, ft_config=FICTRAC_CONFIG, ft_theta_idx=FT_THETA_IDX, ft_x_idx=FT_X_IDX, ft_y_idx=FT_Y_IDX, ft_frame_num_idx=FT_FRAME_NUM_IDX, ft_timestamp_idx=FT_TIMESTAMP_IDX):
-        super().__init__(fs_manager=fs_manager, host=host, port=port, save_directory=save_directory, start_at_init=False, udp=udp)
+    def __init__(self, fs_manager, host=FICTRAC_HOST, port=FICTRAC_PORT, daq_device=None, save_directory=None, start_at_init=False, udp=True, ft_bin=FICTRAC_BIN, ft_config=FICTRAC_CONFIG, ft_theta_idx=FT_THETA_IDX, ft_x_idx=FT_X_IDX, ft_y_idx=FT_Y_IDX, ft_frame_num_idx=FT_FRAME_NUM_IDX, ft_timestamp_idx=FT_TIMESTAMP_IDX):
+        super().__init__(fs_manager=fs_manager, host=host, port=port, daq_device=daq_device, save_directory=save_directory, start_at_init=False, udp=udp)
 
         self.ft_frame_num_idx = ft_frame_num_idx
         self.ft_timestamp_idx = ft_timestamp_idx
