@@ -563,11 +563,11 @@ class FlashSeriesWithOptoStep(BaseProtocol):
                                     'width': 240.0,
                                     'center': [0, 0],
                                     'flash_width': 0.5,  # sec
-                                    'flash_times': [1, 3.2, 5.2, 7.2, 9.2, 11.2, 13.2],  # sec, flash onsets, into stim time
+                                    'flash_times': [1, 4.5, 8, 11.5],  # sec, flash onsets, into stim time
                                     'flash_intensity': 1,
 
-                                    'led_time': 3,  # sec, onset
-                                    'led_duration': 4.0,  # sec, duration. Must be shorter than stim_time
+                                    'led_time': 4.3,  # sec, onset
+                                    'led_duration': 3.5,  # sec, duration. Must be shorter than stim_time
 
                                     'led_intensity': [0.25, 1, 4],  # V
                                     'randomize_order': True}
