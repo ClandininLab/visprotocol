@@ -407,67 +407,6 @@ class OcclusionShape(BaseProtocol):
                                'idle_color': 0.0}
 
 # %%
-
-class StripeFixation(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        current_width, current_height, current_intensity, current_angle, current_theta, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['height'], self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
-
-        self.convenience_parameters = {'current_width': current_width,
-                                       'current_height': current_height,
-                                       'current_angle': current_angle,
-                                       'current_intensity': current_intensity,
-                                       'current_theta': current_theta,
-                                       'current_closed_loop': current_closed_loop}
-
-        self.epoch_parameters = {'name': 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch',
-                            'width': current_width,
-                            'height': current_height,
-                            'color': current_intensity,
-                            'theta': current_theta,
-                            'angle': current_angle}
-
-    def loadStimuli(self, client, multicall=None):
-        if multicall is None:
-            multicall = flyrpc.multicall.MyMultiCall(client.manager)
-
-        multicall.print_on_server(f'Epoch {self.convenience_parameters}')
-
-        bg = self.run_parameters.get('idle_color')
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-
-        if isinstance(self.epoch_parameters, list):
-            for ep in self.epoch_parameters:
-                multicall.load_stim(**ep.copy(), hold=True)
-        else:
-            multicall.load_stim(**self.epoch_parameters.copy(), hold=True)
-
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'width': [5.0],
-                                    'height': [50.0],
-                                    'intensity': [0.0, 1.0],
-                                    'angle': [0.0],
-                                    'theta': [0.0],
-                                    'closed_loop': [0],
-                                    'render_on_cylinder': True,
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'StripeFixation',
-                               'num_epochs': 40,
-                               'pre_time': 0.5,
-                               'stim_time': 3.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
 class PatchFixation(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
