@@ -83,9 +83,10 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.setSpacing(10)
 
         self.data_tab = QWidget()
-        self.data_grid = QFormLayout()
-        self.data_grid.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
-        self.data_grid.setLabelAlignment(QtCore.Qt.AlignCenter)
+        self.data_grid = QGridLayout()
+        self.data_grid.setSpacing(10)
+        # self.data_grid.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        # self.data_grid.setLabelAlignment(QtCore.Qt.AlignCenter)
 
         self.file_tab = QWidget()
         self.file_grid = QFormLayout()
@@ -202,43 +203,79 @@ class ImagingExperimentGUI(QWidget):
         newLabel = QLabel('Load existing animal')
         self.existing_animal_input = QComboBox()
         self.existing_animal_input.activated[int].connect(self.onSelectedExistingAnimal)
-        self.data_grid.addRow(newLabel, self.existing_animal_input)
+        self.data_grid.addWidget(newLabel, 1, 0)
+        self.data_grid.addWidget(self.existing_animal_input, 1, 1, 1, 2)
         self.updateExistingAnimalInput()
-
-        newLabel = QLabel('Current animal info:')
-        newLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.data_grid.addRow(newLabel)
 
         # Animal ID:
         newLabel = QLabel('Animal ID:')
         self.animal_id_input = QLineEdit()
-        self.data_grid.addRow(newLabel, self.animal_id_input)
+        self.data_grid.addWidget(newLabel, 2, 0)
+        self.data_grid.addWidget(self.animal_id_input, 2, 1, 1, 2)
 
+        # Age: 
         newLabel = QLabel('Age:')
         self.animal_age_input = QSpinBox()
         self.animal_age_input.setMinimum(0)
         self.animal_age_input.setValue(1)
-        self.data_grid.addRow(newLabel, self.animal_age_input)
+        self.data_grid.addWidget(newLabel, 3, 0)
+        self.data_grid.addWidget(self.animal_age_input, 3, 1, 1, 2)
+
+        # Notes: 
+        newLabel = QLabel('Notes:')
+        self.animal_notes_input = QTextEdit()
+        self.data_grid.addWidget(newLabel, 4, 0)
+        self.data_grid.addWidget(self.animal_notes_input, 4, 1, 1, 2)
 
         # Use user cfg to populate other metadata options
         self.animal_metadata_inputs = {}
+        ct = 0
         for key in self.cfg['animal_metadata']:
-            newLabel = QLabel(key)
-            new_input = QComboBox()
-            new_input.addItem("")
-            for choiceID in self.cfg['animal_metadata'][key]:
-               new_input.addItem(choiceID)
-            self.data_grid.addRow(newLabel, new_input)
-            self.animal_metadata_inputs[key] = new_input
+            if key == 'transgenes':
+                pass
+            else:
+                ct += 1
+                newLabel = QLabel(key)
+                new_input = QComboBox()
+                new_input.addItem("")
+                for choiceID in self.cfg['animal_metadata'][key]:
+                    new_input.addItem(choiceID)
+                self.data_grid.addWidget(newLabel, 4+ct, 0)
+                self.data_grid.addWidget(new_input, 4+ct, 1, 1, 2)
+
+                self.animal_metadata_inputs[key] = new_input
             
+        newLabel = QLabel('Transgenes')
+        self.data_grid.addWidget(newLabel, 5+ct, 2, 1, 2)
+        # handle transgenes metadata
+        self.transgenes_input = []
+        for driver_ind in range(self.cfg['animal_metadata']['transgenes'].get('max_drivers', 1)):
+            newLabel = QLabel('driver / effector')
+            driver_input = QComboBox()
+            driver_input.addItem("")
+            for choiceID in self.cfg['animal_metadata']['transgenes']['driver']:
+                    driver_input.addItem(choiceID)
+            self.data_grid.addWidget(driver_input, 6+ct+driver_ind, 0)
+
+            effector_inputs = []
+            for effector_ind in range(self.cfg['animal_metadata']['transgenes'].get('max_effectors', 1)):
+                effector_input = QComboBox()
+                effector_input.addItem("")
+                for choiceID in self.cfg['animal_metadata']['transgenes']['effector']:
+                    effector_input.addItem(choiceID)
+                    effector_inputs.append(effector_input)
+                self.data_grid.addWidget(effector_input, 6+ct+driver_ind, effector_ind+1)
+
+            self.transgenes_input.append({'driver': driver_input, 'effectors': effector_inputs})
+
         # Create animal button
         new_separator_line = QFrame()
         new_separator_line.setFrameShape(new_separator_line.HLine)
-        self.data_grid.addRow(new_separator_line)
+        self.data_grid.addWidget(new_separator_line, 7+ct+driver_ind, 0, 1, 3)
 
         createAnimalButton = QPushButton("Create animal", self)
         createAnimalButton.clicked.connect(self.onCreatedAnimal)
-        self.data_grid.addRow(createAnimalButton)
+        self.data_grid.addWidget(createAnimalButton, 8+ct+driver_ind, 0, 1, 3)
 
         # # # TAB 3: FILE tab - init, load, close etc. h5 file
         # Data file info
@@ -425,8 +462,19 @@ class ImagingExperimentGUI(QWidget):
         animal_metadata = {}
         animal_metadata['animal_id'] = self.animal_id_input.text()
         animal_metadata['age'] = self.animal_age_input.value()
+        animal_metadata['notes'] = self.animal_notes_input.text()
         for key in self.animal_metadata_inputs:
             animal_metadata[key] = self.animal_metadata_inputs[key].currentText()
+
+        for driver_ind, tg in enumerate(self.transgenes_input):
+            expression_string = tg['driver'].currentText() + '->'
+            for effector_ind, ef in enumerate(tg['effectors']):
+                expression_string += ef.currentText{}
+
+            expression_string = '{}->{}'.format(tg['driver'].currentText(), )
+            animal_metadata['driver_{}'.format(driver_ind+1)] = tg['driver'].currentText()
+            for effector_ind, tg in enumerate(tg['effectors']):
+                animal_metadata['driver_{}_effector_{}'.format(driver_ind+1)] = tg['driver'].currentText()
 
         self.data.createAnimal(animal_metadata)  # creates new animal and selects it as the current animal
         self.updateExistingAnimalInput()
@@ -494,6 +542,7 @@ class ImagingExperimentGUI(QWidget):
     def populateAnimalMetadataFields(self, animal_data_dict):
         self.animal_id_input.setText(animal_data_dict['animal_id'])
         self.animal_age_input.setValue(animal_data_dict['age'])
+        self.animal_notes_input.setText(animal_data_dict['notes'])
         for key in self.animal_metadata_inputs:
             self.animal_metadata_inputs[key].setCurrentText(animal_data_dict[key])
 

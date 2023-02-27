@@ -111,3 +111,6 @@ venv.bak/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# txt file with path to lab package
+lab_package_path.txt

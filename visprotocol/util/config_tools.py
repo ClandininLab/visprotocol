@@ -1,6 +1,6 @@
 import os
 import glob
-import importlib.resources
+import  importlib.resources
 import yaml
 
 import visprotocol
@@ -8,6 +8,7 @@ import visprotocol
 
 def getLabPackagePath():
     lab_package_path = importlib.resources.read_text(visprotocol, 'lab_package_path.txt')
+    # lab_package_path = files(visprotocol).joinpath('lab_package_path.txt').open('r').read()
     return lab_package_path
 
 

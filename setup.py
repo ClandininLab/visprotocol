@@ -15,6 +15,7 @@ setup(
         'h5py',
         'scipy',
         'nptdms',
+        'PyQT5',
         'pyYaml'],
     extras_require={'gui':  ["PyQT6"]},
     include_package_data=True,
