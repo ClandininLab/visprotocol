@@ -1,0 +1,39 @@
+open_loop_moving_ellipse_v0:
+  run_parameters:
+    protocol_ID: MovingPatchWithOpto
+    num_epochs: 200.0
+    pre_time: 1.0
+    stim_time: 6.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 35.0
+    height:
+    - 25.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed:
+    - 30.0
+    - -30.0
+    angle:
+    - 0.0
+    ellipse: true
+    render_on_cylinder: true
+    closed_loop:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 7.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    - 0.0
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true

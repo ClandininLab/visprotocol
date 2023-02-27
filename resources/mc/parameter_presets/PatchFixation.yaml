@@ -1,0 +1,215 @@
+? ''
+: run_parameters:
+    protocol_ID: PatchFixation
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 58.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 25.0
+    height:
+    - 15.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    closed_loop:
+    - 1.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 1.0
+    opto_freq:
+    - 1.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.1
+    ellipse: true
+    render_on_cylinder: true
+    randomize_order: true
+opto_ellipse_v0:
+  run_parameters:
+    protocol_ID: PatchFixation
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 58.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 25.0
+    height:
+    - 15.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    closed_loop:
+    - 1.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 59.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    ellipse: true
+    render_on_cylinder: true
+    randomize_order: true
+opto_rect_on_vs_off:
+  run_parameters:
+    protocol_ID: PatchFixation
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 58.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 25.0
+    height:
+    - 15.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    closed_loop:
+    - 1.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 59.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    - 0.0
+    opto_pulse_width:
+    - 0.01
+    ellipse: false
+    render_on_cylinder: false
+    randomize_order: true
+opto_ellipse_on_vs_off:
+  run_parameters:
+    protocol_ID: PatchFixation
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 58.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 35.0
+    height:
+    - 25.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    closed_loop:
+    - 1.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 59.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    - 0.0
+    opto_pulse_width:
+    - 0.01
+    ellipse: true
+    render_on_cylinder: false
+    randomize_order: true
+opto_ellipse_random_theta:
+  run_parameters:
+    protocol_ID: PatchFixation
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 58.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 35.0
+    height:
+    - 25.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    theta_random: true
+    theta_random_range:
+    - -120.0
+    - 120.0
+    closed_loop:
+    - 1.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 59.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    ellipse: true
+    render_on_cylinder: true
+    randomize_order: true
+opto_ellipse_random_theta_v2:
+  run_parameters:
+    protocol_ID: PatchFixation
+    num_epochs: 40.0
+    pre_time: 1.0
+    stim_time: 58.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width:
+    - 35.0
+    height:
+    - 25.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    theta_random: true
+    theta_random_range:
+    - -120.0
+    - 120.0
+    closed_loop:
+    - 1.0
+    opto_pre_time:
+    - 0.0
+    opto_stim_time:
+    - 59.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 0.0
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    ellipse: true
+    render_on_cylinder: true
+    randomize_order: true
