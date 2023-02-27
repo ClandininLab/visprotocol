@@ -73,15 +73,25 @@ class ImagingExperimentGUI(QWidget):
         self.layout = QVBoxLayout(self)
         self.tabs = QTabWidget()
 
-        self.protocol_tab = QWidget()
+        self.protocol_box = QWidget()
         self.protocol_grid = QGridLayout()
         self.protocol_grid.setSpacing(10)
-        self.protocol_tab.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
+        self.protocol_box.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                                     QSizePolicy.MinimumExpanding))
 
-        self.protocol_scroll = QScrollArea()
-        self.protocol_scroll.setWidget(self.protocol_tab)
-        self.protocol_scroll.setWidgetResizable(True)
+        self.protocol_params_scroll_box = QScrollArea()
+        self.protocol_params_scroll_box.setWidget(self.protocol_box)
+        self.protocol_params_scroll_box.setWidgetResizable(True)
+
+        self.protocol_control_box = QWidget()
+        self.protocol_control_box.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
+                                                            QSizePolicy.Fixed))
+        self.protocol_control_grid = QGridLayout()
+
+        self.protocol_tab = QWidget()
+        self.protocol_tab_layout = QVBoxLayout()
+        self.protocol_tab_layout.addWidget(self.protocol_params_scroll_box)
+        self.protocol_tab_layout.addWidget(self.protocol_control_box)
 
         self.data_tab = QWidget()
         self.data_grid = QFormLayout()
@@ -93,11 +103,85 @@ class ImagingExperimentGUI(QWidget):
         self.file_grid.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.file_grid.setLabelAlignment(QtCore.Qt.AlignCenter)
 
-        self.tabs.addTab(self.protocol_scroll, "Main")
+        self.tabs.addTab(self.protocol_tab, "Main")
         self.tabs.addTab(self.data_tab, "Fly")
         self.tabs.addTab(self.file_tab, "File")
 
         self.tabs.resize(450, 500)
+
+        # Status window:
+        newLabel = QLabel('Status:')
+        self.protocol_control_grid.addWidget(newLabel, 0, 0)
+        self.status_label = QLabel()
+        self.status_label.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_control_grid.addWidget(self.status_label, 0, 1)
+        self.status_label.setText('')
+
+        # Current imaging series counter
+        newLabel = QLabel('Series counter:')
+        self.protocol_control_grid.addWidget(newLabel, 0, 2)
+        self.series_counter_input = QSpinBox()
+        self.series_counter_input.setMinimum(1)
+        self.series_counter_input.setMaximum(1000)
+        self.series_counter_input.setValue(1)
+        self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
+        self.protocol_control_grid.addWidget(self.series_counter_input, 0, 3)
+
+        # Epoch count refresh button:
+        checkEpochCntButton = QPushButton("Check epochs:", self)
+        checkEpochCntButton.clicked.connect(self.onPressedButton)
+        self.protocol_control_grid.addWidget(checkEpochCntButton, 1, 0)
+        # Epoch count window:
+        self.epoch_count = QLabel()
+        self.epoch_count.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_control_grid.addWidget(self.epoch_count, 1, 1)
+        self.epoch_count.setText('')
+
+        # loco checkbox:
+        if self.cfg['loco_avail']:
+            loco_label = QLabel('Locomotion:')
+            self.protocol_control_grid.addWidget(loco_label, 1, 2)
+            self.loco_checkbox = QCheckBox()
+            self.loco_checkbox.setChecked(False)
+            self.protocol_control_grid.addWidget(self.loco_checkbox, 1, 3)
+
+        # View button:
+        self.viewButton = QPushButton("View", self)
+        self.viewButton.clicked.connect(self.onPressedButton)
+        self.protocol_control_grid.addWidget(self.viewButton, 2, 0)
+
+        # Record button:
+        self.recordButton = QPushButton("Record", self)
+        self.recordButton.clicked.connect(self.onPressedButton)
+        self.protocol_control_grid.addWidget(self.recordButton, 2, 1)
+
+        # Pause/resume button:
+        self.pauseButton = QPushButton("Pause", self)
+        self.pauseButton.clicked.connect(self.onPressedButton)
+        self.protocol_control_grid.addWidget(self.pauseButton, 2, 2)
+
+        # Stop button:
+        stopButton = QPushButton("Stop", self)
+        stopButton.clicked.connect(self.onPressedButton)
+        self.protocol_control_grid.addWidget(stopButton, 2, 3)
+
+        # Enter note button:
+        noteButton = QPushButton("Enter note", self)
+        noteButton.clicked.connect(self.onPressedButton)
+        self.protocol_control_grid.addWidget(noteButton, 3, 0)
+
+        # Notes field:
+        self.notesEdit = QTextEdit()
+        self.notesEdit.setFixedHeight(30)
+        self.protocol_control_grid.addWidget(self.notesEdit, 3, 1, 1, 3)
+
+        # Imaging type dropdown (if AODscope):
+        if self.data.rig == 'AODscope':
+            self.imagingTypeComboBox = QComboBox(self)
+            self.imagingTypeComboBox.addItem("POI")
+            self.imagingTypeComboBox.addItem("xyt series")
+            self.imagingTypeComboBox.activated[str].connect(self.onChangedDataType)
+            self.protocol_control_grid.addWidget(self.imagingTypeComboBox, 3, 2)
 
         # # # TAB 1: MAIN controls, for selecting / playing stimuli
         # Protocol ID drop-down:
@@ -109,14 +193,6 @@ class ImagingExperimentGUI(QWidget):
         comboBox.activated[str].connect(self.onSelectedProtocolID)
         self.protocol_grid.addWidget(protocol_label, 1, 0)
         self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
-
-        # loco checkbox:
-        if self.cfg['loco_avail']:
-            loco_label = QLabel('Locomotion:')
-            self.protocol_grid.addWidget(loco_label, 1, 2)
-            self.loco_checkbox = QCheckBox()
-            self.loco_checkbox.setChecked(False)
-            self.protocol_grid.addWidget(self.loco_checkbox, 1, 3)
         
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
@@ -130,72 +206,6 @@ class ImagingExperimentGUI(QWidget):
 
         # Run paramters input:
         self.updaterunParametersInput()
-
-        # View button:
-        self.viewButton = QPushButton("View", self)
-        self.viewButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(self.viewButton, self.run_params_ct+4, 0)
-
-        # Record button:
-        self.recordButton = QPushButton("Record", self)
-        self.recordButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(self.recordButton, self.run_params_ct+4, 1)
-
-        # Pause/resume button:
-        self.pauseButton = QPushButton("Pause", self)
-        self.pauseButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(self.pauseButton, self.run_params_ct+4, 2)
-
-        # Stop button:
-        stopButton = QPushButton("Stop", self)
-        stopButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(stopButton, self.run_params_ct+4, 3)
-
-        # Enter note button:
-        noteButton = QPushButton("Enter note", self)
-        noteButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(noteButton, self.run_params_ct+5, 0)
-
-        # Notes field:
-        self.notesEdit = QTextEdit()
-        self.protocol_grid.addWidget(self.notesEdit, self.run_params_ct+5, 1, 1, 2)
-
-        # Status window:
-        newLabel = QLabel('Status:')
-        self.protocol_grid.addWidget(newLabel, 3, 2)
-        self.status_label = QLabel()
-        self.status_label.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_grid.addWidget(self.status_label, 3, 3)
-        self.status_label.setText('')
-
-        # Epoch count refresh button:
-        checkEpochCntButton = QPushButton("Check epochs:", self)
-        checkEpochCntButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(checkEpochCntButton, 4, 2)
-
-        # Epoch count window:
-        self.epoch_count = QLabel()
-        self.epoch_count.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_grid.addWidget(self.epoch_count, 4, 3)
-        self.epoch_count.setText('')
-
-        # Imaging type dropdown (if AODscope):
-        if self.data.rig == 'AODscope':
-            self.imagingTypeComboBox = QComboBox(self)
-            self.imagingTypeComboBox.addItem("POI")
-            self.imagingTypeComboBox.addItem("xyt series")
-            self.imagingTypeComboBox.activated[str].connect(self.onChangedDataType)
-            self.protocol_grid.addWidget(self.imagingTypeComboBox, 5, 2)
-
-        # Current imaging series counter
-        newLabel = QLabel('Series counter:')
-        self.protocol_grid.addWidget(newLabel, self.run_params_ct+2, 2)
-        self.series_counter_input = QSpinBox()
-        self.series_counter_input.setMinimum(1)
-        self.series_counter_input.setMaximum(1000)
-        self.series_counter_input.setValue(1)
-        self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
-        self.protocol_grid.addWidget(self.series_counter_input, self.run_params_ct+2, 3)
 
         # # # TAB 2: Current FLY metadata information
         # # Fly info:
@@ -348,7 +358,9 @@ class ImagingExperimentGUI(QWidget):
 
         # Add all layouts to window
         self.layout.addWidget(self.tabs)
-        self.protocol_tab.setLayout(self.protocol_grid)
+        self.protocol_tab.setLayout(self.protocol_tab_layout)
+        self.protocol_control_box.setLayout(self.protocol_control_grid)
+        self.protocol_box.setLayout(self.protocol_grid)
         self.data_tab.setLayout(self.data_grid)
         self.file_tab.setLayout(self.file_grid)
         self.setWindowTitle('Visprotocol')
@@ -491,23 +503,29 @@ class ImagingExperimentGUI(QWidget):
         self.updateExistingFlyInput()
 
     def resetLayout(self):
-        for ii in range(len(self.protocol_object.protocol_parameters.items())):
-            item = self.protocol_grid.itemAtPosition(self.run_params_ct+6+ii, 0)
+        for ii in range(3, self.protocol_grid.rowCount()):
+            item = self.protocol_grid.itemAtPosition(ii, 0)
             if item is not None:
                 item.widget().deleteLater()
-            item = self.protocol_grid.itemAtPosition(self.run_params_ct+6+ii, 1)
+            item = self.protocol_grid.itemAtPosition(ii, 1)
             if item is not None:
                 item.widget().deleteLater()
         self.show()
 
     def updateProtocolParametersInput(self):
         # update display window to show parameters for this protocol
+        newLabel = QLabel('Protocol parameters:')
+        self.protocol_grid.addWidget(newLabel, self.run_params_ct + 3, 0)
+
         self.protocol_parameter_input = {}  # clear old input params dict
         ct = 0
         for key, value in self.protocol_object.protocol_parameters.items():
             ct += 1
             newLabel = QLabel(key + ':')
-            self.protocol_grid.addWidget(newLabel, self.run_params_ct + 5 + ct, 0)
+
+            row_offset = self.run_params_ct + 4 + ct
+
+            self.protocol_grid.addWidget(newLabel, row_offset, 0)
 
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
@@ -520,7 +538,7 @@ class ImagingExperimentGUI(QWidget):
                     self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
 
                 self.protocol_parameter_input[key].setText(str(value))  # set to default value
-            self.protocol_grid.addWidget(self.protocol_parameter_input[key], self.run_params_ct + 5 + ct, 1, 1, 2)
+            self.protocol_grid.addWidget(self.protocol_parameter_input[key], row_offset, 1, 1, 2)
 
     def updateParameterPresetSelector(self):
         self.parameter_preset_comboBox = QComboBox(self)
@@ -763,7 +781,7 @@ class ImagingExperimentGUI(QWidget):
 
     def updateWindowWidth(self):
         self.resize(100, self.height())
-        window_width = self.protocol_tab.sizeHint().width() + self.protocol_scroll.verticalScrollBar().sizeHint().width() + 40
+        window_width = self.protocol_box.sizeHint().width() + self.protocol_params_scroll_box.verticalScrollBar().sizeHint().width() + 40
         self.resize(window_width, self.height())
 
 # # # Other accessory classes. For data file initialization and threading # # # #
