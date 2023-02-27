@@ -543,7 +543,7 @@ class PatchFixation(BaseProtocol):
                                     'opto_freq': [50.0],
                                     'opto_amp': [2.5],
                                     'opto_pulse_width': [0.01],
-                                    
+
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
@@ -563,30 +563,26 @@ class PatchFixationOptoPaired(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_width, current_height, current_intensity, current_angle, current_theta, current_closed_loop, current_opto_pre_time, current_opto_stim_time, current_opto_freq, current_opto_amp, current_opto_pulse_width = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['height'], self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop'], self.protocol_parameters['opto_pre_time'], self.protocol_parameters['opto_stim_time'], self.protocol_parameters['opto_freq'], self.protocol_parameters['opto_amp'], self.protocol_parameters['opto_pulse_width']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        self.convenience_parameters = {'current_width': current_width,
-                                       'current_height': current_height,
-                                       'current_angle': current_angle,
-                                       'current_intensity': current_intensity,
-                                       'current_theta': current_theta,
-                                       'current_closed_loop': current_closed_loop,
-                                       'current_opto_pre_time': current_opto_pre_time,
-                                       'current_opto_stim_time': current_opto_stim_time,
-                                       'current_opto_freq': current_opto_freq,
-                                       'current_opto_amp': current_opto_amp,
-                                       'current_opto_pulse_width': current_opto_pulse_width}
+        # Select protocol parameters for this epoch
+        self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+            ['width', 'height', 'intensity', 'angle', 'theta', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            randomize_order = self.protocol_parameters['randomize_order'])
 
-        if self.protocol_parameters['ellipse']:
-            flystim_stim_name = 'MovingEllipseOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingEllipse'
+        # Create epoch parameters dictionary
+        if self.protocol_parameters['render_on_cylinder']:
+            flystim_stim_name = 'MovingEllipseOnCylinder' if self.protocol_parameters['ellipse'] else 'MovingPatchOnCylinder'
+            surface_dim_name = 'cylinder_radius'
         else:
-            flystim_stim_name = 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch'
+            flystim_stim_name = 'MovingEllipse' if self.protocol_parameters['ellipse'] else 'MovingPatch'
+            surface_dim_name = 'sphere_radius'
         self.epoch_parameters = {'name': flystim_stim_name,
-                            'width': current_width,
-                            'height': current_height,
-                            'color': current_intensity,
-                            'theta': current_theta,
-                            'angle': current_angle}
+                                 'width': self.convenience_parameters['current_width'],
+                                 'height': self.convenience_parameters['current_height'],
+                                 'color': self.convenience_parameters['current_intensity'],
+                                 'theta': self.convenience_parameters['current_theta'],
+                                 'angle': self.convenience_parameters['current_angle'],
+                                 surface_dim_name: 1.0}
 
     def loadStimuli(self, client, multicall=None):
 
@@ -1364,60 +1360,6 @@ class SurroundGratingTuning(BaseProtocol):
         self.run_parameters = {'protocol_ID': 'SurroundGratingTuning',
                                'num_epochs': 220, # 11 x 5 avgs each
                                'pre_time': 1.0,
-                               'stim_time': 3.0,
-                               'tail_time': 1.0,
-                               'idle_color': 0.5}
-
-# %%
-
-class MovingRectangle(BaseProtocol):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-
-    def getEpochParameters(self):
-        current_intensity, current_angle, current_closed_loop = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle'],  self.protocol_parameters['closed_loop']), randomize_order=self.protocol_parameters['randomize_order'])
-
-
-        self.epoch_parameters = self.getMovingPatchParameters(angle=current_angle, color=current_intensity)
-
-        self.convenience_parameters = {'current_angle': current_angle,
-                                       'current_intensity': current_intensity,
-                                       'current_closed_loop': current_closed_loop}
-    def loadStimuli(self, client, multicall=None):
-        if multicall is None:
-            multicall = flyrpc.multicall.MyMultiCall(client.manager)
-
-        multicall.print_on_server(str({k[8:]:v for k,v in self.convenience_parameters.items()}))
-
-        bg = self.run_parameters.get('idle_color')
-        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
-
-        if isinstance(self.epoch_parameters, list):
-            for ep in self.epoch_parameters:
-                multicall.load_stim(**ep.copy(), hold=True)
-        else:
-            multicall.load_stim(**self.epoch_parameters.copy(), hold=True)
-
-        multicall()
-
-    def getParameterDefaults(self):
-        self.protocol_parameters = {'width': 5.0,
-                                    'height': 50.0,
-                                    'intensity': [0.0, 1.0],
-                                    'center': [0, 0],
-                                    'speed': 80.0,
-                                    'angle': [0.0, 180.0],
-                                    'closed_loop': [0],
-                                    'render_on_cylinder': True,
-                                    'randomize_order': True}
-
-    def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'MovingRectangle',
-                               'num_epochs': 40,
-                               'pre_time': 0.5,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
