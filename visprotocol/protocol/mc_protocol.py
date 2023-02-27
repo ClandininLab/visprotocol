@@ -286,7 +286,7 @@ class OcclusionShape(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['angle', 'obj_start_theta', 'obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            ['angle', 'obj_start_theta', 'obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_width', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Set variables for convenience
@@ -302,7 +302,7 @@ class OcclusionShape(BaseProtocol):
 
         occluder_ellipse = self.protocol_parameters['occluder_ellipse']
         occluder_theta = self.protocol_parameters['occluder_theta']
-        occluder_width = self.protocol_parameters['occluder_width']
+        occluder_width = self.convenience_parameters['current_occluder_width']
         occluder_height = self.protocol_parameters['occluder_height']
         occluder_color = self.convenience_parameters['current_occluder_color']
         occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
@@ -387,6 +387,9 @@ class OcclusionShape(BaseProtocol):
         self.epoch_parameters = [obj_parameters, occluder_parameters]
         self.convenience_parameters['current_stim_duration'] = stim_duration
 
+        # opto
+        self.convenience_parameters['current_opto_stim_time'] = stim_duration + self.run_parameters['pre_time'] - self.convenience_parameters['current_opto_pre_time']
+
     def loadStimuli(self, client, multicall=None):
         self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
 
@@ -410,19 +413,19 @@ class OcclusionShape(BaseProtocol):
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'obj_ellipse': True,
-                                    'obj_start_theta': [90.0],
-                                    'obj_end_theta': 0.0,
-                                    'obj_width': 25.0,
-                                    'obj_height': 15.0,
-                                    'obj_prime_color': [1.0],
-                                    'obj_probe_color': 1.0,
-                                    'obj_speed': [15.0, -15.0],
+                                    'obj_start_theta': [0.0],
+                                    'obj_end_theta': 210.0,
+                                    'obj_width': 35.0,
+                                    'obj_height': 25.0,
+                                    'obj_prime_color': [0.3],
+                                    'obj_probe_color': 0.3,
+                                    'obj_speed': [30.0, -30.0],
                                     'obj_surface_radius': 3.0,
                                     
                                     'occluder_ellipse': False,
-                                    'occluder_theta': 60.0,
-                                    'occluder_width': 40.0,
-                                    'occluder_height': 170.0,
+                                    'occluder_theta': 120.0,
+                                    'occluder_width': [0.0, 60.0],
+                                    'occluder_height': 100.0,
                                     'occluder_color': [0.0],
                                     'occluder_surface_radius': 2.0,
                                     
@@ -431,11 +434,10 @@ class OcclusionShape(BaseProtocol):
                                     'angle': [0.0],
                                     'closed_loop': [0],
                                     
-                                    'preprime_duration': 0.0,
+                                    'preprime_duration': 1.0,
                                     'pause_duration': [0.0],
                                     
                                     'opto_pre_time': [0.0],
-                                    'opto_stim_time': [1.0],
                                     'opto_freq': [50.0],
                                     'opto_amp': [2.5],
                                     'opto_pulse_width': [0.01],
@@ -447,7 +449,7 @@ class OcclusionShape(BaseProtocol):
                                'num_epochs': 240, # 12 x 20 each
                                'pre_time': 1.0,
                                'tail_time': 1.0,
-                               'idle_color': 0.0}
+                               'idle_color': 1.0}
 
 # %%
 class PatchFixation(BaseProtocol):
