@@ -640,6 +640,131 @@ class PatchFixationOptoPaired(BaseProtocol):
                                'idle_color': 0.5}
 
 
+#%%
+class MovingPatch(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+
+        # Select protocol parameters for this epoch
+        self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+            ['width', 'height', 'intensity', 'speed', 'angle', 'closed_loop'], 
+            randomize_order = self.protocol_parameters['randomize_order'])
+
+        # Create flystim epoch parameters dictionary
+        self.epoch_parameters = self.getMovingPatchParameters(angle=self.convenience_parameters['current_angle'],
+                                                              speed=self.convenience_parameters['current_speed'],
+                                                              width=self.convenience_parameters['current_width'],
+                                                              height=self.convenience_parameters['current_height'],
+                                                              color=self.convenience_parameters['current_intensity'])
+
+    def loadStimuli(self, client, multicall=None):
+
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        
+        conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
+        multicall.print_on_server(f'{conv_params_to_print}')
+
+        super().loadStimuli(client, multicall)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'ellipse': True,
+                                    'width': [25.0],
+                                    'height': [15.0],
+                                    'intensity': [0.0],
+                                    'center': [0, 0],
+                                    'speed': [80.0],
+                                    'angle': [0.0],
+                                    
+                                    'render_on_cylinder': True,
+                                    'closed_loop': [0],
+
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'MovingPatch',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+# %%
+class MovingPatchWithOpto(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+
+        # Select protocol parameters for this epoch
+        self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+            ['width', 'height', 'intensity', 'speed', 'angle', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            randomize_order = self.protocol_parameters['randomize_order'])
+
+        # Create flystim epoch parameters dictionary
+        self.epoch_parameters = self.getMovingPatchParameters(angle=self.convenience_parameters['current_angle'],
+                                                              speed=self.convenience_parameters['current_speed'],
+                                                              width=self.convenience_parameters['current_width'],
+                                                              height=self.convenience_parameters['current_height'],
+                                                              color=self.convenience_parameters['current_intensity'])
+
+    def loadStimuli(self, client, multicall=None):
+
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        
+        conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
+        multicall.print_on_server(f'{conv_params_to_print}')
+
+        # set up opto pulse wave
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
+                                              freq=self.convenience_parameters['current_opto_freq'], 
+                                              amp=self.convenience_parameters['current_opto_amp'], 
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+                                              scanRate=5000)
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+                                       stim_time=self.convenience_parameters['current_opto_stim_time'],
+                                       scanRate=5000, scansPerRead=1000)
+
+        super().loadStimuli(client, multicall)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'ellipse': True,
+                                    'width': [25.0],
+                                    'height': [15.0],
+                                    'intensity': [0.0],
+                                    'center': [0, 0],
+                                    'speed': [80.0],
+                                    'angle': [0.0],
+
+                                    'render_on_cylinder': True,
+                                    'closed_loop': [0],
+
+                                    'opto_pre_time': [0.5],
+                                    'opto_stim_time': [3.0],
+                                    'opto_freq': [10.0],
+                                    'opto_amp': [2.5],
+                                    'opto_pulse_width': [0.05],
+
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'MovingPatchWithOpto',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
 # %%
 
 class SphericalCheckerboardWhiteNoise(BaseProtocol):
