@@ -582,6 +582,8 @@ class ImagingExperimentGUI(QWidget):
 
     def updaterunParametersInput(self):
         self.run_params_ct = 0
+        self.run_parameter_input = {}  # clear old input params dict
+
         # Run parameters list
         for key, value in self.protocol_object.run_parameters.items():
             if key not in ['protocol_ID', 'run_start_time']:
