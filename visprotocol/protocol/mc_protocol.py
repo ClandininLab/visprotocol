@@ -92,165 +92,160 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
 """
 # %%
 
-        centerX = center[0]
-        centerY = center[1]
-        stim_time = self.run_parameters['stim_time']
-        if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
-            distance_to_travel = speed * stim_time
-            # trajectory just has two points, at time=0 and time=stim_time
-            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
-            x = [startX, endX]
-            y = [startY, endY]
+class OcclusionDuration(BaseProtocol):
+    '''
+    Occluder is defined by the occlusion duration.
+    '''
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
-        else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
-            travel_time = distance_to_travel / speed
-            if travel_time > stim_time:
-                print('Warning: stim_time is too short to show whole trajectory at this speed!')
-                hang_time = 0
-            else:
-                hang_time = (stim_time - travel_time)/2
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
 
-            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
-            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+    def getEpochParameters(self):
 
-            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+        # Select protocol parameters for this epoch
+        self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+            ['obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_color', 'occlusion_duration', 'pause_duration', 'closed_loop'], 
+            randomize_order = self.protocol_parameters['randomize_order'])
 
-            x = [x_1, x_2, x_3, x_4]
-            y = [y_1, y_2, y_3, y_4]
-
-        x_trajectory = {'name': 'tv_pairs',
-                        'tv_pairs': x,
-                        'kind': 'linear'}
-        y_trajectory = {'name': 'tv_pairs',
-                        'tv_pairs': y,
-                        'kind': 'linear'}
-
-        spot_parameters = {'name': 'MovingSpot',
-                           'radius': radius,
-                           'color': color,
-                           'theta': x_trajectory,
-                           'phi': y_trajectory}
-        return spot_parameters
-
-# %%
-
-    def getOcclusionWithPauseParameters(self, center=None, start_theta=None, bar_width=None, bar_height=None, bar_prime_color=None, bar_probe_color=None, bar_speed=None, occluder_height=None, occluder_color=None,
-                                        preprime_duration=None, prime_duration=None, occlusion_duration=None, pause_duration=None, probe_duration=None, render_on_cylinder=None, bar_surface_radius=None, occluder_surface_radius=None):
-        if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
-        if start_theta is None: start_theta = self.protocol_parameters['start_theta'] #negative value starts from the opposite side of bar direction
-        if bar_width is None: bar_width = self.protocol_parameters['bar_width']
-        if bar_height is None: bar_height = self.protocol_parameters['bar_height']
-        if bar_prime_color is None: bar_prime_color = self.protocol_parameters['bar_prime_color']
-        if bar_probe_color is None: bar_probe_color = self.protocol_parameters['bar_probe_color']
-        if bar_speed is None: bar_speed = self.protocol_parameters['bar_speed']
-        if occluder_height is None: occluder_height = self.protocol_parameters['occluder_height']
-        if occluder_color is None: occluder_color = self.protocol_parameters['occluder_color']
-        if preprime_duration is None: preprime_duration = self.protocol_parameters['preprime_duration']
-        if prime_duration is None: prime_duration = self.protocol_parameters['prime_duration']
-        if occlusion_duration is None: occlusion_duration = self.protocol_parameters['occlusion_duration']
-        if pause_duration is None: pause_duration = self.protocol_parameters['pause_duration']
-        if probe_duration is None: probe_duration = self.protocol_parameters['probe_duration']
-        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder']
-        if bar_surface_radius is None: bar_surface_radius = self.protocol_parameters['bar_surface_radius']
-        if occluder_surface_radius is None: occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
-
+        # Set variables for convenience
+        obj_ellipse = self.protocol_parameters['obj_ellipse']
+        obj_width = self.convenience_parameters['current_obj_width']
+        obj_height = self.protocol_parameters['obj_height']
+        obj_prime_color = self.convenience_parameters['current_obj_prime_color']
+        obj_probe_color = self.convenience_parameters['current_obj_probe_color']
+        obj_start_theta = self.protocol_parameters['obj_start_theta']
+        obj_speed = self.convenience_parameters['current_obj_speed']
+        obj_surface_radius = self.protocol_parameters['obj_surface_radius']
+        
+        occluder_ellipse = self.protocol_parameters['occluder_ellipse']
+        occluder_height = self.protocol_parameters['occluder_height']
+        occluder_color = self.convenience_parameters['current_occluder_color']
+        occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
+        
+        render_on_cylinder = self.protocol_parameters['render_on_cylinder']
+        center = self.protocol_parameters['center']
         centerX = center[0]
 
-        # Stimulus construction
+        preprime_duration = self.protocol_parameters['preprime_duration']
+        prime_duration = self.protocol_parameters['prime_duration']
+        occlusion_duration = self.convenience_parameters['current_occlusion_duration']
+        pause_duration = self.convenience_parameters['current_pause_duration']
+        probe_duration = self.protocol_parameters['probe_duration']
 
+        ### Stimulus construction ###
+        
         stim_duration = preprime_duration + prime_duration + occlusion_duration + probe_duration + pause_duration
 
-        # consistent bar trajectory
-        start_theta *= np.sign(bar_speed)
+        # consistent obj trajectory
+        obj_start_theta *= np.sign(obj_speed)
         time = [0, preprime_duration]
-        x = [start_theta, start_theta]
-        bar_color = [bar_prime_color, bar_prime_color]
+        x = [obj_start_theta, obj_start_theta]
+        obj_color = [obj_prime_color, obj_prime_color]
 
-        prime_movement = bar_speed * (prime_duration + occlusion_duration)
-        prime_end_theta = start_theta + prime_movement
+        prime_movement = obj_speed * (prime_duration + occlusion_duration)
+        prime_end_theta = obj_start_theta + prime_movement
         prime_end_time = preprime_duration + prime_duration + occlusion_duration
 
         time.append(prime_end_time)
         x.append(prime_end_theta)
-        bar_color.append(bar_prime_color)
+        obj_color.append(obj_prime_color)
 
         pause_end_theta = prime_end_theta
         pause_end_time = prime_end_time + pause_duration
 
         time.append(pause_end_time)
         x.append(pause_end_theta)
-        bar_color.append(bar_probe_color)
+        obj_color.append(obj_probe_color)
 
-        probe_movement = bar_speed * probe_duration
+        probe_movement = obj_speed * probe_duration
         probe_end_theta = pause_end_theta + probe_movement
         probe_end_time = pause_end_time + probe_duration
 
         time.append(probe_end_time)
         x.append(probe_end_theta)
-        bar_color.append(bar_probe_color)
+        obj_color.append(obj_probe_color)
 
         # Compute location and width of the occluder per specification
-        occlusion_start_theta = start_theta + bar_speed * prime_duration
-        occluder_width = np.abs(bar_speed) * occlusion_duration + bar_width # the last term ensures that the bar is completely hidden during the occlusion period
-        occluder_loc = occlusion_start_theta + np.sign(bar_speed) * (occluder_width/2 - bar_width/2) # the last two terms account for widths of the bar and the occluder, such that the bar is completely hidden during occlusion period
+        occlusion_start_theta = obj_start_theta + obj_speed * prime_duration
+        occluder_width = np.abs(obj_speed) * occlusion_duration + obj_width # the last term ensures that the obj is completely hidden during the occlusion period
+        occluder_loc = occlusion_start_theta + np.sign(obj_speed) * (occluder_width/2 - obj_width/2) # the last two terms account for widths of the obj and the occluder, such that the obj is completely hidden during occlusion period
         occluder_time = [0, stim_duration]
         occluder_x = [occluder_loc, occluder_loc]
 
-        # bar_traj_r = list(zip(time, (centerX - np.array(x)).tolist()))
-        # occluder_traj_r = list(zip(occluder_time, (centerX - np.array(occluder_x)).tolist()))
-        # bar_traj_l = list(zip(time, (centerX + np.array(x)).tolist()))
-        # occluder_traj_l = list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist()))
-
-        # Create flystim trajectory objects
-        bar_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())),                   'kind': 'linear'}
-        bar_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, bar_color)), 'kind': 'linear'}
+        ### Create flystim trajectory objects ###
+        obj_theta_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, (centerX + np.array(x)).tolist())), 'kind': 'linear'}
+        obj_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, obj_color)), 'kind': 'linear'}
         occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
 
         if render_on_cylinder:
-            bar_parameters = {'name': 'MovingPatchOnCylinder',
-                                'width': bar_width,
-                                'height': bar_height,
-                                'color': bar_color_traj,
-                                'theta': bar_theta_traj,
-                                'phi': 0,
-                                'angle': 0,
-                                'cylinder_radius': bar_surface_radius}
-            occluder_parameters = {'name': 'MovingPatchOnCylinder',
-                                'width': occluder_width,
-                                'height': occluder_height,
-                                'color': occluder_color,
-                                'theta': occluder_theta_traj,
-                                'phi': 0,
-                                'angle': 0,
-                                'cylinder_radius': occluder_surface_radius}
+            obj_flystim_stim_name = 'MovingEllipseOnCylinder' if obj_ellipse else 'MovingPatchOnCylinder'
+            occluder_flystim_stim_name = 'MovingEllipseOnCylinder' if occluder_ellipse else 'MovingPatchOnCylinder'
+            surface_dim_name = 'cylinder_radius'
         else:
-            bar_parameters = {'name': 'MovingPatch',
-                                'width': bar_width,
-                                'height': bar_height,
-                                'color': bar_color_traj,
-                                'theta': bar_theta_traj,
-                                'phi': 0,
-                                'angle': 0,
-                                'sphere_radius': bar_surface_radius}
-            occluder_parameters = {'name': 'MovingPatch',
-                                'width': occluder_width,
-                                'height': occluder_height,
-                                'color': occluder_color,
-                                'theta': occluder_theta_traj,
-                                'phi': 0,
-                                'angle': 0,
-                                'sphere_radius': occluder_surface_radius}
+            obj_flystim_stim_name = 'MovingEllipse' if obj_ellipse else 'MovingPatch'
+            occluder_flystim_stim_name = 'MovingEllipse' if occluder_ellipse else 'MovingPatch'
+            surface_dim_name = 'sphere_radius'
+        
+        obj_parameters = {'name': obj_flystim_stim_name,
+                            'width': obj_width,
+                            'height': obj_height,
+                            'color': obj_color_traj,
+                            'theta': obj_theta_traj,
+                            'phi': 0,
+                            'angle': 0,
+                            surface_dim_name: obj_surface_radius}
+        occluder_parameters = {'name': occluder_flystim_stim_name,
+                            'width': occluder_width,
+                            'height': occluder_height,
+                            'color': occluder_color,
+                            'theta': occluder_theta_traj,
+                            'phi': 0,
+                            'angle': 0,
+                            surface_dim_name: occluder_surface_radius}
 
-        return bar_parameters, occluder_parameters, stim_duration
+        self.epoch_parameters = [obj_parameters, occluder_parameters]
+        self.convenience_parameters['current_stim_duration'] = stim_duration
+
+    def loadStimuli(self, client, multicall=None):
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+        
+        super().loadStimuli(client, multicall)
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'obj_ellipse': True,
+                                    'obj_width': 25.0,
+                                    'obj_height': 15.0,
+                                    'obj_prime_color': [1.0, 0.0],
+                                    'obj_probe_color': 1.0,
+                                    'obj_start_theta': -90.0,
+                                    'obj_speed': [-35.0, -25.0, -15.0, 15.0, 25.0, 35.0],
+                                    'obj_surface_radius': 3.0,
+                                    
+                                    'occluder_ellipse': False,
+                                    'occluder_height': 170.0,
+                                    'occluder_color': 0.0,
+                                    'occluder_surface_radius': 2.0,
+                                    
+                                    'render_on_cylinder': False,
+                                    'center': [0, 0],
+                                    'closed_loop': [0],
+
+                                    'preprime_duration': 0.0,
+                                    'prime_duration': 2.0,
+                                    'occlusion_duration': [0.5, 2.0],
+                                    'pause_duration': [0.0, 1.0],
+                                    'probe_duration': 1.5,
+                                    
+                                    'randomize_order': True,}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'OcclusionDuration',
+                               'num_epochs': 240, # 12 x 20 each
+                               'pre_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.0}
 
 # %%
 
