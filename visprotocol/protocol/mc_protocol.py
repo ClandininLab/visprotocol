@@ -106,7 +106,7 @@ class OcclusionDuration(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_color', 'occlusion_duration', 'pause_duration', 'closed_loop'], 
+            ['obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_color', 'occlusion_duration', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Set variables for convenience
@@ -211,8 +211,23 @@ class OcclusionDuration(BaseProtocol):
 
     def loadStimuli(self, client, multicall=None):
         self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
         
-        super().loadStimuli(client, multicall)
+        conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
+        multicall.print_on_server(f'{conv_params_to_print}')
+
+        # set up opto pulse wave
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
+                                              freq=self.convenience_parameters['current_opto_freq'], 
+                                              amp=self.convenience_parameters['current_opto_amp'], 
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+                                              scanRate=5000)
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+                                       stim_time=self.convenience_parameters['current_opto_stim_time'],
+                                       scanRate=5000, scansPerRead=1000)
+
 
     def getParameterDefaults(self):
         self.protocol_parameters = {'obj_ellipse': True,
@@ -239,6 +254,12 @@ class OcclusionDuration(BaseProtocol):
                                     'pause_duration': [0.0, 1.0],
                                     'probe_duration': 1.5,
                                     
+                                    'opto_pre_time': [0.0],
+                                    'opto_stim_time': [1.0],
+                                    'opto_freq': [50.0],
+                                    'opto_amp': [2.5],
+                                    'opto_pulse_width': [0.01],
+
                                     'randomize_order': True,}
 
     def getRunParameterDefaults(self):
@@ -265,7 +286,7 @@ class OcclusionShape(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['angle', 'obj_start_theta', 'obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_color', 'pause_duration', 'closed_loop'], 
+            ['angle', 'obj_start_theta', 'obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Set variables for convenience
@@ -368,7 +389,23 @@ class OcclusionShape(BaseProtocol):
 
     def loadStimuli(self, client, multicall=None):
         self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(client.manager)
         
+        conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
+        multicall.print_on_server(f'{conv_params_to_print}')
+
+        # set up opto pulse wave
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
+                                              freq=self.convenience_parameters['current_opto_freq'], 
+                                              amp=self.convenience_parameters['current_opto_amp'], 
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+                                              scanRate=5000)
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+                                       stim_time=self.convenience_parameters['current_opto_stim_time'],
+                                       scanRate=5000, scansPerRead=1000)
+
         super().loadStimuli(client, multicall)
 
     def getParameterDefaults(self):
@@ -397,6 +434,12 @@ class OcclusionShape(BaseProtocol):
                                     'preprime_duration': 0.0,
                                     'pause_duration': [0.0],
                                     
+                                    'opto_pre_time': [0.0],
+                                    'opto_stim_time': [1.0],
+                                    'opto_freq': [50.0],
+                                    'opto_amp': [2.5],
+                                    'opto_pulse_width': [0.01],
+
                                     'randomize_order': True,}
 
     def getRunParameterDefaults(self):
