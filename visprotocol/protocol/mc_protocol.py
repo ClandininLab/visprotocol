@@ -179,6 +179,7 @@ class OcclusionDuration(BaseProtocol):
         obj_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, obj_color)), 'kind': 'linear'}
         occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
 
+        # Create epoch parameters dictionary
         if render_on_cylinder:
             obj_flystim_stim_name = 'MovingEllipseOnCylinder' if obj_ellipse else 'MovingPatchOnCylinder'
             occluder_flystim_stim_name = 'MovingEllipseOnCylinder' if occluder_ellipse else 'MovingPatchOnCylinder'
@@ -335,6 +336,7 @@ class OcclusionShape(BaseProtocol):
         obj_color_traj      = {'name': 'tv_pairs', 'tv_pairs': list(zip(time, obj_color)), 'kind': 'previous'}
         occluder_theta_traj = {'name': 'tv_pairs', 'tv_pairs': list(zip(occluder_time, (centerX + np.array(occluder_x)).tolist())), 'kind': 'linear'}
 
+        # Create epoch parameters dictionary
         if render_on_cylinder:
             obj_flystim_stim_name = 'MovingEllipseOnCylinder' if obj_ellipse else 'MovingPatchOnCylinder'
             occluder_flystim_stim_name = 'MovingEllipseOnCylinder' if occluder_ellipse else 'MovingPatchOnCylinder'
@@ -474,30 +476,34 @@ class PatchFixation(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_width, current_height, current_intensity, current_angle, current_theta, current_closed_loop, current_opto_pre_time, current_opto_stim_time, current_opto_freq, current_opto_amp, current_opto_pulse_width = self.selectParametersFromLists((self.protocol_parameters['width'], self.protocol_parameters['height'], self.protocol_parameters['intensity'], self.protocol_parameters['angle'], self.protocol_parameters['theta'], self.protocol_parameters['closed_loop'], self.protocol_parameters['opto_pre_time'], self.protocol_parameters['opto_stim_time'], self.protocol_parameters['opto_freq'], self.protocol_parameters['opto_amp'], self.protocol_parameters['opto_pulse_width']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        self.convenience_parameters = {'current_width': current_width,
-                                       'current_height': current_height,
-                                       'current_angle': current_angle,
-                                       'current_intensity': current_intensity,
-                                       'current_theta': current_theta,
-                                       'current_closed_loop': current_closed_loop,
-                                       'current_opto_pre_time': current_opto_pre_time,
-                                       'current_opto_stim_time': current_opto_stim_time,
-                                       'current_opto_freq': current_opto_freq,
-                                       'current_opto_amp': current_opto_amp,
-                                       'current_opto_pulse_width': current_opto_pulse_width}
+        # Select protocol parameters for this epoch
+        if self.protocol_parameters['theta_random']:
 
-        if self.protocol_parameters['ellipse']:
-            flystim_stim_name = 'MovingEllipseOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingEllipse'
+            self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+                ['width', 'height', 'intensity', 'angle', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+                randomize_order = self.protocol_parameters['randomize_order'])
+            
+            self.convenience_parameters['current_theta'] = np.random.uniform(*self.protocol_parameters['theta_random_range'])
         else:
-            flystim_stim_name = 'MovingPatchOnCylinder' if self.protocol_parameters['render_on_cylinder'] else 'MovingPatch'
+            self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+                ['width', 'height', 'intensity', 'angle', 'theta', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+                randomize_order = self.protocol_parameters['randomize_order'])
+
+        # Create epoch parameters dictionary
+        if self.protocol_parameters['render_on_cylinder']:
+            flystim_stim_name = 'MovingEllipseOnCylinder' if self.protocol_parameters['ellipse'] else 'MovingPatchOnCylinder'
+            surface_dim_name = 'cylinder_radius'
+        else:
+            flystim_stim_name = 'MovingEllipse' if self.protocol_parameters['ellipse'] else 'MovingPatch'
+            surface_dim_name = 'sphere_radius'
         self.epoch_parameters = {'name': flystim_stim_name,
-                            'width': current_width,
-                            'height': current_height,
-                            'color': current_intensity,
-                            'theta': current_theta,
-                            'angle': current_angle}
+                                 'width': self.convenience_parameters['current_width'],
+                                 'height': self.convenience_parameters['current_height'],
+                                 'color': self.convenience_parameters['current_intensity'],
+                                 'theta': self.convenience_parameters['current_theta'],
+                                 'angle': self.convenience_parameters['current_angle'],
+                                 surface_dim_name: 1.0}
 
     def loadStimuli(self, client, multicall=None):
 
@@ -520,19 +526,24 @@ class PatchFixation(BaseProtocol):
         super().loadStimuli(client, multicall)
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'width': [25.0],
-                                    'height': [15.0],
+        self.protocol_parameters = {'ellipse': True,
+                                    'width': [35.0],
+                                    'height': [25.0],
                                     'intensity': [0.0],
                                     'angle': [0.0],
                                     'theta': [0.0],
+                                    'theta_random': False,
+                                    'theta_random_range': [-120.0, 120.0],
+
+                                    'render_on_cylinder': True,
                                     'closed_loop': [0],
+
                                     'opto_pre_time': [0.0],
                                     'opto_stim_time': [1.0],
-                                    'opto_freq': [1.0],
+                                    'opto_freq': [50.0],
                                     'opto_amp': [2.5],
-                                    'opto_pulse_width': [0.1],
-                                    'ellipse': True,
-                                    'render_on_cylinder': True,
+                                    'opto_pulse_width': [0.01],
+                                    
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
