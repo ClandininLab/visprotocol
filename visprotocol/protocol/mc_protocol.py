@@ -16,14 +16,15 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)  # call the parent class init method
 
-    def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None, render_on_cylinder=None):
+    def getMovingPatchParameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None, ellipse=None, render_on_cylinder=None):
         if center is None: center = self.adjustCenter(self.protocol_parameters['center'])
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
         if width is None: width = self.protocol_parameters['width']
         if height is None: height = self.protocol_parameters['height']
         if color is None: color = self.protocol_parameters['color']
-        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder']
+        if ellipse is None: ellipse = self.protocol_parameters['ellipse'] if 'ellipse' in self.protocol_parameters else False
+        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder'] if 'render_on_cylinder' in self.protocol_parameters else False
 
         centerX = center[0]
         centerY = center[1]
@@ -39,7 +40,8 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
             y = [startY, endY]
 
         else:  # distance_to_travel is specified, so only go that distance at the defined speed. Hang pre- and post- for any extra stim time
-            travel_time = distance_to_travel / speed
+            travel_time = np.abs(distance_to_travel / speed)
+            distance_to_travel = np.sign(speed) * distance_to_travel
             if travel_time > stim_time:
                 print('Warning: stim_time is too short to show whole trajectory at this speed!')
                 hang_time = 0
@@ -49,13 +51,13 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
             # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
             x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
             x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_3 = (hang_time+travel_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_4 = (hang_time+travel_time+hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (stim_time-hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
 
             y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
             y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_3 = (hang_time+travel_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_4 = (hang_time+travel_time+hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (stim_time-hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
 
             x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
@@ -67,7 +69,12 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                         'tv_pairs': y,
                         'kind': 'linear'}
 
-        patch_parameters = {'name': 'MovingPatchOnCylinder' if render_on_cylinder else 'MovingPatch',
+        if render_on_cylinder:
+            flystim_stim_name = 'MovingEllipseOnCylinder' if ellipse else 'MovingPatchOnCylinder'
+        else:
+            flystim_stim_name = 'MovingEllipse' if ellipse else 'MovingPatch'
+        
+        patch_parameters = {'name': flystim_stim_name,
                             'width': width,
                             'height': height,
                             'color': color,
@@ -75,15 +82,15 @@ class BaseProtocol(clandinin_protocol.BaseProtocol):
                             'phi': y_trajectory,
                             'angle': angle}
         return patch_parameters
+    
+# %%
 
-    def getMovingSpotParameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
-        if center is None: center = self.protocol_parameters['center']
-        if angle is None: angle = self.protocol_parameters['angle']
-        if speed is None: speed = self.protocol_parameters['speed']
-        if radius is None: radius = self.protocol_parameters['radius']
-        if color is None: color = self.protocol_parameters['color']
-
-        center = self.adjustCenter(center)
+"""
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # FLY-CENTERED STIMS  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+"""
+# %%
 
         centerX = center[0]
         centerY = center[1]
@@ -912,9 +919,10 @@ class ExpandingMovingSpot(BaseProtocol):
     def getEpochParameters(self):
         current_diameter, current_intensity, current_speed = self.selectParametersFromLists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity'], self.protocol_parameters['speed']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        self.epoch_parameters = self.getMovingSpotParameters(radius=current_diameter/2,
-                                                             color=current_intensity,
-                                                             speed=current_speed)
+        self.epoch_parameters = self.getMovingPatchParameters(width=current_diameter,
+                                                              height=current_diameter,
+                                                              color=current_intensity,
+                                                              speed=current_speed)
 
         self.convenience_parameters = {'current_diameter': current_diameter,
                                        'current_intensity': current_intensity,
@@ -1135,8 +1143,9 @@ class MovingSpotOnDriftingGrating(BaseProtocol):
                                                                                  all_combinations = True,
                                                                                  randomize_order = self.protocol_parameters['randomize_order'])
 
-        patch_parameters = self.getMovingSpotParameters(speed = current_spot_speed,
-                                                        radius = self.protocol_parameters['spot_radius'],
+        patch_parameters = self.getMovingPatchParameters(speed = current_spot_speed,
+                                                        width = self.protocol_parameters['spot_radius']*2,
+                                                        height = self.protocol_parameters['spot_radius']*2,
                                                         color = self.protocol_parameters['spot_color'],
                                                         distance_to_travel = 180)
 
@@ -1202,10 +1211,11 @@ class SurroundGratingTuning(BaseProtocol):
                                                                                                       all_combinations=True,
                                                                                                       randomize_order=self.protocol_parameters['randomize_order'])
 
-        patch_parameters = self.getMovingSpotParameters(speed=current_spot_speed,
-                                                        radius=self.protocol_parameters['spot_radius'],
-                                                        color=self.protocol_parameters['spot_color'],
-                                                        distance_to_travel=180)
+        patch_parameters = self.getMovingPatchParameters(speed=current_spot_speed,
+                                                         width=self.protocol_parameters['spot_radius'] * 2,
+                                                         height=self.protocol_parameters['spot_radius'] * 2,
+                                                         color=self.protocol_parameters['spot_color'],
+                                                         distance_to_travel=180)
 
         grate_parameters = {'name': 'RotatingGrating',
                             'period': current_grate_period,
