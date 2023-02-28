@@ -21,7 +21,7 @@ yyyy-mm-dd
 """
 import h5py
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 
 
@@ -62,10 +62,12 @@ class Data():
             init_now = datetime.now()
             date = init_now.isoformat()[:-16]
             init_time = init_now.strftime("%H:%M:%S")
+            init_unix_time = init_now.astimezone(timezone.utc).timestamp()
 
             # Write experiment metadata as top-level attributes
             experiment_file.attrs['date'] = date
             experiment_file.attrs['init_time'] = init_time
+            experiment_file.attrs['init_unix_time'] = init_unix_time
             experiment_file.attrs['data_directory'] = self.data_directory
             experiment_file.attrs['experimenter'] = self.experimenter
             experiment_file.attrs['rig'] = self.rig
@@ -84,10 +86,13 @@ class Data():
 
         if self.experimentFileExists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                fly_init_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                fly_init_now = datetime.now()
+                fly_init_time = fly_init_now.strftime('%H:%M:%S.%f')[:-4]
+                fly_init_unix_time = fly_init_now.astimezone(timezone.utc).timestamp()
                 flies_group = experiment_file['/Flies']
                 new_fly = flies_group.create_group(fly_metadata.get('fly_id'))
                 new_fly.attrs['init_time'] = fly_init_time
+                new_fly.attrs['init_unix_time'] = fly_init_unix_time
                 for key in fly_metadata:
                     new_fly.attrs[key] = fly_metadata.get(key)
 
@@ -103,10 +108,13 @@ class Data():
         # create a new epoch run group in the data file
         if (self.currentFlyExists() and self.experimentFileExists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                run_start_now = datetime.now()
+                run_start_time = run_start_now.strftime('%H:%M:%S.%f')[:-4]
+                run_start_unix_time = run_start_now.astimezone(timezone.utc).timestamp()
                 fly_group = experiment_file['/Flies/{}/epoch_runs'.format(self.current_fly)]
                 new_epoch_run = fly_group.create_group('series_{}'.format(str(self.series_count).zfill(3)))
                 new_epoch_run.attrs['run_start_time'] = run_start_time
+                new_epoch_run.attrs['run_start_unix_time'] = run_start_unix_time
                 for key in protocol_object.run_parameters:  # add run parameter attributes
                     new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
 
@@ -127,10 +135,13 @@ class Data():
         """
         if (self.currentFlyExists() and self.experimentFileExists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                epoch_time = datetime.now().strftime('%H:%M:%S.%f') #[:-4] MC 20220308 increasing precision of timestamp
+                epoch_now = datetime.now()
+                epoch_time = epoch_now.strftime('%H:%M:%S.%f')
+                epoch_unix_time = epoch_now.astimezone(timezone.utc).timestamp()
                 epoch_run_group = experiment_file['/Flies/{}/epoch_runs/series_{}/epochs'.format(self.current_fly, str(self.series_count).zfill(3))]
                 new_epoch = epoch_run_group.create_group('epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3)))
                 new_epoch.attrs['epoch_time'] = epoch_time
+                new_epoch.attrs['epoch_unix_time'] = epoch_unix_time
 
                 epochParametersGroup = new_epoch
                 if type(protocol_object.epoch_parameters) is tuple:  # stimulus is tuple of multiple stims layered on top of one another
@@ -156,9 +167,11 @@ class Data():
         ""
         if self.experimentFileExists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                noteTime = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                note_now = datetime.now()
+                note_time = note_now.strftime('%H:%M:%S.%f')[:-4]
+                note_unix_time = note_now.astimezone(timezone.utc).timestamp()
                 notes = experiment_file['/Notes']
-                notes.attrs[noteTime] = noteText
+                notes.attrs[note_time] = f'[{note_unix_time}] {noteText}'
         else:
             print('Initialize a data file before writing a note')
 
@@ -290,10 +303,13 @@ class AODscopeData(Data):
         # create a new epoch run group in the data file
         if (self.currentFlyExists() and self.experimentFileExists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
+                run_start_now = datetime.now()
+                run_start_time = run_start_now.strftime('%H:%M:%S.%f')[:-4]
+                run_start_unix_time = run_start_now.astimezone(timezone.utc).timestamp()
                 fly_group = experiment_file['/Flies/{}/epoch_runs'.format(self.current_fly)]
                 new_epoch_run = fly_group.create_group('series_{}'.format(str(self.series_count).zfill(3)))
                 new_epoch_run.attrs['run_start_time'] = run_start_time
+                new_epoch_run.attrs['run_start_unix_time'] = run_start_unix_time
                 for key in protocol_object.run_parameters:  # add run parameter attributes
                     new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
 
