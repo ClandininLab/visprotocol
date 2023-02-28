@@ -162,6 +162,19 @@ class Data():
         else:
             print('Create a data file and/or define a fly first')
 
+    def endEpoch(self, protocol_object):
+        """
+        Save the timestamp when the epoch ends
+        """
+        with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
+            epoch_end_now = datetime.now()
+            epoch_end_time = epoch_end_now.strftime('%H:%M:%S.%f')
+            epoch_end_unix_time = epoch_end_now.astimezone(timezone.utc).timestamp()
+            epoch_run_group = experiment_file['/Flies/{}/epoch_runs/series_{}/epochs'.format(self.current_fly, str(self.series_count).zfill(3))]
+            epoch_group = epoch_run_group['epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3))]
+            epoch_group.attrs['epoch_end_time'] = epoch_end_time
+            epoch_group.attrs['epoch_end_unix_time'] = epoch_end_unix_time
+
     def createNote(self, noteText):
         ""
         ""
