@@ -805,24 +805,30 @@ class ExpandingEdges(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_rate, current_expand_dark = self.selectParametersFromLists((self.protocol_parameters['rate'], self.protocol_parameters['expand_dark']), randomize_order = self.protocol_parameters['randomize_order'])
-
+        # Select protocol parameters for this epoch
+        if self.protocol_parameters['theta_offset_random']:
+            self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+                ['rate', 'expand_dark'], 
+                randomize_order = self.protocol_parameters['randomize_order'])
+            self.convenience_parameters['current_theta_offset'] = np.random.uniform(0, 360)
+        else:
+            self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
+                ['rate', 'expand_dark', 'theta_offset'], 
+                randomize_order = self.protocol_parameters['randomize_order'])
 
         self.epoch_parameters = {'name': 'ExpandingEdges',
                                  'period': self.protocol_parameters['period'],
-                                 'rate': current_rate,
-                                 'expander_color': self.protocol_parameters['dark_color'] if current_expand_dark else self.protocol_parameters['light_color'],
-                                 'opposite_color': self.protocol_parameters['light_color'] if current_expand_dark else self.protocol_parameters['dark_color'],
+                                 'rate': self.convenience_parameters['current_rate'],
+                                 'expander_color': self.protocol_parameters['dark_color'] if self.convenience_parameters['current_expand_dark'] else self.protocol_parameters['light_color'],
+                                 'opposite_color': self.protocol_parameters['light_color'] if self.convenience_parameters['current_expand_dark'] else self.protocol_parameters['dark_color'],
                                  'width_0': self.protocol_parameters['width_0'],
                                  'hold_duration': self.protocol_parameters['hold_duration'],
                                  'color': [1, 1, 1, 1],
                                  'n_theta_pixels': self.protocol_parameters['n_theta_pixels'],
                                  'cylinder_radius': 1,
                                  'vert_extent': self.protocol_parameters['vert_extent'],
-                                 'theta_offset': self.protocol_parameters['theta_offset'],
+                                 'theta_offset': self.convenience_parameters['current_theta_offset'],
                                  'theta': self.screen_center[0]}
-
-        self.convenience_parameters = {'current_rate': current_rate, 'current_expand_dark': current_expand_dark}
 
         self.meta_parameters = {'center': self.adjustCenter(self.protocol_parameters['center'])}
 
@@ -830,7 +836,6 @@ class ExpandingEdges(BaseProtocol):
         self.protocol_parameters = {'period': 40.0,
                                     'rate': [-80.0, 80.0],
                                     'vert_extent': 80.0,
-                                    'theta_offset': 0.0,
                                     'light_color': 1.0,
                                     'dark_color': 0.0,
                                     'expand_dark': [0,1],
@@ -838,6 +843,8 @@ class ExpandingEdges(BaseProtocol):
                                     'hold_duration': 0.550,
                                     'n_theta_pixels': 5760,
                                     'center': [0, 0],
+                                    'theta_offset': [0.0],
+                                    'theta_offset_random': False,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
