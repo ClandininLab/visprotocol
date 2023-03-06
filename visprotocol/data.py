@@ -23,19 +23,17 @@ import os
 from datetime import datetime
 import numpy as np
 
+from visprotocol.util import config_tools
 
-class Data():
+
+class BaseData():
     def __init__(self, cfg):
+        self.cfg = cfg
+
         self.experiment_file_name = None
         self.series_count = 1
         self.animal_metadata = {}  # populated in GUI or user protocol
         self.current_animal = None
-        self.user_name = cfg.get('user_name')
-        self.rig_name = cfg.get('rig_name')
-        self.cfg = cfg
-
-        # # # Metadata defaults # # #
-        self.experimenter = self.cfg.get('experimenter', '')
 
         # # #  Lists of animal metadata # # #
         self.animalChoices = self.cfg.get('animal_choices', [])
@@ -43,10 +41,7 @@ class Data():
         self.indicatorChoices = self.cfg.get('indicator_choices', [])
         self.effectorChoices = self.cfg.get('effector_choices', [])
 
-        # load rig-specific metadata things
-        self.data_directory = self.cfg.get('rig_config').get(self.rig_name).get('data_directory', os.getcwd())
-        self.rig = self.cfg.get('rig_config').get(self.rig_name).get('rig', '(rig)')
-        self.screen_center = self.cfg.get('rig_config').get(self.rig_name).get('screen_center', [0, 0])
+        self.data_directory = config_tools.getDataDirectory(self.cfg)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # #  Creating experiment file and groups  # # # # # # # # # # # #
@@ -66,8 +61,9 @@ class Data():
             experiment_file.attrs['date'] = date
             experiment_file.attrs['init_time'] = init_time
             experiment_file.attrs['data_directory'] = self.data_directory
-            experiment_file.attrs['experimenter'] = self.experimenter
-            experiment_file.attrs['rig'] = self.rig
+            experiment_file.attrs['experimenter'] = self.cfg.get('experimenter', '')
+            experiment_file.attrs['rig'] = self.cfg.get('current_rig_name', '')
+            experiment_file.attrs['screen_center'] = config_tools.getScreenCenter(self.cfg)
 
             # Create a top-level group for epoch runs and user-entered notes
             experiment_file.create_group('Client')

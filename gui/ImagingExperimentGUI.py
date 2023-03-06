@@ -18,8 +18,10 @@ import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
 
+import visprotocol
 from visprotocol.util import config_tools, h5io
 from visprotocol.control import EpochRun
+from visprotocol import protocol, client, control, data
 
 
 class ImagingExperimentGUI(QWidget):
@@ -31,43 +33,41 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_parameter_input = {}
         self.ignoreWarnings = False
 
-        # user input for user name and rig config
+        # user input to select configuration file and rig name
+        # sets self.cfg, self.cfg_name, and self.rig_name
         dialog = QDialog()
         dialog.ui = InitializeRigGUI(parent=dialog)
         dialog.ui.setupUI(self, dialog)
         dialog.setFixedSize(200, 200)
         dialog.exec()
 
-        # load user and rig configurations
-        self.user_configuration = config_tools.getUserConfiguration(self.user_name)
-        self.cfg = self.user_configuration.copy()
-        self.cfg['user_name'] = self.user_name
-        self.cfg['rig_name'] = self.rig_name
-        self.cfg['draw_screens'] = self.draw_screens
+        # self.cfg['server_data_directory'] = rig_config['server_data_directory'] if 'server_data_directory' in rig_config else None
+        # self.cfg['loco_avail'] = 'locomotion' in rig_config and rig_config['locomotion']
 
-        rig_config = self.cfg['rig_config'][self.rig_name]
-        self.cfg['server_data_directory'] = rig_config['server_data_directory'] if 'server_data_directory' in rig_config else None
-        self.cfg['loco_avail'] = 'locomotion' in rig_config and rig_config['locomotion']
+        # # Use user config file to import protocol, client and data modules
+        # full_module_paths = config_tools.getFullPathsToModules(self.cfg)
+        # protocol_module = SourceFileLoader(full_module_paths['protocol_module_name'],
+        #                                    full_module_paths['protocol_module_path']).load_module()
+        # client_module = SourceFileLoader(full_module_paths['client_module_name'],
+        #                                    full_module_paths['client_module_path']).load_module()
+        # data_module = SourceFileLoader(full_module_paths['data_module_name'],
+        #                                    full_module_paths['data_module_path']).load_module()
 
-        # Use user config file to import protocol, client and data modules
-        full_module_paths = config_tools.getFullPathsToModules(self.cfg)
-        protocol_module = SourceFileLoader(full_module_paths['protocol_module_name'],
-                                           full_module_paths['protocol_module_path']).load_module()
-        client_module = SourceFileLoader(full_module_paths['client_module_name'],
-                                           full_module_paths['client_module_path']).load_module()
-        data_module = SourceFileLoader(full_module_paths['data_module_name'],
-                                           full_module_paths['data_module_path']).load_module()
+        # Start with basic visprotocol protocol, client and data
+        # protocol_module = visprotocol.protocol
+        # client_module = visprotocol.client
+        # data_module = visprotocol.data
 
         # get a protocol, just start with the base class until user selects one
-        self.protocol_object = protocol_module.BaseProtocol(self.cfg) 
+        self.protocol_object =  protocol.BaseProtocol(self.cfg) 
         # get available protocol classes
-        self.available_protocols = protocol_module.BaseProtocol.__subclasses__()
+        self.available_protocols =  protocol.BaseProtocol.__subclasses__()
 
         # start a client
-        self.client = client_module.Client(self.cfg)
+        self.client = client.BaseClient(self.cfg)
 
         # start a data object
-        self.data = data_module.Data(self.cfg)
+        self.data = data.BaseData(self.cfg)
 
         # get an epoch run control object
         self.epoch_run = EpochRun()
@@ -110,13 +110,13 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(protocol_label, 1, 0)
         self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
 
-        # loco checkbox:
-        if self.cfg['loco_avail']:
-            loco_label = QLabel('Locomotion:')
-            self.protocol_grid.addWidget(loco_label, 1, 2)
-            self.loco_checkbox = QCheckBox()
-            self.loco_checkbox.setChecked(False)
-            self.protocol_grid.addWidget(self.loco_checkbox, 1, 3)
+        # # loco checkbox:
+        # if self.cfg['loco_avail']:
+        #     loco_label = QLabel('Locomotion:')
+        #     self.protocol_grid.addWidget(loco_label, 1, 2)
+        #     self.loco_checkbox = QCheckBox()
+        #     self.loco_checkbox.setChecked(False)
+        #     self.protocol_grid.addWidget(self.loco_checkbox, 1, 3)
         
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
@@ -179,13 +179,13 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_grid.addWidget(self.epoch_count, 4, 3)
         self.epoch_count.setText('')
 
-        # Imaging type dropdown (if AODscope):
-        if self.data.rig == 'AODscope':
-            self.imagingTypeComboBox = QComboBox(self)
-            self.imagingTypeComboBox.addItem("POI")
-            self.imagingTypeComboBox.addItem("xyt series")
-            self.imagingTypeComboBox.activated[str].connect(self.onChangedDataType)
-            self.protocol_grid.addWidget(self.imagingTypeComboBox, 5, 2)
+        # # Imaging type dropdown (if AODscope):
+        # if self.data.rig == 'AODscope':
+        #     self.imagingTypeComboBox = QComboBox(self)
+        #     self.imagingTypeComboBox.addItem("POI")
+        #     self.imagingTypeComboBox.addItem("xyt series")
+        #     self.imagingTypeComboBox.activated[str].connect(self.onChangedDataType)
+        #     self.protocol_grid.addWidget(self.imagingTypeComboBox, 5, 2)
 
         # Current imaging series counter
         newLabel = QLabel('Series counter:')
@@ -469,7 +469,7 @@ class ImagingExperimentGUI(QWidget):
         for driver_ind, tg in enumerate(self.transgenes_input):
             expression_string = tg['driver'].currentText() + '->'
             for effector_ind, ef in enumerate(tg['effectors']):
-                expression_string += ef.currentText{}
+                expression_string += ef.currentText()
 
             expression_string = '{}->{}'.format(tg['driver'].currentText(), )
             animal_metadata['driver_{}'.format(driver_ind+1)] = tg['driver'].currentText()
@@ -661,8 +661,8 @@ class ImagingExperimentGUI(QWidget):
                 else:
                     self.protocol_object.protocol_parameters[key] = float(new_param_entry)
 
-        if self.cfg['loco_avail']:
-            self.data.cfg['do_loco'] = self.loco_checkbox.isChecked() # loco
+        # if self.cfg['loco_avail']:
+        #     self.data.cfg['do_loco'] = self.loco_checkbox.isChecked() # loco
 
     def populateGroups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
@@ -809,59 +809,52 @@ class InitializeRigGUI(QWidget):
         super(InitializeRigGUI, self).__init__(parent)
         self.parent = parent
         self.experimentGuiObject = experimentGuiObject
-        self.user_name = None
-        self.draw_screens = False
+
+        self.cfg_name = None
+        self.cfg = None
         self.available_rig_configs = []
 
         self.layout = QFormLayout()
         self.resize(200, 400)
 
-        label_UserName = QLabel('User Name:')
-        self.UserComboBox = QComboBox()
-        self.UserComboBox.activated.connect(self.onSelectedUserName)
-        for choiceID in config_tools.getAvailableUserNames():
-            self.UserComboBox.addItem(choiceID)
-        self.layout.addRow(label_UserName, self.UserComboBox)
+        label_config = QLabel('Config')
+        self.config_combobox = QComboBox()
+        self.config_combobox.activated.connect(self.onSelectedConfig)
+        for choiceID in config_tools.getAvailableConfigFiles():
+            self.config_combobox.addItem(choiceID)
+        self.layout.addRow(label_config, self.config_combobox)
 
-        label_RigName = QLabel('Rig Config:')
-        self.RigComboBox = QComboBox()
-        self.RigComboBox.activated.connect(self.onSelectedRig)
-        self.layout.addRow(label_RigName, self.RigComboBox)
+        label_rigname = QLabel('Rig Config:')
+        self.rig_combobox = QComboBox()
+        self.rig_combobox.activated.connect(self.onSelectedRig)
+        self.layout.addRow(label_rigname, self.rig_combobox)
         self.updateAvailableRigs()
-
-        label_DrawScreens = QLabel('Draw Screens:')
-        self.DrawScreensBox = QCheckBox()
-        self.DrawScreensBox.setChecked(False)
-        self.DrawScreensBox.stateChanged.connect(lambda x: self.should_draw_screens())
-        self.layout.addRow(label_DrawScreens, self.DrawScreensBox)
 
         self.setLayout(self.layout)
         self.show()
 
     def updateAvailableRigs(self):
-        self.RigComboBox.clear()
+        self.rig_combobox.clear()
         for choiceID in self.available_rig_configs:
-            self.RigComboBox.addItem(choiceID)
+            self.rig_combobox.addItem(choiceID)
 
-    def onSelectedUserName(self):
-        self.user_name = self.UserComboBox.currentText()
-        self.available_rig_configs = config_tools.getAvailableRigConfigs(self.user_name)
+    def onSelectedConfig(self):
+        self.cfg_name = self.config_combobox.currentText()
+        self.cfg = config_tools.getConfigurationFile(self.cfg_name)
+        self.available_rig_configs = config_tools.getAvailableRigConfigs(self.cfg)
         self.updateAvailableRigs()
         self.show()
 
     def onSelectedRig(self):
-        self.rig_name = self.RigComboBox.currentText()
-        self.experimentGuiObject.user_name = self.user_name
-        self.experimentGuiObject.rig_name = self.rig_name
-        self.experimentGuiObject.draw_screens = self.draw_screens
+        # Store the rig and cfg names in the cfg dict
+        self.cfg['current_rig_name'] = self.rig_combobox.currentText()
+        self.cfg['current_cfg_name'] = self.cfg_name
+
+        # Pass cfg up to experiment GUI object
+        self.experimentGuiObject.cfg = self.cfg
+
         self.close()
         self.parent.close()
-
-    def should_draw_screens(self):
-        if self.DrawScreensBox.isChecked():
-            self.draw_screens = True
-        else:
-            self.draw_screens = False
 
 
 class runSeriesThread(QThread):
