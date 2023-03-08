@@ -13,9 +13,11 @@ rig_config:
     locomotion: True
 
   24HrFitness:
-    data_directory: /home/clandinin/Niyathi/ballrig_data/FlystimData
+    data_directory: /home/clandinin/niyathi/ballrig_data/vp_data
     screen_center: [0, 0]
     rig: 24HrFitness
+    server_data_directory: /home/clandinin/niyathi/ballrig_data/vp_data/fictrac
+    locomotion: True
 
   Laptop:
     data_directory: /Users/niyathisa
