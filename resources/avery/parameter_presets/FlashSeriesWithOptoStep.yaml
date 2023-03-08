@@ -1,0 +1,31 @@
+full_screen:
+  run_parameters:
+    protocol_ID: FlashSeriesWithOptoStep
+    num_epochs: 100.0
+    pre_time: 2.0
+    stim_time: 15.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    flash_width: 0.5
+    flash_times:
+    - 1.0
+    - 3.0
+    - 7.0
+    - 9.0
+    - 13.0
+    flash_intensity: 1.0
+    led_time: 2.0
+    led_duration: 6.0
+    led_intensity:
+    - 0.25
+    - 0.5
+    - 1.0
+    - 2.0
+    - 4.0
+    randomize_order: true

@@ -50,9 +50,9 @@ def get_subscreen(dir):
         viewport_ll = (-1.0, -1.0)
         viewport_width  = 2
         viewport_height = 2
-        pa = (x_left,  y_forward, z_bottom)
-        pb = (x_right, y_forward, z_bottom)
-        pc = (x_left,  y_forward, z_top)
+        pa = (x_left*5,  y_forward, z_bottom)
+        pb = (x_right*5, y_forward, z_bottom)
+        pc = (x_left*5,  y_forward, z_top)
 
     else:
         raise ValueError('Invalid direction.')
@@ -66,8 +66,8 @@ def main():
     right_screen = Screen(subscreens=[get_subscreen('r')], server_number=1, id=3, fullscreen=True, vsync=True, square_size=(0.05, 0.10), square_loc=(-1, +0.90), square_max_color=square_max_color, name='Right', horizontal_flip=False)
     aux_screen = Screen(subscreens=[get_subscreen('aux')], server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
-    # screens = [left_screen, center_screen, right_screen, aux_screen]
-    screens = [left_screen, center_screen, right_screen]
+    screens = [left_screen, center_screen, right_screen, aux_screen]
+    # screens = [left_screen, center_screen, right_screen]
     # screens = [left_screen]
     # draw_screens(screens); plt.show()
 
