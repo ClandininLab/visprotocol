@@ -79,6 +79,11 @@ class ImagingExperimentGUI(QWidget):
         self.protocol_box.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                                     QSizePolicy.MinimumExpanding))
 
+        self.protocol_selector_box = QWidget()
+        self.protocol_selector_box.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
+                                                            QSizePolicy.Fixed))
+        self.protocol_selector_grid = QGridLayout()
+
         self.protocol_params_scroll_box = QScrollArea()
         self.protocol_params_scroll_box.setWidget(self.protocol_box)
         self.protocol_params_scroll_box.setWidgetResizable(True)
@@ -90,6 +95,7 @@ class ImagingExperimentGUI(QWidget):
 
         self.protocol_tab = QWidget()
         self.protocol_tab_layout = QVBoxLayout()
+        self.protocol_tab_layout.addWidget(self.protocol_selector_box)
         self.protocol_tab_layout.addWidget(self.protocol_params_scroll_box)
         self.protocol_tab_layout.addWidget(self.protocol_control_box)
 
@@ -108,6 +114,27 @@ class ImagingExperimentGUI(QWidget):
         self.tabs.addTab(self.file_tab, "File")
 
         self.tabs.resize(450, 500)
+
+        # # # TAB 1: MAIN controls, for selecting / playing stimuli
+        # Protocol ID drop-down:
+        comboBox = QComboBox(self)
+        comboBox.addItem("(select a protocol to run)")
+        for sub_class in self.available_protocols:
+            comboBox.addItem(sub_class.__name__)
+        protocol_label = QLabel('Protocol:')
+        comboBox.activated[str].connect(self.onSelectedProtocolID)
+        self.protocol_selector_grid.addWidget(protocol_label, 1, 0)
+        self.protocol_selector_grid.addWidget(comboBox, 1, 1, 1, 1)
+        
+        # Parameter preset drop-down:
+        parameter_preset_label = QLabel('Parameter_preset:')
+        self.protocol_selector_grid.addWidget(parameter_preset_label, 2, 0)
+        self.updateParameterPresetSelector()
+
+        # Save parameter preset button:
+        savePresetButton = QPushButton("Save preset", self)
+        savePresetButton.clicked.connect(self.onPressedButton)
+        self.protocol_selector_grid.addWidget(savePresetButton, 2, 2)
 
         # Status window:
         newLabel = QLabel('Status:')
@@ -183,29 +210,8 @@ class ImagingExperimentGUI(QWidget):
             self.imagingTypeComboBox.activated[str].connect(self.onChangedDataType)
             self.protocol_control_grid.addWidget(self.imagingTypeComboBox, 3, 2)
 
-        # # # TAB 1: MAIN controls, for selecting / playing stimuli
-        # Protocol ID drop-down:
-        comboBox = QComboBox(self)
-        comboBox.addItem("(select a protocol to run)")
-        for sub_class in self.available_protocols:
-            comboBox.addItem(sub_class.__name__)
-        protocol_label = QLabel('Protocol:')
-        comboBox.activated[str].connect(self.onSelectedProtocolID)
-        self.protocol_grid.addWidget(protocol_label, 1, 0)
-        self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
-        
-        # Parameter preset drop-down:
-        parameter_preset_label = QLabel('Parameter_preset:')
-        self.protocol_grid.addWidget(parameter_preset_label, 2, 0)
-        self.updateParameterPresetSelector()
-
-        # Save parameter preset button:
-        savePresetButton = QPushButton("Save preset", self)
-        savePresetButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(savePresetButton, 2, 2)
-
         # Run paramters input:
-        self.updaterunParametersInput()
+        self.updateRunParametersInput()
 
         # # # TAB 2: Current FLY metadata information
         # # Fly info:
@@ -359,6 +365,7 @@ class ImagingExperimentGUI(QWidget):
         # Add all layouts to window
         self.layout.addWidget(self.tabs)
         self.protocol_tab.setLayout(self.protocol_tab_layout)
+        self.protocol_selector_box.setLayout(self.protocol_selector_grid)
         self.protocol_control_box.setLayout(self.protocol_control_grid)
         self.protocol_box.setLayout(self.protocol_grid)
         self.data_tab.setLayout(self.data_grid)
@@ -394,8 +401,8 @@ class ImagingExperimentGUI(QWidget):
         # update display lists of run & protocol parameters
         self.protocol_object.loadParameterPresets()
         self.updateParameterPresetSelector()
+        self.updateRunParametersInput()
         self.updateProtocolParametersInput()
-        self.updaterunParametersInput()
         self.updateWindowWidth()
         self.show()
 
@@ -503,7 +510,7 @@ class ImagingExperimentGUI(QWidget):
         self.updateExistingFlyInput()
 
     def resetLayout(self):
-        for ii in range(3, self.protocol_grid.rowCount()):
+        for ii in range(self.protocol_grid.rowCount()):
             item = self.protocol_grid.itemAtPosition(ii, 0)
             if item is not None:
                 item.widget().deleteLater()
@@ -515,7 +522,7 @@ class ImagingExperimentGUI(QWidget):
     def updateProtocolParametersInput(self):
         # update display window to show parameters for this protocol
         newLabel = QLabel('Protocol parameters:')
-        self.protocol_grid.addWidget(newLabel, self.run_params_ct + 3, 0)
+        self.protocol_grid.addWidget(newLabel, self.run_params_ct, 0) # add label after run_params
 
         self.protocol_parameter_input = {}  # clear old input params dict
         ct = 0
@@ -523,7 +530,7 @@ class ImagingExperimentGUI(QWidget):
             ct += 1
             newLabel = QLabel(key + ':')
 
-            row_offset = self.run_params_ct + 4 + ct
+            row_offset = self.run_params_ct + 1 + ct # +1 for label 'Protocol parameters:'
 
             self.protocol_grid.addWidget(newLabel, row_offset, 0)
 
@@ -546,13 +553,13 @@ class ImagingExperimentGUI(QWidget):
         for name in self.protocol_object.parameter_presets.keys():
             self.parameter_preset_comboBox.addItem(name)
         self.parameter_preset_comboBox.activated[str].connect(self.onSelectedParameterPreset)
-        self.protocol_grid.addWidget(self.parameter_preset_comboBox, 2, 1, 1, 1)
+        self.protocol_selector_grid.addWidget(self.parameter_preset_comboBox, 2, 1, 1, 1)
 
     def onSelectedParameterPreset(self, text):
         self.protocol_object.selectProtocolPreset(text)
         self.resetLayout()
         self.updateProtocolParametersInput()
-        self.updaterunParametersInput()
+        self.updateRunParametersInput()
         self.show()
 
     def onSelectedExistingFly(self, index):
@@ -580,22 +587,21 @@ class ImagingExperimentGUI(QWidget):
         self.fly_effector_1.setCurrentText(fly_data_dict['effector_2'])
         self.fly_genotype_input.setText(fly_data_dict['genotype'])
 
-    def updaterunParametersInput(self):
+    def updateRunParametersInput(self):
         self.run_params_ct = 0
         self.run_parameter_input = {}  # clear old input params dict
 
         # Run parameters list
         for key, value in self.protocol_object.run_parameters.items():
             if key not in ['protocol_ID', 'run_start_time']:
-                self.run_params_ct += 1
                 # delete existing labels:
-                item = self.protocol_grid.itemAtPosition(2 + self.run_params_ct, 0)
+                item = self.protocol_grid.itemAtPosition(self.run_params_ct, 0)
                 if item is not None:
                     item.widget().deleteLater()
 
                 # write new labels:
                 newLabel = QLabel(key + ':')
-                self.protocol_grid.addWidget(newLabel, 2 + self.run_params_ct, 0)
+                self.protocol_grid.addWidget(newLabel, self.run_params_ct, 0)
 
                 if isinstance(value, bool):
                     self.run_parameter_input[key] = QCheckBox()
@@ -611,7 +617,9 @@ class ImagingExperimentGUI(QWidget):
                     self.run_parameter_input[key].setValidator(validator)
                     self.run_parameter_input[key].setText(str(value))
 
-                self.protocol_grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
+                self.protocol_grid.addWidget(self.run_parameter_input[key], self.run_params_ct, 1, 1, 1)
+
+                self.run_params_ct += 1
 
     def onEnteredSeriesCount(self):
         self.data.updateSeriesCount(self.series_counter_input.value())
@@ -676,6 +684,10 @@ class ImagingExperimentGUI(QWidget):
             self.populateGroups()
 
     def updateParametersFromFillableFields(self):
+        # Empty the parameters before filling them from the GUI
+        self.protocol_object.run_parameters = {'protocol_ID': self.protocol_object.run_parameters['protocol_ID']}
+        self.protocol_object.protocol_parameters = {}
+
         for key, value in self.run_parameter_input.items():
             if isinstance(self.run_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
@@ -685,7 +697,7 @@ class ImagingExperimentGUI(QWidget):
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
-            elif isinstance(self.protocol_object.protocol_parameters[key], str):
+            elif isinstance(self.protocol_parameter_input[key], str):
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
                 new_param_entry = self.protocol_parameter_input[key].text()
