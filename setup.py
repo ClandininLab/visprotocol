@@ -14,7 +14,6 @@ setup(
         'labjack-ljm',
         'h5py',
         'scipy',
-        'nptdms',
         'PyQT5',
         'pyYaml'],
     extras_require={'gui':  ["PyQT6"]},

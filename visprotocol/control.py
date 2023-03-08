@@ -6,8 +6,6 @@ EpochRun object controls presentation of a sequence of epochs ("epoch run")
 
 from PyQt5.QtWidgets import QApplication
 from time import sleep
-import os
-import posixpath
 
 class EpochRun():
     def __init__(self):
@@ -50,10 +48,6 @@ class EpochRun():
         if client.trigger_device is not None:
             print("Triggering acquisition devices.")
             client.trigger_device.send_trigger()
-
-        if 'do_loco' in data.cfg and data.cfg['do_loco']:
-            sleep(2) # Give loco time to start acquiring
-            client.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
 
         # # # Epoch run loop # # #
         client.manager.print_on_server("Starting run.")

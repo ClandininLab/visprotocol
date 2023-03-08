@@ -29,7 +29,7 @@ class ExperimentGUI(QWidget):
         self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
-        # self.ignore_warnings = False
+        # self.ignore_warnings = False  # TODO does this do anything?
 
         # user input to select configuration file and rig name
         # sets self.cfg, self.cfg_name, and self.rig_name
@@ -181,7 +181,6 @@ class ExperimentGUI(QWidget):
 
         # # # TAB 2: Current animal metadata information
         # # Animal info:
-        # Load any existing animal metadata in this file
         new_label = QLabel('Load existing animal')
         self.existing_animal_input = QComboBox()
         self.existing_animal_input.activated[int].connect(self.on_selected_existing_animal)
@@ -192,6 +191,7 @@ class ExperimentGUI(QWidget):
         new_label.setAlignment(QtCore.Qt.AlignCenter)
         self.data_form.addRow(new_label)
 
+        # Only built-ins are "animal_id," "age" and "notes"
         # Animal ID:
         new_label = QLabel('Animal ID:')
         self.animal_id_input = QLineEdit()
@@ -219,7 +219,6 @@ class ExperimentGUI(QWidget):
                 ct += 1
                 new_label = QLabel(key)
                 new_input = QComboBox()
-                new_input.addItem("")
                 for choiceID in self.cfg['animal_metadata'][key]:
                     new_input.addItem(choiceID)
                 self.data_form.addRow(new_label, new_input)
@@ -229,31 +228,7 @@ class ExperimentGUI(QWidget):
         new_label = QLabel('Transgenes')
         self.data_form.addRow(new_label)
 
-        # # handle transgenes metadata
-        # self.transgenes_input = []
-        # for driver_ind in range(self.cfg['animal_metadata']['transgenes'].get('max_drivers', 1)):
-        #     new_label = QLabel('driver / effector')
-        #     driver_input = QComboBox()
-        #     driver_input.addItem("")
-        #     for choiceID in self.cfg['animal_metadata']['transgenes']['driver']:
-        #             driver_input.addItem(choiceID)
-
-        #     effector_inputs = []
-        #     for effector_ind in range(self.cfg['animal_metadata']['transgenes'].get('max_effectors', 1)):
-        #         effector_input = QComboBox()
-        #         effector_input.addItem("")
-        #         for choiceID in self.cfg['animal_metadata']['transgenes']['effector']:
-        #             effector_input.addItem(choiceID)
-        #             effector_inputs.append(effector_input)
-        #     self.data_form.addRow(new_label, driver_input, effector_input)
-
-        #     self.transgenes_input.append({'driver': driver_input, 'effectors': effector_inputs})
-
         # Create animal button
-        # new_separator_line = QFrame()
-        # new_separator_line.setFrameShape(new_separator_line.HLine)
-        # self.data_form.addRow(new_separator_line.HLine)
-
         create_animal_button = QPushButton("Create animal", self)
         create_animal_button.clicked.connect(self.on_created_animal)
         self.data_form.addRow(create_animal_button)
@@ -438,21 +413,14 @@ class ExperimentGUI(QWidget):
     def on_created_animal(self):
         # Populate animal metadata from animal data fields
         animal_metadata = {}
+        # Built-ins
         animal_metadata['animal_id'] = self.animal_id_input.text()
         animal_metadata['age'] = self.animal_age_input.value()
         animal_metadata['notes'] = self.animal_notes_input.toPlainText()
+
+        # user-defined:
         for key in self.animal_metadata_inputs:
             animal_metadata[key] = self.animal_metadata_inputs[key].currentText()
-
-        # for driver_ind, tg in enumerate(self.transgenes_input):
-        #     expression_string = tg['driver'].currentText() + '->'
-        #     for effector_ind, ef in enumerate(tg['effectors']):
-        #         expression_string += ef.currentText()
-
-        #     expression_string = '{}->{}'.format(tg['driver'].currentText(), )
-        #     animal_metadata['driver_{}'.format(driver_ind+1)] = tg['driver'].currentText()
-        #     for effector_ind, tg in enumerate(tg['effectors']):
-        #         animal_metadata['driver_{}_effector_{}'.format(driver_ind+1)] = tg['driver'].currentText()
 
         self.data.create_animal(animal_metadata)  # creates new animal and selects it as the current animal
         self.update_existing_animal_input()
@@ -645,9 +613,6 @@ class ExperimentGUI(QWidget):
                     self.protocol_object.protocol_parameters[key] = to_a_list
                 else:
                     self.protocol_object.protocol_parameters[key] = float(new_param_entry)
-
-        # if self.cfg['loco_avail']:
-        #     self.data.cfg['do_loco'] = self.loco_checkbox.isChecked() # loco
 
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
