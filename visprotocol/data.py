@@ -35,19 +35,17 @@ class BaseData():
         self.animal_metadata = {}  # populated in GUI or user protocol
         self.current_animal = None
 
-        # # #  Lists of animal metadata # # #
-        self.animalChoices = self.cfg.get('animal_choices', [])
-        self.driverChoices = self.cfg.get('driver_choices', [])
-        self.indicatorChoices = self.cfg.get('indicator_choices', [])
-        self.effectorChoices = self.cfg.get('effector_choices', [])
-
-        self.data_directory = config_tools.getDataDirectory(self.cfg)
+        # default data_directory, experiment_file_name, experimenter from cfg
+        # may be overwritten by GUI or other before initialize_experiment_file() is called
+        self.data_directory = config_tools.get_data_directory(self.cfg)
+        self.experiment_file_name = datetime.now().isoformat()[:-16]
+        self.experimenter = config_tools.get_experimenter(self.cfg)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # #  Creating experiment file and groups  # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-    def initializeExperimentFile(self):
+    def initialize_experiment_file(self):
         """
         Create HDF5 data file and initialize top-level hierarchy nodes
         """
@@ -61,23 +59,23 @@ class BaseData():
             experiment_file.attrs['date'] = date
             experiment_file.attrs['init_time'] = init_time
             experiment_file.attrs['data_directory'] = self.data_directory
-            experiment_file.attrs['experimenter'] = self.cfg.get('experimenter', '')
+            experiment_file.attrs['experimenter'] = self.experimenter
             experiment_file.attrs['rig'] = self.cfg.get('current_rig_name', '')
-            experiment_file.attrs['screen_center'] = config_tools.getScreenCenter(self.cfg)
+            experiment_file.attrs['screen_center'] = config_tools.get_screen_center(self.cfg)
 
             # Create a top-level group for epoch runs and user-entered notes
             experiment_file.create_group('Client')
             experiment_file.create_group('Animals')
             experiment_file.create_group('Notes')
 
-    def createAnimal(self, animal_metadata):
+    def create_animal(self, animal_metadata):
         """
         """
-        if animal_metadata.get('animal_id') in [x.get('animal_id') for x in self.getExistingAnimalData()]:
+        if animal_metadata.get('animal_id') in [x.get('animal_id') for x in self.get_existing_animal_data()]:
             print('A animal with this ID already exists')
             return
 
-        if self.experimentFileExists():
+        if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
                 animal_init_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
                 animals_group = experiment_file['/Animals']
@@ -88,16 +86,16 @@ class BaseData():
 
                 new_animal.create_group('epoch_runs')
 
-            self.selectAnimal(animal_metadata.get('animal_id'))
+            self.select_animal(animal_metadata.get('animal_id'))
             print('Created animal {}'.format(animal_metadata.get('animal_id')))
         else:
             print('Initialize a data file before defining a animal')
 
-    def createEpochRun(self, protocol_object):
+    def create_epoch_run(self, protocol_object):
         """"
         """
         # create a new epoch run group in the data file
-        if (self.currentAnimalExists() and self.experimentFileExists()):
+        if (self.current_animal_exists() and self.experiment_file_exists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
                 run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
                 animal_group = experiment_file['/Animals/{}/epoch_runs'.format(self.current_animal)]
@@ -117,39 +115,39 @@ class BaseData():
         else:
             print('Create a data file and/or define a animal first')
 
-    def createEpoch(self, protocol_object):
+    def create_epoch(self, protocol_object):
         """
         """
-        if (self.currentAnimalExists() and self.experimentFileExists()):
+        if (self.current_animal_exists() and self.experiment_file_exists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                epoch_time = datetime.now().strftime('%H:%M:%S.%f') #[:-4] MC 20220308 increasing precision of timestamp
+                epoch_time = datetime.now().strftime('%H:%M:%S.%f')
                 epoch_run_group = experiment_file['/Animals/{}/epoch_runs/series_{}/epochs'.format(self.current_animal, str(self.series_count).zfill(3))]
                 new_epoch = epoch_run_group.create_group('epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3)))
                 new_epoch.attrs['epoch_time'] = epoch_time
 
-                epochParametersGroup = new_epoch
+                epoch_parameters_group = new_epoch
                 if type(protocol_object.epoch_parameters) is tuple:  # stimulus is tuple of multiple stims layered on top of one another
                     num_stims = len(protocol_object.epoch_parameters)
                     for stim_ind in range(num_stims):
                         for key in protocol_object.epoch_parameters[stim_ind]:
                             prefix = 'stim{}_'.format(str(stim_ind))
-                            epochParametersGroup.attrs[prefix + key] = hdf5ifyParameter(protocol_object.epoch_parameters[stim_ind][key])
+                            epoch_parameters_group.attrs[prefix + key] = hdf5ify_parameter(protocol_object.epoch_parameters[stim_ind][key])
 
                 elif type(protocol_object.epoch_parameters) is dict:  # single stim class
                     for key in protocol_object.epoch_parameters:
-                        epochParametersGroup.attrs[key] = hdf5ifyParameter(protocol_object.epoch_parameters[key])
+                        epoch_parameters_group.attrs[key] = hdf5ify_parameter(protocol_object.epoch_parameters[key])
 
-                convenienceParametersGroup = new_epoch
+                convenience_parameters_group = new_epoch
                 for key in protocol_object.convenience_parameters:  # save out convenience parameters
-                    convenienceParametersGroup.attrs[key] = hdf5ifyParameter(protocol_object.convenience_parameters[key])
+                    convenience_parameters_group.attrs[key] = hdf5ify_parameter(protocol_object.convenience_parameters[key])
 
         else:
             print('Create a data file and/or define a animal first')
 
-    def createNote(self, noteText):
+    def create_note(self, noteText):
         ""
         ""
-        if self.experimentFileExists():
+        if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
                 noteTime = datetime.now().strftime('%H:%M:%S.%f')[:-4]
                 notes = experiment_file['/Notes']
@@ -161,21 +159,21 @@ class BaseData():
 # # # # # # # # #  Retrieve / query data file # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-    def experimentFileExists(self):
+    def experiment_file_exists(self):
         if self.experiment_file_name is None:
             tf = False
         else:
             tf = os.path.isfile(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'))
         return tf
 
-    def currentAnimalExists(self):
+    def current_animal_exists(self):
         if self.current_animal is None:
             tf = False
         else:
             tf = True
         return tf
 
-    def getExistingSeries(self):
+    def get_existing_series(self):
         all_series = []
         with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
             for animal_id in list(experiment_file['/Animals'].keys()):
@@ -185,17 +183,17 @@ class BaseData():
         series = [int(x.split('_')[-1]) for x in all_series]
         return series
 
-    def getHighestSeriesCount(self):
-        series = self.getExistingSeries()
+    def get_highest_series_count(self):
+        series = self.get_existing_series()
         if len(series) == 0:
             return 0
         else:
             return np.max(series)
 
-    def getExistingAnimalData(self):
+    def get_existing_animal_data(self):
         # return list of dicts for animal metadata already present in experiment file
         animal_data_list = []
-        if self.experimentFileExists():
+        if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
                 for animal in experiment_file['/Animals']:
                     new_animal = experiment_file['/Animals'][animal]
@@ -206,19 +204,19 @@ class BaseData():
                     animal_data_list.append(new_dict)
         return animal_data_list
 
-    def selectAnimal(self, animal_id):
+    def select_animal(self, animal_id):
         self.current_animal = animal_id
 
-    def advanceSeriesCount(self):
+    def advance_series_count(self):
         self.series_count += 1
 
-    def updateSeriesCount(self, val):
+    def update_series_count(self, val):
         self.series_count = val
 
-    def getSeriesCount(self):
+    def get_series_count(self):
         return self.series_count
 
-    def reloadSeriesCount(self):
+    def reload_series_count(self):
         all_series = []
         with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
             for animal_id in list(experiment_file['/Animals'].keys()):
@@ -233,7 +231,7 @@ class BaseData():
             self.series_count = np.max(series) + 1
 
 
-def hdf5ifyParameter(value):
+def hdf5ify_parameter(value):
     if value is None:
         value = 'None'
     if type(value) is dict:  # TODO: Find a way to split this into subgroups. Hacky work around.

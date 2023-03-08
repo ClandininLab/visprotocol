@@ -6,8 +6,6 @@ Created on Thu Jun 21 10:51:42 2018
 @author: mhturner
 """
 from datetime import datetime
-import importlib
-from importlib.machinery import SourceFileLoader
 import os
 import sys
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
@@ -19,20 +17,19 @@ import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
 
-import visprotocol
 from visprotocol.util import config_tools, h5io
 from visprotocol.control import EpochRun
-from visprotocol import protocol, client, control, data
+from visprotocol import protocol, client, data
 
 
-class ImagingExperimentGUI(QWidget):
+class ExperimentGUI(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.noteText = ''
+        self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
-        self.ignoreWarnings = False
+        # self.ignore_warnings = False
 
         # user input to select configuration file and rig name
         # sets self.cfg, self.cfg_name, and self.rig_name
@@ -42,22 +39,6 @@ class ImagingExperimentGUI(QWidget):
         dialog.setFixedSize(200, 200)
         dialog.exec()
 
-        # self.cfg['server_data_directory'] = rig_config['server_data_directory'] if 'server_data_directory' in rig_config else None
-        # self.cfg['loco_avail'] = 'locomotion' in rig_config and rig_config['locomotion']
-
-        # # Use user config file to import protocol, client and data modules
-        # full_module_paths = config_tools.getFullPathsToModules(self.cfg)
-        # protocol_module = SourceFileLoader(full_module_paths['protocol_module_name'],
-        #                                    full_module_paths['protocol_module_path']).load_module()
-        # client_module = SourceFileLoader(full_module_paths['client_module_name'],
-        #                                    full_module_paths['client_module_path']).load_module()
-        # data_module = SourceFileLoader(full_module_paths['data_module_name'],
-        #                                    full_module_paths['data_module_path']).load_module()
-
-        # Start with basic visprotocol protocol, client and data
-        # protocol_module = visprotocol.protocol
-        # client_module = visprotocol.client
-        # data_module = visprotocol.data
 
         # get a protocol, just start with the base class until user selects one
         self.protocol_object =  protocol.BaseProtocol(self.cfg) 
@@ -70,7 +51,7 @@ class ImagingExperimentGUI(QWidget):
         # start a data object
         self.data = data.BaseData(self.cfg)
 
-        # get an epoch run control object
+        # get an epoch run object
         self.epoch_run = EpochRun()
 
         self.initUI()
@@ -116,27 +97,27 @@ class ImagingExperimentGUI(QWidget):
         self.tabs.resize(450, 500)
 
         # Status window:
-        newLabel = QLabel('Status:')
-        self.protocol_control_grid.addWidget(newLabel, 0, 0)
+        new_label = QLabel('Status:')
+        self.protocol_control_grid.addWidget(new_label, 0, 0)
         self.status_label = QLabel()
         self.status_label.setFrameShadow(QFrame.Shadow(1))
         self.protocol_control_grid.addWidget(self.status_label, 0, 1)
         self.status_label.setText('')
 
-        # Current imaging series counter
-        newLabel = QLabel('Series counter:')
-        self.protocol_control_grid.addWidget(newLabel, 0, 2)
+        # Current series counter
+        new_label = QLabel('Series counter:')
+        self.protocol_control_grid.addWidget(new_label, 0, 2)
         self.series_counter_input = QSpinBox()
         self.series_counter_input.setMinimum(1)
         self.series_counter_input.setMaximum(1000)
         self.series_counter_input.setValue(1)
-        self.series_counter_input.valueChanged.connect(self.onEnteredSeriesCount)
+        self.series_counter_input.valueChanged.connect(self.on_entered_series_count)
         self.protocol_control_grid.addWidget(self.series_counter_input, 0, 3)
 
         # Epoch count refresh button:
-        checkEpochCntButton = QPushButton("Check epochs:", self)
-        checkEpochCntButton.clicked.connect(self.onPressedButton)
-        self.protocol_control_grid.addWidget(checkEpochCntButton, 1, 0)
+        check_epoch_count_button = QPushButton("Check epochs:", self)
+        check_epoch_count_button.clicked.connect(self.on_pressed_button)
+        self.protocol_control_grid.addWidget(check_epoch_count_button, 1, 0)
         # Epoch count window:
         self.epoch_count = QLabel()
         self.epoch_count.setFrameShadow(QFrame.Shadow(1))
@@ -144,89 +125,89 @@ class ImagingExperimentGUI(QWidget):
         self.epoch_count.setText('')
 
         # View button:
-        self.viewButton = QPushButton("View", self)
-        self.viewButton.clicked.connect(self.onPressedButton)
-        self.protocol_control_grid.addWidget(self.viewButton, 2, 0)
+        self.view_button = QPushButton("View", self)
+        self.view_button.clicked.connect(self.on_pressed_button)
+        self.protocol_control_grid.addWidget(self.view_button, 2, 0)
 
         # Record button:
-        self.recordButton = QPushButton("Record", self)
-        self.recordButton.clicked.connect(self.onPressedButton)
-        self.protocol_control_grid.addWidget(self.recordButton, 2, 1)
+        self.record_button = QPushButton("Record", self)
+        self.record_button.clicked.connect(self.on_pressed_button)
+        self.protocol_control_grid.addWidget(self.record_button, 2, 1)
 
         # Pause/resume button:
-        self.pauseButton = QPushButton("Pause", self)
-        self.pauseButton.clicked.connect(self.onPressedButton)
-        self.protocol_control_grid.addWidget(self.pauseButton, 2, 2)
+        self.pause_button = QPushButton("Pause", self)
+        self.pause_button.clicked.connect(self.on_pressed_button)
+        self.protocol_control_grid.addWidget(self.pause_button, 2, 2)
 
         # Stop button:
-        stopButton = QPushButton("Stop", self)
-        stopButton.clicked.connect(self.onPressedButton)
-        self.protocol_control_grid.addWidget(stopButton, 2, 3)
+        stop_button = QPushButton("Stop", self)
+        stop_button.clicked.connect(self.on_pressed_button)
+        self.protocol_control_grid.addWidget(stop_button, 2, 3)
 
         # Enter note button:
-        noteButton = QPushButton("Enter note", self)
-        noteButton.clicked.connect(self.onPressedButton)
-        self.protocol_control_grid.addWidget(noteButton, 3, 0)
+        note_button = QPushButton("Enter note", self)
+        note_button.clicked.connect(self.on_pressed_button)
+        self.protocol_control_grid.addWidget(note_button, 3, 0)
 
         # Notes field:
-        self.notesEdit = QTextEdit()
-        self.notesEdit.setFixedHeight(30)
-        self.protocol_control_grid.addWidget(self.notesEdit, 3, 1, 1, 3)
+        self.notes_edit = QTextEdit()
+        self.notes_edit.setFixedHeight(30)
+        self.protocol_control_grid.addWidget(self.notes_edit, 3, 1, 1, 3)
 
         # # # TAB 1: MAIN controls, for selecting / playing stimuli
         # Protocol ID drop-down:
-        comboBox = QComboBox(self)
-        comboBox.addItem("(select a protocol to run)")
+        combo_box = QComboBox(self)
+        combo_box.addItem("(select a protocol to run)")
         for sub_class in self.available_protocols:
-            comboBox.addItem(sub_class.__name__)
+            combo_box.addItem(sub_class.__name__)
         protocol_label = QLabel('Protocol:')
-        comboBox.activated[str].connect(self.onSelectedProtocolID)
+        combo_box.activated[str].connect(self.on_selected_protocol_ID)
         self.protocol_grid.addWidget(protocol_label, 1, 0)
-        self.protocol_grid.addWidget(comboBox, 1, 1, 1, 1)
+        self.protocol_grid.addWidget(combo_box, 1, 1, 1, 1)
 
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
         self.protocol_grid.addWidget(parameter_preset_label, 2, 0)
-        self.updateParameterPresetSelector()
+        self.update_parameter_preset_selector()
 
         # Save parameter preset button:
-        savePresetButton = QPushButton("Save preset", self)
-        savePresetButton.clicked.connect(self.onPressedButton)
-        self.protocol_grid.addWidget(savePresetButton, 2, 2)
+        save_preset_button = QPushButton("Save preset", self)
+        save_preset_button.clicked.connect(self.on_pressed_button)
+        self.protocol_grid.addWidget(save_preset_button, 2, 2)
 
         # Run paramters input:
-        self.updaterunParametersInput()
+        self.update_run_parameters_input()
 
 
         # # # TAB 2: Current animal metadata information
         # # Animal info:
         # Load any existing animal metadata in this file
-        newLabel = QLabel('Load existing animal')
+        new_label = QLabel('Load existing animal')
         self.existing_animal_input = QComboBox()
-        self.existing_animal_input.activated[int].connect(self.onSelectedExistingAnimal)
-        self.data_form.addRow(newLabel, self.existing_animal_input)
-        self.updateExistingAnimalInput()
+        self.existing_animal_input.activated[int].connect(self.on_selected_existing_animal)
+        self.data_form.addRow(new_label, self.existing_animal_input)
+        self.update_existing_animal_input()
 
-        newLabel = QLabel('Current Animal info:')
-        newLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.data_form.addRow(newLabel)
+        new_label = QLabel('Current Animal info:')
+        new_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.data_form.addRow(new_label)
 
         # Animal ID:
-        newLabel = QLabel('Animal ID:')
+        new_label = QLabel('Animal ID:')
         self.animal_id_input = QLineEdit()
-        self.data_form.addRow(newLabel, self.animal_id_input)
+        self.data_form.addRow(new_label, self.animal_id_input)
 
         # Age: 
-        newLabel = QLabel('Age:')
+        new_label = QLabel('Age:')
         self.animal_age_input = QSpinBox()
         self.animal_age_input.setMinimum(0)
         self.animal_age_input.setValue(1)
-        self.data_form.addRow(newLabel, self.animal_age_input)
+        self.data_form.addRow(new_label, self.animal_age_input)
 
         # Notes: 
-        newLabel = QLabel('Notes:')
+        new_label = QLabel('Notes:')
         self.animal_notes_input = QTextEdit()
-        self.data_form.addRow(newLabel, self.animal_notes_input)
+        self.data_form.addRow(new_label, self.animal_notes_input)
 
         # Use user cfg to populate other metadata options
         self.animal_metadata_inputs = {}
@@ -236,22 +217,22 @@ class ImagingExperimentGUI(QWidget):
                 pass
             else:
                 ct += 1
-                newLabel = QLabel(key)
+                new_label = QLabel(key)
                 new_input = QComboBox()
                 new_input.addItem("")
                 for choiceID in self.cfg['animal_metadata'][key]:
                     new_input.addItem(choiceID)
-                self.data_form.addRow(newLabel, new_input)
+                self.data_form.addRow(new_label, new_input)
 
                 self.animal_metadata_inputs[key] = new_input
             
-        newLabel = QLabel('Transgenes')
-        self.data_form.addRow(newLabel)
+        new_label = QLabel('Transgenes')
+        self.data_form.addRow(new_label)
 
         # # handle transgenes metadata
         # self.transgenes_input = []
         # for driver_ind in range(self.cfg['animal_metadata']['transgenes'].get('max_drivers', 1)):
-        #     newLabel = QLabel('driver / effector')
+        #     new_label = QLabel('driver / effector')
         #     driver_input = QComboBox()
         #     driver_input.addItem("")
         #     for choiceID in self.cfg['animal_metadata']['transgenes']['driver']:
@@ -264,7 +245,7 @@ class ImagingExperimentGUI(QWidget):
         #         for choiceID in self.cfg['animal_metadata']['transgenes']['effector']:
         #             effector_input.addItem(choiceID)
         #             effector_inputs.append(effector_input)
-        #     self.data_form.addRow(newLabel, driver_input, effector_input)
+        #     self.data_form.addRow(new_label, driver_input, effector_input)
 
         #     self.transgenes_input.append({'driver': driver_input, 'effectors': effector_inputs})
 
@@ -273,36 +254,36 @@ class ImagingExperimentGUI(QWidget):
         # new_separator_line.setFrameShape(new_separator_line.HLine)
         # self.data_form.addRow(new_separator_line.HLine)
 
-        createAnimalButton = QPushButton("Create animal", self)
-        createAnimalButton.clicked.connect(self.onCreatedAnimal)
-        self.data_form.addRow(createAnimalButton)
+        create_animal_button = QPushButton("Create animal", self)
+        create_animal_button.clicked.connect(self.on_created_animal)
+        self.data_form.addRow(create_animal_button)
 
         # # # TAB 3: FILE tab - init, load, close etc. h5 file
         # Data file info
         # Initialize new experiment button
-        initializeButton = QPushButton("Initialize experiment", self)
-        initializeButton.clicked.connect(self.onPressedButton)
-        newLabel = QLabel('Current data file:')
-        self.file_form.addRow(initializeButton, newLabel)
+        initialize_button = QPushButton("Initialize experiment", self)
+        initialize_button.clicked.connect(self.on_pressed_button)
+        new_label = QLabel('Current data file:')
+        self.file_form.addRow(initialize_button, new_label)
         # Load existing experiment button
-        loadButton = QPushButton("Load experiment", self)
-        loadButton.clicked.connect(self.onPressedButton)
+        load_button = QPushButton("Load experiment", self)
+        load_button.clicked.connect(self.on_pressed_button)
         # Label with current expt file
-        self.currentExperimentLabel = QLabel('')
-        self.file_form.addRow(loadButton, self.currentExperimentLabel)
+        self.current_experiment_label = QLabel('')
+        self.file_form.addRow(load_button, self.current_experiment_label)
 
         # # # # Data browser: # # # # # # # #
-        self.groupTree = QTreeWidget(self)
-        self.groupTree.setHeaderHidden(True)
-        self.groupTree.itemClicked.connect(self.onTreeItemClicked)
-        self.file_form.addRow(self.groupTree)
+        self.group_tree = QTreeWidget(self)
+        self.group_tree.setHeaderHidden(True)
+        self.group_tree.itemClicked.connect(self.on_tree_item_clicked)
+        self.file_form.addRow(self.group_tree)
 
         # Attribute table
-        self.tableAttributes = QTableWidget()
-        self.tableAttributes.setStyleSheet("")
-        self.tableAttributes.setColumnCount(2)
-        self.tableAttributes.setObjectName("tableAttributes")
-        self.tableAttributes.setRowCount(0)
+        self.table_attributes = QTableWidget()
+        self.table_attributes.setStyleSheet("")
+        self.table_attributes.setColumnCount(2)
+        self.table_attributes.setObjectName("table_attributes")
+        self.table_attributes.setRowCount(0)
         item = QTableWidgetItem()
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -311,29 +292,29 @@ class ImagingExperimentGUI(QWidget):
         brush = QtGui.QBrush(QtGui.QColor(91, 91, 91))
         brush.setStyle(QtCore.Qt.SolidPattern)
         item.setForeground(brush)
-        self.tableAttributes.setHorizontalHeaderItem(0, item)
+        self.table_attributes.setHorizontalHeaderItem(0, item)
         item = QTableWidgetItem()
         item.setBackground(QtGui.QColor(123, 123, 123))
         brush = QtGui.QBrush(QtGui.QColor(91, 91, 91))
         brush.setStyle(QtCore.Qt.SolidPattern)
         item.setForeground(brush)
-        self.tableAttributes.setHorizontalHeaderItem(1, item)
-        self.tableAttributes.horizontalHeader().setCascadingSectionResizes(True)
-        self.tableAttributes.horizontalHeader().setDefaultSectionSize(200)
-        self.tableAttributes.horizontalHeader().setHighlightSections(False)
-        self.tableAttributes.horizontalHeader().setSortIndicatorShown(True)
-        self.tableAttributes.horizontalHeader().setStretchLastSection(True)
-        self.tableAttributes.verticalHeader().setVisible(False)
-        self.tableAttributes.verticalHeader().setHighlightSections(False)
-        self.tableAttributes.setMinimumSize(QtCore.QSize(200, 400))
-        item = self.tableAttributes.horizontalHeaderItem(0)
+        self.table_attributes.setHorizontalHeaderItem(1, item)
+        self.table_attributes.horizontalHeader().setCascadingSectionResizes(True)
+        self.table_attributes.horizontalHeader().setDefaultSectionSize(200)
+        self.table_attributes.horizontalHeader().setHighlightSections(False)
+        self.table_attributes.horizontalHeader().setSortIndicatorShown(True)
+        self.table_attributes.horizontalHeader().setStretchLastSection(True)
+        self.table_attributes.verticalHeader().setVisible(False)
+        self.table_attributes.verticalHeader().setHighlightSections(False)
+        self.table_attributes.setMinimumSize(QtCore.QSize(200, 400))
+        item = self.table_attributes.horizontalHeaderItem(0)
         item.setText("Attribute")
-        item = self.tableAttributes.horizontalHeaderItem(1)
+        item = self.table_attributes.horizontalHeaderItem(1)
         item.setText("Value")
 
-        self.tableAttributes.itemChanged.connect(self.update_attrs_to_file)
+        self.table_attributes.itemChanged.connect(self.update_attrs_to_file)
 
-        self.file_form.addRow(self.tableAttributes)
+        self.file_form.addRow(self.table_attributes)
 
         # Add all layouts to window
         self.layout.addWidget(self.tabs)
@@ -345,33 +326,33 @@ class ImagingExperimentGUI(QWidget):
         self.setWindowTitle('Visprotocol')
 
         # Resize window based on protocol tab
-        self.updateWindowWidth()
+        self.update_window_width()
 
         self.show()
 
-    def onSelectedProtocolID(self, text):
+    def on_selected_protocol_ID(self, text):
         if text == "(select a protocol to run)":
             return
         # Clear old params list from grid
-        self.resetLayout()
+        self.reset_layout()
 
         # initialize the selected protocol object
         prot_names = [x.__name__ for x in self.available_protocols]
         self.protocol_object = self.available_protocols[prot_names.index(text)](self.cfg)
 
         # update display lists of run & protocol parameters
-        self.protocol_object.loadParameterPresets()
-        self.updateParameterPresetSelector()
-        self.updateProtocolParametersInput()
-        self.updaterunParametersInput()
-        self.updateWindowWidth()
+        self.protocol_object.load_parameter_presets()
+        self.update_parameter_preset_selector()
+        self.update_protocol_parameters_input()
+        self.update_run_parameters_input()
+        self.update_window_width()
         self.show()
 
-    def onPressedButton(self):
+    def on_pressed_button(self):
         sender = self.sender()
         if sender.text() == 'Record':
-            if (self.data.experimentFileExists() and self.data.currentAnimalExists()):
-                self.sendRun(save_metadata_flag=True)
+            if (self.data.experiment_file_exists() and self.data.current_animal_exists()):
+                self.send_run(save_metadata_flag=True)
             else:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
@@ -383,42 +364,42 @@ class ImagingExperimentGUI(QWidget):
                 msg.exec_()
 
         elif sender.text() == 'View':
-            self.sendRun(save_metadata_flag=False)
-            self.pauseButton.setText('Pause')
+            self.send_run(save_metadata_flag=False)
+            self.pause_button.setText('Pause')
 
         elif sender.text() == 'Pause':
-            self.epoch_run.pauseRun()
-            self.pauseButton.setText('Resume')
+            self.epoch_run.pause_run()
+            self.pause_button.setText('Resume')
             self.status_label.setText('Paused...')
             self.show()
 
         elif sender.text() == 'Resume':
-            self.epoch_run.resumeRun()
-            self.pauseButton.setText('Pause')
+            self.epoch_run.resume_run()
+            self.pause_button.setText('Pause')
             self.status_label.setText('Viewing...')
             self.show()
 
         elif sender.text() == 'Stop':
-            self.epoch_run.stopRun()
-            self.pauseButton.setText('Pause')
+            self.epoch_run.stop_run()
+            self.pause_button.setText('Pause')
 
         elif sender.text() == 'Enter note':
-            self.noteText = self.notesEdit.toPlainText()
-            if self.data.experimentFileExists():
-                self.data.createNote(self.noteText)  # save note to expt file
-                self.notesEdit.clear()  # clear notes box
+            self.note_text = self.notes_edit.toPlainText()
+            if self.data.experiment_file_exists() is True:
+                self.data.create_note(self.note_text)  # save note to expt file
+                self.notes_edit.clear()  # clear notes box
             else:
-                self.notesEdit.setTextColor(QtGui.QColor("Red"))
+                self.notes_edit.setTextColor(QtGui.QColor("Red"))
 
         elif sender.text() == 'Save preset':
-            self.updateParametersFromFillableFields()  # get the state of the param input from GUI
+            self.update_parameters_from_fillable_fields()  # get the state of the param input from GUI
             start_name = self.parameter_preset_comboBox.currentText()
             if start_name == 'Default':
                 start_name = ''
 
             text, _ = QInputDialog.getText(self, "Save preset", "Preset Name:", QLineEdit.Normal, start_name)
 
-            self.protocol_object.updateParameterPresets(text)
+            self.protocol_object.update_parameter_presets(text)
 
         elif sender.text() == 'Initialize experiment':
             dialog = QDialog()
@@ -428,12 +409,12 @@ class ImagingExperimentGUI(QWidget):
             dialog.setFixedSize(300, 200)
             dialog.exec_()
 
-            self.data.experiment_file_name = dialog.ui.le_FileName.text()
-            self.data.data_directory = dialog.ui.le_DataDirectory.text()
-            self.data.experimenter = dialog.ui.le_Experimenter.text()
+            self.data.experiment_file_name = dialog.ui.le_filename.text()
+            self.data.data_directory = dialog.ui.le_data_directory.text()
+            self.data.experimenter = dialog.ui.le_experimenter.text()
 
-            self.updateExistingAnimalInput()
-            self.populateGroups()
+            self.update_existing_animal_input()
+            self.populate_groups()
 
         elif sender.text() == 'Load experiment':
             if os.path.isdir(self.data.data_directory):
@@ -444,39 +425,39 @@ class ImagingExperimentGUI(QWidget):
             self.data.data_directory = os.path.split(filePath)[0]
 
             if self.data.experiment_file_name != '':
-                self.currentExperimentLabel.setText(self.data.experiment_file_name)
+                self.current_experiment_label.setText(self.data.experiment_file_name)
                 # update series count to reflect already-collected series
-                self.data.reloadSeriesCount()
-                self.series_counter_input.setValue(self.data.getHighestSeriesCount() + 1)
-                self.updateExistingAnimalInput()
-                self.populateGroups()
+                self.data.reload_series_count()
+                self.series_counter_input.setValue(self.data.get_highest_series_count() + 1)
+                self.update_existing_animal_input()
+                self.populate_groups()
 
         elif sender.text() == 'Check epochs:':
             self.epoch_count.setText(str(self.protocol_object.num_epochs_completed))
 
-    def onCreatedAnimal(self):
+    def on_created_animal(self):
         # Populate animal metadata from animal data fields
         animal_metadata = {}
         animal_metadata['animal_id'] = self.animal_id_input.text()
         animal_metadata['age'] = self.animal_age_input.value()
-        animal_metadata['notes'] = self.animal_notes_input.text()
+        animal_metadata['notes'] = self.animal_notes_input.toPlainText()
         for key in self.animal_metadata_inputs:
             animal_metadata[key] = self.animal_metadata_inputs[key].currentText()
 
-        for driver_ind, tg in enumerate(self.transgenes_input):
-            expression_string = tg['driver'].currentText() + '->'
-            for effector_ind, ef in enumerate(tg['effectors']):
-                expression_string += ef.currentText()
+        # for driver_ind, tg in enumerate(self.transgenes_input):
+        #     expression_string = tg['driver'].currentText() + '->'
+        #     for effector_ind, ef in enumerate(tg['effectors']):
+        #         expression_string += ef.currentText()
 
-            expression_string = '{}->{}'.format(tg['driver'].currentText(), )
-            animal_metadata['driver_{}'.format(driver_ind+1)] = tg['driver'].currentText()
-            for effector_ind, tg in enumerate(tg['effectors']):
-                animal_metadata['driver_{}_effector_{}'.format(driver_ind+1)] = tg['driver'].currentText()
+        #     expression_string = '{}->{}'.format(tg['driver'].currentText(), )
+        #     animal_metadata['driver_{}'.format(driver_ind+1)] = tg['driver'].currentText()
+        #     for effector_ind, tg in enumerate(tg['effectors']):
+        #         animal_metadata['driver_{}_effector_{}'.format(driver_ind+1)] = tg['driver'].currentText()
 
-        self.data.createAnimal(animal_metadata)  # creates new animal and selects it as the current animal
-        self.updateExistingAnimalInput()
+        self.data.create_animal(animal_metadata)  # creates new animal and selects it as the current animal
+        self.update_existing_animal_input()
 
-    def resetLayout(self):
+    def reset_layout(self):
         for ii in range(3, self.protocol_grid.rowCount()):
             item = self.protocol_grid.itemAtPosition(ii, 0)
             if item is not None:
@@ -486,18 +467,18 @@ class ImagingExperimentGUI(QWidget):
                 item.widget().deleteLater()
         self.show()
 
-    def updateProtocolParametersInput(self):
+    def update_protocol_parameters_input(self):
         # update display window to show parameters for this protocol
-        newLabel = QLabel('Protocol parameters:')
-        self.protocol_grid.addWidget(newLabel, self.run_params_ct + 3, 0)
+        new_label = QLabel('Protocol parameters:')
+        self.protocol_grid.addWidget(new_label, self.run_params_ct + 3, 0)
         
         self.protocol_parameter_input = {}  # clear old input params dict
         ct = 0
         for key, value in self.protocol_object.protocol_parameters.items():
             ct += 1
-            newLabel = QLabel(key + ':')
+            new_label = QLabel(key + ':')
             row_offset = self.run_params_ct + 4 + ct
-            self.protocol_grid.addWidget(newLabel, row_offset, 0)
+            self.protocol_grid.addWidget(new_label, row_offset, 0)
 
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
@@ -513,42 +494,42 @@ class ImagingExperimentGUI(QWidget):
             self.protocol_grid.addWidget(self.protocol_parameter_input[key], row_offset, 1, 1, 2)
 
 
-    def updateParameterPresetSelector(self):
+    def update_parameter_preset_selector(self):
         self.parameter_preset_comboBox = QComboBox(self)
         self.parameter_preset_comboBox.addItem("Default")
         for name in self.protocol_object.parameter_presets.keys():
             self.parameter_preset_comboBox.addItem(name)
-        self.parameter_preset_comboBox.activated[str].connect(self.onSelectedParameterPreset)
+        self.parameter_preset_comboBox.activated[str].connect(self.on_selected_parameter_preset)
         self.protocol_grid.addWidget(self.parameter_preset_comboBox, 2, 1, 1, 1)
 
-    def onSelectedParameterPreset(self, text):
-        self.protocol_object.selectProtocolPreset(text)
-        self.resetLayout()
-        self.updateProtocolParametersInput()
-        self.updaterunParametersInput()
+    def on_selected_parameter_preset(self, text):
+        self.protocol_object.select_protocol_preset(text)
+        self.reset_layout()
+        self.update_protocol_parameters_input()
+        self.update_run_parameters_input()
         self.show()
 
-    def onSelectedExistingAnimal(self, index):
-        animal_data = self.data.getExistingAnimalData()
-        self.populateAnimalMetadataFields(animal_data[index])
+    def on_selected_existing_animal(self, index):
+        animal_data = self.data.get_existing_animal_data()
+        self.populate_animal_metadata_fields(animal_data[index])
         self.data.current_animal = animal_data[index].get('animal_id')
 
-    def updateExistingAnimalInput(self):
+    def update_existing_animal_input(self):
         self.existing_animal_input.clear()
-        for animal_data in self.data.getExistingAnimalData():
+        for animal_data in self.data.get_existing_animal_data():
             self.existing_animal_input.addItem(animal_data['animal_id'])
         index = self.existing_animal_input.findText(self.data.current_animal)
         if index >= 0:
             self.existing_animal_input.setCurrentIndex(index)
 
-    def populateAnimalMetadataFields(self, animal_data_dict):
+    def populate_animal_metadata_fields(self, animal_data_dict):
         self.animal_id_input.setText(animal_data_dict['animal_id'])
         self.animal_age_input.setValue(animal_data_dict['age'])
         self.animal_notes_input.setText(animal_data_dict['notes'])
         for key in self.animal_metadata_inputs:
             self.animal_metadata_inputs[key].setCurrentText(animal_data_dict[key])
 
-    def updaterunParametersInput(self):
+    def update_run_parameters_input(self):
         self.run_params_ct = 0
         self.run_parameter_input = {}  # clear old input params dict
         
@@ -562,8 +543,8 @@ class ImagingExperimentGUI(QWidget):
                     item.widget().deleteLater()
 
                 # write new labels:
-                newLabel = QLabel(key + ':')
-                self.protocol_grid.addWidget(newLabel, 2 + self.run_params_ct, 0)
+                new_label = QLabel(key + ':')
+                self.protocol_grid.addWidget(new_label, 2 + self.run_params_ct, 0)
 
                 if isinstance(value, bool):
                     self.run_parameter_input[key] = QCheckBox()
@@ -581,15 +562,15 @@ class ImagingExperimentGUI(QWidget):
 
                 self.protocol_grid.addWidget(self.run_parameter_input[key], 2 + self.run_params_ct, 1, 1, 1)
 
-    def onEnteredSeriesCount(self):
-        self.data.updateSeriesCount(self.series_counter_input.value())
-        if self.data.experimentFileExists:
-            if self.data.getSeriesCount() <= self.data.getHighestSeriesCount():
+    def on_entered_series_count(self):
+        self.data.update_series_count(self.series_counter_input.value())
+        if self.data.experiment_file_exists() is True:
+            if self.data.get_series_count() <= self.data.get_highest_series_count():
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 0, 0);")
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
-    def sendRun(self, save_metadata_flag=True):
+    def send_run(self, save_metadata_flag=True):
         # check to make sure a protocol has been selected
         if self.protocol_object.run_parameters['protocol_ID'] == '':
             self.status_label.setText('Select a protocol')
@@ -597,8 +578,8 @@ class ImagingExperimentGUI(QWidget):
 
         # check to make sure the series count does not already exist
         if save_metadata_flag:
-            self.data.updateSeriesCount(self.series_counter_input.value())
-            if (self.data.getSeriesCount() in self.data.getExistingSeries()):
+            self.data.update_series_count(self.series_counter_input.value())
+            if (self.data.get_series_count() in self.data.get_existing_series()):
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 0, 0);")
                 self.status_label.setText('Select an unused series number')
                 return  # group already exists, don't send anything
@@ -606,44 +587,44 @@ class ImagingExperimentGUI(QWidget):
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
         # Populate parameters from filled fields
-        self.updateParametersFromFillableFields()
+        self.update_parameters_from_fillable_fields()
 
         # start the epoch run thread:
-        self.runSeriesThread = runSeriesThread(self.epoch_run,
+        self.run_series_thread = runSeriesThread(self.epoch_run,
                                                self.protocol_object,
                                                self.data,
                                                self.client,
                                                save_metadata_flag)
 
-        self.runSeriesThread.finished.connect(lambda: self.runFinished(save_metadata_flag))
-        self.runSeriesThread.started.connect(lambda: self.runStarted(save_metadata_flag))
+        self.run_series_thread.finished.connect(lambda: self.run_finished(save_metadata_flag))
+        self.run_series_thread.started.connect(lambda: self.run_started(save_metadata_flag))
 
-        self.runSeriesThread.start()
+        self.run_series_thread.start()
 
-    def runStarted(self, save_metadata_flag):
+    def run_started(self, save_metadata_flag):
         # Lock the view and run buttons to prevent spinning up multiple threads
-        self.viewButton.setEnabled(False)
-        self.recordButton.setEnabled(False)
+        self.view_button.setEnabled(False)
+        self.record_button.setEnabled(False)
         if save_metadata_flag:
-            self.status_label.setText('Recording series ' + str(self.data.getSeriesCount()))
+            self.status_label.setText('Recording series ' + str(self.data.get_series_count()))
         else:
             self.status_label.setText('Viewing...')
 
-    def runFinished(self, save_metadata_flag):
+    def run_finished(self, save_metadata_flag):
         # re-enable view/record buttons
-        self.viewButton.setEnabled(True)
-        self.recordButton.setEnabled(True)
+        self.view_button.setEnabled(True)
+        self.record_button.setEnabled(True)
 
         self.status_label.setText('Ready')
-        self.pauseButton.setText('Pause')
+        self.pause_button.setText('Pause')
         if save_metadata_flag:
-            self.updateExistingAnimalInput()
+            self.update_existing_animal_input()
             # Advance the series_count:
-            self.data.advanceSeriesCount()
-            self.series_counter_input.setValue(self.data.getSeriesCount())
-            self.populateGroups()
+            self.data.advance_series_count()
+            self.series_counter_input.setValue(self.data.get_series_count())
+            self.populate_groups()
 
-    def updateParametersFromFillableFields(self):
+    def update_parameters_from_fillable_fields(self):
         for key, value in self.run_parameter_input.items():
             if isinstance(self.run_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
@@ -668,10 +649,10 @@ class ImagingExperimentGUI(QWidget):
         # if self.cfg['loco_avail']:
         #     self.data.cfg['do_loco'] = self.loco_checkbox.isChecked() # loco
 
-    def populateGroups(self):
+    def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_dset_dict = h5io.getHierarchy(file_path, additional_exclusions='rois')
-        self._populateTree(self.groupTree, group_dset_dict)
+        group_dset_dict = h5io.get_hierarchy(file_path, additional_exclusions='rois')
+        self._populateTree(self.group_tree, group_dset_dict)
 
     def _populateTree(self, widget, dict):
         widget.clear()
@@ -703,12 +684,12 @@ class ImagingExperimentGUI(QWidget):
             child.setText(0, value)
             item.addChild(child)
 
-    def onTreeItemClicked(self, item, column):
+    def on_tree_item_clicked(self, item, column):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_path = h5io.getPathFromTreeItem(self.groupTree.selectedItems()[0])
+        group_path = h5io.get_path_from_tree_item(self.group_tree.selectedItems()[0])
 
         if group_path != '':
-            attr_dict = h5io.getAttributesFromGroup(file_path, group_path)
+            attr_dict = h5io.get_attributes_from_group(file_path, group_path)
             if 'series' in group_path.split('/')[-1]:
                 editable_values = False  # don't let user edit epoch parameters
             else:
@@ -717,107 +698,105 @@ class ImagingExperimentGUI(QWidget):
 
     def populate_attrs(self, attr_dict=None, editable_values=False):
         """ Populate attribute for currently selected group """
-        self.tableAttributes.blockSignals(True)  # block udpate signals for auto-filled forms
-        self.tableAttributes.setRowCount(0)
-        self.tableAttributes.setColumnCount(2)
-        self.tableAttributes.setSortingEnabled(False)
+        self.table_attributes.blockSignals(True)  # block udpate signals for auto-filled forms
+        self.table_attributes.setRowCount(0)
+        self.table_attributes.setColumnCount(2)
+        self.table_attributes.setSortingEnabled(False)
 
         if attr_dict:
             for num, key in enumerate(attr_dict):
-                self.tableAttributes.insertRow(self.tableAttributes.rowCount())
+                self.table_attributes.insertRow(self.table_attributes.rowCount())
                 key_item = QTableWidgetItem(key)
                 key_item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-                self.tableAttributes.setItem(num, 0, key_item)
+                self.table_attributes.setItem(num, 0, key_item)
 
                 val_item = QTableWidgetItem(str(attr_dict[key]))
                 if editable_values:
                     val_item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled)
                 else:
                     val_item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-                self.tableAttributes.setItem(num, 1, val_item)
+                self.table_attributes.setItem(num, 1, val_item)
 
-        self.tableAttributes.blockSignals(False)
+        self.table_attributes.blockSignals(False)
 
     def update_attrs_to_file(self, item):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
-        group_path = cfg.getPathFromTreeItem(self.groupTree.selectedItems()[0])
+        group_path = h5io.get_path_from_tree_item(self.group_tree.selectedItems()[0])
 
-        attr_key = self.tableAttributes.item(item.row(), 0).text()
+        attr_key = self.table_attributes.item(item.row(), 0).text()
         attr_val = item.text()
 
         # update attr in file
-        cfg.changeAttribute(file_path, group_path, attr_key, attr_val)
+        h5io.change_attribute(file_path, group_path, attr_key, attr_val)
         print('Changed attr {} to = {}'.format(attr_key, attr_val))
 
-    def updateWindowWidth(self):
+    def update_window_width(self):
         self.resize(100, self.height())
         window_width = self.protocol_box.sizeHint().width() + self.protocol_params_scroll_box.verticalScrollBar().sizeHint().width() + 40
         self.resize(window_width, self.height())
 
 # # # Other accessory classes. For data file initialization and threading # # # #
-
-
 class InitializeExperimentGUI(QWidget):
-    def setupUI(self, experimentGuiObject, parent=None):
+    def setupUI(self, experiment_gui_object, parent=None):
         super(InitializeExperimentGUI, self).__init__(parent)
         self.parent = parent
-        self.experimentGuiObject = experimentGuiObject
+        self.experiment_gui_object = experiment_gui_object
         layout = QFormLayout()
 
-        label_FileName = QLabel('File Name:')
+        label_filename = QLabel('File Name:')
         init_now = datetime.now()
         defaultName = init_now.isoformat()[:-16]
-        self.le_FileName = QLineEdit(defaultName)
-        layout.addRow(label_FileName, self.le_FileName)
+        self.le_filename = QLineEdit(defaultName)
+        layout.addRow(label_filename, self.le_filename)
 
-        button_SelectDirectory = QPushButton("Select Directory...", self)
-        button_SelectDirectory.clicked.connect(self.onPressedDirectoryButton)
-        self.le_DataDirectory = QLineEdit(self.experimentGuiObject.data.data_directory)
-        layout.addRow(button_SelectDirectory, self.le_DataDirectory)
+        select_directory_button = QPushButton("Select Directory...", self)
+        select_directory_button.clicked.connect(self.on_pressed_directory_button)
+        self.le_data_directory = QLineEdit(config_tools.get_data_directory(self.experiment_gui_object.cfg))
+        layout.addRow(select_directory_button, self.le_data_directory)
 
-        label_Experimenter = QLabel('Experimenter:')
-        self.le_Experimenter = QLineEdit(self.experimentGuiObject.data.experimenter)
-        layout.addRow(label_Experimenter, self.le_Experimenter)
+        label_experimenter = QLabel('Experimenter:')
+        self.le_experimenter = QLineEdit(config_tools.get_experimenter(self.experiment_gui_object.cfg))
+        layout.addRow(label_experimenter, self.le_experimenter)
 
         self.label_status = QLabel('Enter experiment info')
         layout.addRow(self.label_status)
 
-        enterButton = QPushButton("Enter", self)
-        enterButton.clicked.connect(self.onPressedEnterButton)
-        layout.addRow(enterButton)
+        enter_button = QPushButton("Enter", self)
+        enter_button.clicked.connect(self.on_pressed_enter_button)
+        layout.addRow(enter_button)
 
         self.setLayout(layout)
 
-    def onPressedEnterButton(self):
-        self.experimentGuiObject.data.experiment_file_name = self.le_FileName.text()
-        self.experimentGuiObject.data.data_directory = self.le_DataDirectory.text()
-        self.experimentGuiObject.data.experimenter = self.le_Experimenter.text()
+    def on_pressed_enter_button(self):
+        self.experiment_gui_object.data.experiment_file_name = self.le_filename.text()
+        self.experiment_gui_object.data.data_directory = self.le_data_directory.text()
+        self.experiment_gui_object.data.experimenter = self.le_experimenter.text()
 
-        if os.path.isfile(os.path.join(self.experimentGuiObject.data.data_directory, self.experimentGuiObject.data.experiment_file_name) + '.hdf5'):
+        if os.path.isfile(os.path.join(self.experiment_gui_object.data.data_directory, self.experiment_gui_object.data.experiment_file_name) + '.hdf5'):
            self.label_status.setText('Experiment file already exists!')
-        elif not os.path.isdir(self.experimentGuiObject.data.data_directory):
+        elif not os.path.isdir(self.experiment_gui_object.data.data_directory):
             self.label_status.setText('Data directory does not exist!')
         else:
             self.label_status.setText('Data entered')
-            self.experimentGuiObject.currentExperimentLabel.setText(self.experimentGuiObject.data.experiment_file_name)
-            self.experimentGuiObject.data.initializeExperimentFile()
-            self.experimentGuiObject.series_counter_input.setValue(1)
+            self.experiment_gui_object.current_experiment_label.setText(self.experiment_gui_object.data.experiment_file_name)
+            self.experiment_gui_object.data.initialize_experiment_file()
+            self.experiment_gui_object.series_counter_input.setValue(1)
             self.close()
             self.parent.close()
 
-    def onPressedDirectoryButton(self):
-        if os.path.isdir(self.experimentGuiObject.data.data_directory):
-            filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory", self.experimentGuiObject.data.data_directory))
+    def on_pressed_directory_button(self):
+        if os.path.isdir(self.experiment_gui_object.data.data_directory):
+            filepath = str(QFileDialog.getExistingDirectory(self, "Select Directory", self.experiment_gui_object.data.data_directory))
         else:
-            filePath = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+            filepath = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         
-        self.le_DataDirectory.setText(filePath)
+        self.le_data_directory.setText(filepath)
 
 class InitializeRigGUI(QWidget):
-    def setupUI(self, experimentGuiObject, parent=None):
+    def setupUI(self, experiment_gui_object, parent=None):
         super(InitializeRigGUI, self).__init__(parent)
         self.parent = parent
-        self.experimentGuiObject = experimentGuiObject
+        self.experiment_gui_object = experiment_gui_object
 
         self.cfg_name = None
         self.cfg = None
@@ -828,39 +807,39 @@ class InitializeRigGUI(QWidget):
 
         label_config = QLabel('Config')
         self.config_combobox = QComboBox()
-        self.config_combobox.activated.connect(self.onSelectedConfig)
-        for choiceID in config_tools.getAvailableConfigFiles():
+        self.config_combobox.activated.connect(self.on_selected_config)
+        for choiceID in config_tools.get_available_config_files():
             self.config_combobox.addItem(choiceID)
         self.layout.addRow(label_config, self.config_combobox)
 
         label_rigname = QLabel('Rig Config:')
         self.rig_combobox = QComboBox()
-        self.rig_combobox.activated.connect(self.onSelectedRig)
+        self.rig_combobox.activated.connect(self.on_selected_rig)
         self.layout.addRow(label_rigname, self.rig_combobox)
-        self.updateAvailableRigs()
+        self.update_available_rigs()
 
         self.setLayout(self.layout)
         self.show()
 
-    def updateAvailableRigs(self):
+    def update_available_rigs(self):
         self.rig_combobox.clear()
         for choiceID in self.available_rig_configs:
             self.rig_combobox.addItem(choiceID)
 
-    def onSelectedConfig(self):
+    def on_selected_config(self):
         self.cfg_name = self.config_combobox.currentText()
-        self.cfg = config_tools.getConfigurationFile(self.cfg_name)
-        self.available_rig_configs = config_tools.getAvailableRigConfigs(self.cfg)
-        self.updateAvailableRigs()
+        self.cfg = config_tools.get_configuration_file(self.cfg_name)
+        self.available_rig_configs = config_tools.get_available_rig_configs(self.cfg)
+        self.update_available_rigs()
         self.show()
 
-    def onSelectedRig(self):
+    def on_selected_rig(self):
         # Store the rig and cfg names in the cfg dict
         self.cfg['current_rig_name'] = self.rig_combobox.currentText()
         self.cfg['current_cfg_name'] = self.cfg_name
 
         # Pass cfg up to experiment GUI object
-        self.experimentGuiObject.cfg = self.cfg
+        self.experiment_gui_object.cfg = self.cfg
 
         self.close()
         self.parent.close()
@@ -880,14 +859,14 @@ class runSeriesThread(QThread):
     def __del__(self):
         self.wait()
 
-    def _sendRun(self):
-        self.epoch_run.startRun(self.protocol_object, self.data, self.client, save_metadata_flag=self.save_metadata_flag)
+    def _send_run(self):
+        self.epoch_run.start_run(self.protocol_object, self.data, self.client, save_metadata_flag=self.save_metadata_flag)
 
     def run(self):
-        self._sendRun()
+        self._send_run()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = ImagingExperimentGUI()
+    ex = ExperimentGUI()
     sys.exit(app.exec())

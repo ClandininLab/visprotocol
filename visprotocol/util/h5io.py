@@ -2,13 +2,13 @@ import h5py
 import numpy as np
 
 # H5io fxns
-def getHierarchy(file_path, additional_exclusions=None):
+def get_hierarchy(file_path, additional_exclusions=None):
     with h5py.File(file_path, 'r') as experiment_file:
         hierarchy = recursively_load_dict_contents_from_group(experiment_file, '/', additional_exclusions=additional_exclusions)
     return hierarchy
 
 
-def getPathFromTreeItem(tree_item):
+def get_path_from_tree_item(tree_item):
     path = tree_item.text(0)
     parent = tree_item.parent()
     while parent is not None:
@@ -17,7 +17,7 @@ def getPathFromTreeItem(tree_item):
     path = '/' + path
     return path
 
-def getAttributesFromGroup(file_path, group_path):
+def get_attributes_from_group(file_path, group_path):
     # see https://github.com/CCampJr/LazyHDF5
     with h5py.File(file_path, 'r+') as experiment_file:
         group = experiment_file[group_path]
@@ -26,7 +26,7 @@ def getAttributesFromGroup(file_path, group_path):
             attr_dict[at] = group.attrs[at]
         return attr_dict
 
-def changeAttribute(file_path, group_path, attr_key, attr_val):
+def change_attribute(file_path, group_path, attr_key, attr_val):
     # see https://github.com/CCampJr/LazyHDF5
     # TODO: try to keep the type the same?
     with h5py.File(file_path, 'r+') as experiment_file:

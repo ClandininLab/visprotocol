@@ -11,7 +11,7 @@ class BaseClient():
         self.cfg = cfg
 
         # # # Load server options from config file and selections # # #
-        self.server_options = config_tools.getServerOptions(self.cfg)
+        self.server_options = config_tools.get_server_options(self.cfg)
 
          # # # Init the trigger device based on cfg # # #
          # TODO put this in config_tools

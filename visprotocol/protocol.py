@@ -28,25 +28,25 @@ class BaseProtocol():
         self.parameter_preset_directory = os.path.curdir
         self.send_ttl = False
         self.convenience_parameters = {}
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
-        self.loadParameterPresets()
+        self.get_run_parameter_defaults()
+        self.get_parameter_defaults()
+        self.load_parameter_presets()
         self.save_metadata_flag = False
 
-        self.parameter_preset_directory = config_tools.getParameterPresetDirectory(self.cfg)
+        self.parameter_preset_directory = config_tools.get_parameter_preset_directory(self.cfg)
         os.makedirs(self.parameter_preset_directory, exist_ok=True)
 
         # Rig-specific screen center
-        self.screen_center = config_tools.getScreenCenter(self.cfg)
+        self.screen_center = config_tools.get_screen_center(self.cfg)
 
-    def adjustCenter(self, relative_center):
+    def adjust_center(self, relative_center):
         absolute_center = [sum(x) for x in zip(relative_center, self.screen_center)]
         return absolute_center
 
-    def getEpochParameters(self):
+    def get_epoch_parameters(self):
         pass
 
-    def getRunParameterDefaults(self):
+    def get_run_parameter_defaults(self):
         self.run_parameters = {'protocol_ID': '',
                                'num_epochs': 5,
                                'pre_time': 1.0,
@@ -54,10 +54,10 @@ class BaseProtocol():
                                'tail_time': 1.0,
                                'idle_color': 0.5}
 
-    def getParameterDefaults(self):
+    def get_parameter_defaults(self):
         self.protocol_parameters = {}
 
-    def loadParameterPresets(self):
+    def load_parameter_presets(self):
         fname = os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID']) + '.yaml'
         if os.path.isfile(fname):
             with open(fname, 'r') as ymlfile:
@@ -65,26 +65,26 @@ class BaseProtocol():
         else:
             self.parameter_presets = {}
 
-    def updateParameterPresets(self, name):
-        self.loadParameterPresets()
+    def update_parameter_presets(self, name):
+        self.load_parameter_presets()
         new_preset = {'run_parameters': self.run_parameters,
                       'protocol_parameters': self.protocol_parameters}
         self.parameter_presets[name] = new_preset
         with open(os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID'] + '.yaml'), 'w+') as ymlfile:
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
-    def selectProtocolPreset(self, name):
+    def select_protocol_preset(self, name):
         if name in self.parameter_presets:
             self.run_parameters = self.parameter_presets[name]['run_parameters']
             self.protocol_parameters = self.parameter_presets[name]['protocol_parameters']
         else:
-            self.getRunParameterDefaults()
-            self.getParameterDefaults()
+            self.get_run_parameter_defaults()
+            self.get_parameter_defaults()
 
-    def advanceEpochCounter(self):
+    def advance_epoch_counter(self):
         self.num_epochs_completed += 1
 
-    def loadStimuli(self, client, multicall=None):
+    def load_stimuli(self, client, multicall=None):
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
 
@@ -99,7 +99,7 @@ class BaseProtocol():
 
         multicall()
 
-    def startStimuli(self, client, append_stim_frames=False, print_profile=True, multicall=None):
+    def start_stimuli(self, client, append_stim_frames=False, print_profile=True, multicall=None):
         # pre time
         sleep(self.run_parameters['pre_time'])
         
@@ -120,7 +120,7 @@ class BaseProtocol():
 
         sleep(self.run_parameters['tail_time'])
 # %% Convenience methods
-    def selectParametersFromLists(self, parameter_list, all_combinations=True, randomize_order=False):
+    def select_parameters_from_lists(self, parameter_list, all_combinations=True, randomize_order=False):
         """
         inputs
         parameter_list can be:
@@ -173,25 +173,25 @@ class BaseProtocol():
 
         return current_parameters
     
-    def getMovingSpotParameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
+    def get_moving_spot_parameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
         if center is None: center = self.protocol_parameters['center']
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
         if radius is None: radius = self.protocol_parameters['radius']
         if color is None: color = self.protocol_parameters['color']
 
-        center = self.adjustCenter(center)
+        center = self.adjust_center(center)
 
-        centerX = center[0]
-        centerY = center[1]
+        center_x = center[0]
+        center_y = center[1]
         stim_time = self.run_parameters['stim_time']
         if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
             distance_to_travel = speed * stim_time
             # trajectory just has two points, at time=0 and time=stim_time
-            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            startX = (0, center_x - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, center_x + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, center_y - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, center_y + np.sin(np.radians(angle)) * distance_to_travel/2)
             x = [startX, endX]
             y = [startY, endY]
 
@@ -204,16 +204,16 @@ class BaseProtocol():
             else:
                 hang_time = (stim_time - travel_time)/2
 
-            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
-            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_3 = (stim_time-hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_4 = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            # split up hang time in pre and post such that trajectory always hits center_x,center_y at stim_time/2
+            x_1 = (0, center_x - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, center_x - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (stim_time-hang_time, center_x + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (stim_time, center_x + np.cos(np.radians(angle)) * distance_to_travel/2)
 
-            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_3 = (stim_time-hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_4 = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_1 = (0, center_y - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, center_y - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (stim_time-hang_time, center_y + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (stim_time, center_y + np.sin(np.radians(angle)) * distance_to_travel/2)
 
             x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
@@ -242,11 +242,11 @@ class DriftingSquareGrating(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
+        self.get_run_parameter_defaults()
+        self.get_parameter_defaults()
 
-    def getEpochParameters(self):
-        current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+    def get_epoch_parameters(self):
+        current_angle = self.select_parameters_from_lists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
 
         self.epoch_parameters = {'name': 'RotatingGrating',
                                  'period': self.protocol_parameters['period'],
@@ -264,9 +264,9 @@ class DriftingSquareGrating(BaseProtocol):
         self.convenience_parameters = {'current_angle': current_angle}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
-                                'center': self.adjustCenter(self.protocol_parameters['center'])}
+                                'center': self.adjust_center(self.protocol_parameters['center'])}
 
-    def getParameterDefaults(self):
+    def get_parameter_defaults(self):
         self.protocol_parameters = {'period': 20.0,
                                     'rate': 20.0,
                                     'contrast': 1.0,
@@ -276,7 +276,7 @@ class DriftingSquareGrating(BaseProtocol):
                                     'center_size': 180.0,
                                     'randomize_order': True}
 
-    def getRunParameterDefaults(self):
+    def get_run_parameter_defaults(self):
         self.run_parameters = {'protocol_ID': 'DriftingSquareGrating',
                                'num_epochs': 40,
                                'pre_time': 1.0,
@@ -293,21 +293,21 @@ class MovingSpot(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
+        self.get_run_parameter_defaults()
+        self.get_parameter_defaults()
 
-    def getEpochParameters(self):
-        current_diameter, current_intensity, current_speed = self.selectParametersFromLists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity'], self.protocol_parameters['speed']), randomize_order=self.protocol_parameters['randomize_order'])
+    def get_epoch_parameters(self):
+        current_diameter, current_intensity, current_speed = self.select_parameters_from_lists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity'], self.protocol_parameters['speed']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        self.epoch_parameters = self.getMovingSpotParameters(radius=current_diameter/2,
-                                                             color=current_intensity,
-                                                             speed=current_speed)
+        self.epoch_parameters = self.get_moving_spot_parameters(radius=current_diameter/2,
+                                                                color=current_intensity,
+                                                                speed=current_speed)
 
         self.convenience_parameters = {'current_diameter': current_diameter,
                                        'current_intensity': current_intensity,
                                        'current_speed': current_speed}
 
-    def getParameterDefaults(self):
+    def get_parameter_defaults(self):
         self.protocol_parameters = {'diameter': [5, 10, 15, 20, 25, 30],
                                     'intensity': [0.0, 1.0],
                                     'center': [0, 0],
@@ -315,12 +315,10 @@ class MovingSpot(BaseProtocol):
                                     'angle': 0.0,
                                     'randomize_order': True}
 
-    def getRunParameterDefaults(self):
+    def get_run_parameter_defaults(self):
         self.run_parameters = {'protocol_ID': 'ExpandingMovingSpot',
                                'num_epochs': 70,
                                'pre_time': 0.5,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-
-# %%
