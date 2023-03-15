@@ -2,21 +2,22 @@ import os
 import glob
 import  importlib.resources
 import yaml
+import sys
 
 import visprotocol
 
-def get_config_directory():
-    cfg_dir_path = importlib.resources.files(visprotocol).joinpath('path_to_config_dir.txt').open('r').read()
+def get_lab_package_directory():
+    cfg_dir_path = importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt').open('r').read()
 
     # TODO handle no .txt file found
     return cfg_dir_path
 
 def get_available_config_files():
-    cfg_names = [os.path.split(f)[1] for f in glob.glob(os.path.join(get_config_directory(), '*.yaml'))]
+    cfg_names = [os.path.split(f)[1] for f in glob.glob(os.path.join(get_lab_package_directory(), '*.yaml'))]
     return cfg_names
 
 def get_configuration_file(cfg_name):
-     with open(os.path.join(get_config_directory(), cfg_name), 'r') as ymlfile:
+     with open(os.path.join(get_lab_package_directory(), cfg_name), 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
      return cfg
 
@@ -26,9 +27,35 @@ def get_available_rig_configs(cfg):
 def get_parameter_preset_directory(cfg):
     presets_dir = cfg.get('parameter_presets_dir', None)
     if presets_dir is not None:
-        return os.path.join(get_config_directory(), presets_dir)
+        return os.path.join(get_lab_package_directory(), presets_dir)
     else:
         raise Exception('You must define a parameter preset directory in your config file')
+
+def get_path_to_module(cfg, module_name):
+    module_path = cfg.get('module_paths', None).get(module_name, None)
+    if module_path is not None:
+        out_path = os.path.join(get_lab_package_directory(), module_path)
+        if os.path.exists(out_path):
+            return out_path
+        else:
+            raise Exception('User defined protocols module not found at {}, check your config file'.format(out_path))
+    else:
+        return None
+
+def load_user_module(cfg, module_name):
+
+    path_to_module = get_path_to_module(cfg, module_name)
+    if path_to_module is None:
+        print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format(module_name))
+        return None
+    else:
+        spec = importlib.util.spec_from_file_location(module_name, path_to_module)
+        loaded_mod = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = loaded_mod
+        spec.loader.exec_module(loaded_mod)
+
+        print('Loaded {} module from {}'.format(module_name, path_to_module))
+        return loaded_mod
 
 def get_screen_center(cfg):
     if 'current_rig_name' in cfg:

@@ -9,13 +9,14 @@ from visprotocol.util import config_tools
 class BaseClient():
     def __init__(self, cfg):
         self.cfg = cfg
+        self.trigger_device_definition = None
 
         # # # Load server options from config file and selections # # #
         self.server_options = config_tools.get_server_options(self.cfg)
 
          # # # Init the trigger device based on cfg # # #
          # TODO put this in config_tools
-        self.trigger_device_definition = cfg['rig_config'][cfg.get('current_rig_name')]['devices'].get('trigger', None)
+        # self.trigger_device_definition = cfg['rig_config'][cfg.get('current_rig_name')]['devices'].get('trigger', None)
 
         if self.trigger_device_definition is None:
             self.trigger_device = None

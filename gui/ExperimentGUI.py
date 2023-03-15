@@ -8,6 +8,7 @@ Created on Thu Jun 21 10:51:42 2018
 from datetime import datetime
 import os
 import sys
+import importlib
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
@@ -19,7 +20,7 @@ import PyQt5.QtGui as QtGui
 
 from visprotocol.util import config_tools, h5io
 from visprotocol.control import EpochRun
-from visprotocol import protocol, client, data
+from visprotocol import protocol, data, client
 
 
 class ExperimentGUI(QWidget):
@@ -39,18 +40,29 @@ class ExperimentGUI(QWidget):
         dialog.setFixedSize(200, 200)
         dialog.exec()
 
-
-        # get a protocol, just start with the base class until user selects one
-        self.protocol_object =  protocol.BaseProtocol(self.cfg) 
-        # get available protocol classes
-        self.available_protocols =  protocol.BaseProtocol.__subclasses__()
+        # Get the protocol object
+        user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
+        if user_protocol_module is not None:
+            self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)
+            self.available_protocols =  user_protocol_module.BaseProtocol.__subclasses__()
+        else:   # use the built-in
+            self.protocol_object =  protocol.BaseProtocol(self.cfg)
+            self.available_protocols =  protocol.BaseProtocol.__subclasses__()
 
         # start a client
-        self.client = client.BaseClient(self.cfg)
+        user_client_module = config_tools.load_user_module(self.cfg, 'client')
+        if user_client_module is not None:
+            self.client = user_client_module.Client(self.cfg)
+        else:  # use the built-in
+            self.client = client.BaseClient(self.cfg)
 
         # start a data object
-        self.data = data.BaseData(self.cfg)
-
+        user_data_module = config_tools.load_user_module(self.cfg, 'data')
+        if user_data_module is not None:
+            self.data = user_data_module.Data(self.cfg)
+        else:  # use the built-in
+            self.data = data.BaseData(self.cfg)
+        
         # get an epoch run object
         self.epoch_run = EpochRun()
 
