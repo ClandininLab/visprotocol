@@ -6,10 +6,10 @@ effector_choices: [CsChrimson, Kir2.1, Shi, GtACR]
 
 rig_config:
   40HrFitness:
-    data_directory: /home/clandinin/Niyathi/fortyhr_data
+    data_directory: /home/clandinin/niyathi/fortyhr_data
     screen_center: [0, 0]
     rig: 40HrFitness
-    server_data_directory: /home/clandinin/Niyathi/visprotocol/fictrac
+    server_data_directory: /home/clandinin/niyathi/fortyhr_data/vp_data/fictrac
     locomotion: True
 
   24HrFitness:
