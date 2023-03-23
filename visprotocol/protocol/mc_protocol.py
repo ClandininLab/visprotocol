@@ -207,10 +207,10 @@ class OcclusionDuration(BaseProtocol):
                             surface_dim_name: occluder_surface_radius}
 
         self.epoch_parameters = [obj_parameters, occluder_parameters]
-        self.convenience_parameters['current_stim_duration'] = stim_duration
+        self.convenience_parameters['current_stim_time'] = stim_duration
 
     def loadStimuli(self, client, multicall=None):
-        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_time']
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
@@ -385,13 +385,13 @@ class OcclusionShape(BaseProtocol):
                             surface_dim_name: occluder_surface_radius}        
         
         self.epoch_parameters = [obj_parameters, occluder_parameters]
-        self.convenience_parameters['current_stim_duration'] = stim_duration
+        self.convenience_parameters['current_stim_time'] = stim_duration
 
         # opto
         self.convenience_parameters['current_opto_stim_time'] = stim_duration + self.run_parameters['pre_time'] - self.convenience_parameters['current_opto_pre_time']
 
     def loadStimuli(self, client, multicall=None):
-        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_duration']
+        self.run_parameters['stim_time'] = self.convenience_parameters['current_stim_time']
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
