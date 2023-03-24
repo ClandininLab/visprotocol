@@ -40,7 +40,6 @@ class ExperimentGUI(QWidget):
         dialog.setFixedSize(200, 200)
         dialog.exec()
 
-        # Get the protocol object
         user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
         if user_protocol_module is not None:
             self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)

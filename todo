@@ -10,6 +10,7 @@ data: client bucket. Is this for something? Maybe save out current cfg settings?
 
 Example lab package:
     - Point to user protocols instead of lab?
+    - Pointer to devices, load list of modules
 
 
 - Comment code

@@ -44,7 +44,8 @@ class BaseProtocol():
         return absolute_center
 
     def get_epoch_parameters(self):
-        pass
+        print('Warning: get_epoch_parameters() method needs to be overwritten by child class definition')
+        self.epoch_parameters = None
 
     def get_run_parameter_defaults(self):
         self.run_parameters = {'protocol_ID': '',
