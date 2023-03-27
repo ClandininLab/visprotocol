@@ -404,18 +404,18 @@ class UniformFlash(BaseProtocol):
         self.convenience_parameters = {'current_intensity': current_intensity}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'height': 120.0,
-                                    'width': 120.0,
+        self.protocol_parameters = {'height': 240.0,
+                                    'width': 240.0,
                                     'center': [0, 0],
-                                    'intensity': [1.0, 0.0],
-                                    'randomize_order': True}
+                                    'intensity': [1.0], # [1.0, 0.0],
+                                    'randomize_order': False}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'UniformFlash',
-                               'num_epochs': 10,
-                               'pre_time': 1.0,
+                               'num_epochs': 50,
+                               'pre_time': 2.0,
                                'stim_time': 0.5,
-                               'tail_time': 1.0,
+                               'tail_time': 3.5,
                                'idle_color': 0.5}
 # %%
 
