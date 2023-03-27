@@ -1,0 +1,83 @@
+? ''
+: run_parameters:
+    protocol_ID: ExpandingEdges
+    num_epochs: 400.0
+    pre_time: 1.0
+    stim_time: 0.8
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    period: 40.0
+    rate:
+    - -80.0
+    - 80.0
+    vert_extent: 80.0
+    theta_offset: 0.0
+    light_color: 1.0
+    dark_color: 0.0
+    expand_dark:
+    - 0.0
+    - 1.0
+    width_0: 2.0
+    hold_duration: 0.55
+    n_theta_pixels: 5760.0
+    center:
+    - 0.0
+    - 0.0
+    randomize_order: true
+JV_OMR_v1:
+  run_parameters:
+    protocol_ID: ExpandingEdges
+    num_epochs: 400.0
+    pre_time: 1.0
+    stim_time: 0.75
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    period: 40.0
+    rate:
+    - -80.0
+    - 80.0
+    vert_extent: 80.0
+    theta_offset: 0.0
+    light_color: 1.0
+    dark_color: 0.0
+    expand_dark:
+    - 0.0
+    - 1.0
+    width_0: 2.0
+    hold_duration: 0.5
+    n_theta_pixels: 5760.0
+    center:
+    - 0.0
+    - 0.0
+    randomize_order: true
+JV_OMR_v2:
+  run_parameters:
+    protocol_ID: ExpandingEdges
+    num_epochs: 400.0
+    pre_time: 1.0
+    stim_time: 0.75
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    period: 60.0
+    rate:
+    - -60.0
+    - 60.0
+    vert_extent: 170.0
+    light_color: 1.0
+    dark_color: 0.0
+    expand_dark:
+    - 0.0
+    - 1.0
+    width_0: 30.0
+    hold_duration: 0.5
+    n_theta_pixels: 5760.0
+    center:
+    - 0.0
+    - 0.0
+    theta_offset:
+    - 0.0
+    theta_offset_random: true
+    randomize_order: true
