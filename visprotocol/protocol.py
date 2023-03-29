@@ -34,7 +34,8 @@ class BaseProtocol():
         self.save_metadata_flag = False
 
         self.parameter_preset_directory = config_tools.get_parameter_preset_directory(self.cfg)
-        os.makedirs(self.parameter_preset_directory, exist_ok=True)
+        if self.parameter_preset_directory is not None:
+            os.makedirs(self.parameter_preset_directory, exist_ok=True)
 
         # Rig-specific screen center
         self.screen_center = config_tools.get_screen_center(self.cfg)

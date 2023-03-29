@@ -33,36 +33,66 @@ class ExperimentGUI(QWidget):
         # self.ignore_warnings = False  # TODO does this do anything?
 
         # user input to select configuration file and rig name
-        # sets self.cfg, self.cfg_name, and self.rig_name
-        dialog = QDialog()
-        dialog.ui = InitializeRigGUI(parent=dialog)
-        dialog.ui.setupUI(self, dialog)
-        dialog.setFixedSize(200, 200)
-        dialog.exec()
+        # sets self.cfg
+        if len(config_tools.get_available_config_files()) > 0:
+            dialog = QDialog()
+            dialog.ui = InitializeRigGUI(parent=dialog)
+            dialog.ui.setupUI(self, dialog)
+            dialog.setFixedSize(200, 200)
+            dialog.exec()
+        else:
+            self.cfg = config_tools.get_default_config()
+            print('!!! No user configuration files found. Check your path_to_lab_package.txt and that there exists a configs directory !!!')
 
         print('# # # Loading protocol, data and client modules # # #')
-
-        user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
-        if user_protocol_module is not None:
+        if config_tools.user_module_exists(self.cfg, 'protocol'):
+            user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
             self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)
             self.available_protocols =  user_protocol_module.BaseProtocol.__subclasses__()
         else:   # use the built-in
+            print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format('protocol'))
             self.protocol_object =  protocol.BaseProtocol(self.cfg)
             self.available_protocols =  protocol.BaseProtocol.__subclasses__()
 
         # start a data object
-        user_data_module = config_tools.load_user_module(self.cfg, 'data')
-        if user_data_module is not None:
+        if config_tools.user_module_exists(self.cfg, 'data'):
+            user_data_module = config_tools.load_user_module(self.cfg, 'data')
             self.data = user_data_module.Data(self.cfg)
         else:  # use the built-in
+            print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format('data'))
             self.data = data.BaseData(self.cfg)
 
-        # start a client
-        user_client_module = config_tools.load_user_module(self.cfg, 'client')
-        if user_client_module is not None:
+         # start a client
+        if config_tools.user_module_exists(self.cfg, 'client'):
+            user_client_module = config_tools.load_user_module(self.cfg, 'client')
             self.client = user_client_module.Client(self.cfg)
         else:  # use the built-in
+            print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format('client'))
             self.client = client.BaseClient(self.cfg)
+
+    
+#  #######
+#         user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
+#         if user_protocol_module is not None:
+#             self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)
+#             self.available_protocols =  user_protocol_module.BaseProtocol.__subclasses__()
+#         else:   # use the built-in
+#             self.protocol_object =  protocol.BaseProtocol(self.cfg)
+#             self.available_protocols =  protocol.BaseProtocol.__subclasses__()
+
+#         # start a data object
+#         user_data_module = config_tools.load_user_module(self.cfg, 'data')
+#         if user_data_module is not None:
+#             self.data = user_data_module.Data(self.cfg)
+#         else:  # use the built-in
+#             self.data = data.BaseData(self.cfg)
+
+#         # start a client
+#         user_client_module = config_tools.load_user_module(self.cfg, 'client')
+#         if user_client_module is not None:
+#             self.client = user_client_module.Client(self.cfg)
+#         else:  # use the built-in
+#             self.client = client.BaseClient(self.cfg)
 
         # get an epoch run object
         self.epoch_run = EpochRun()
@@ -229,20 +259,14 @@ class ExperimentGUI(QWidget):
         self.animal_metadata_inputs = {}
         ct = 0
         for key in self.cfg['animal_metadata']:
-            if key == 'transgenes':
-                pass
-            else:
-                ct += 1
-                new_label = QLabel(key)
-                new_input = QComboBox()
-                for choiceID in self.cfg['animal_metadata'][key]:
-                    new_input.addItem(choiceID)
-                self.data_form.addRow(new_label, new_input)
+            ct += 1
+            new_label = QLabel(key)
+            new_input = QComboBox()
+            for choiceID in self.cfg['animal_metadata'][key]:
+                new_input.addItem(choiceID)
+            self.data_form.addRow(new_label, new_input)
 
-                self.animal_metadata_inputs[key] = new_input
-            
-        new_label = QLabel('Transgenes')
-        self.data_form.addRow(new_label)
+            self.animal_metadata_inputs[key] = new_input
 
         # Create animal button
         create_animal_button = QPushButton("Create animal", self)
@@ -782,7 +806,7 @@ class InitializeRigGUI(QWidget):
         self.cfg_name = None
         self.cfg = None
         self.available_rig_configs = []
-
+    
         self.layout = QFormLayout()
         self.resize(200, 400)
 
@@ -800,6 +824,7 @@ class InitializeRigGUI(QWidget):
         self.update_available_rigs()
 
         self.setLayout(self.layout)
+
         self.show()
 
     def update_available_rigs(self):

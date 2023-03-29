@@ -7,23 +7,56 @@ import sys
 import visprotocol
 
 def get_lab_package_directory():
-    with open(importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt')) as path_file:
-        cfg_dir_path = path_file.read()
+    path_to_lab_package = importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt')
+    if not os.path.exists(path_to_lab_package):
+        print('No path_to_lab_package.txt found!')
+        print('Creating new file at path_to_lab_package - please fill this in with your lab package path to use user-defined configuration and module files')
+        with open(path_to_lab_package, "w") as text_file:
+            text_file.write('/path/to/lab/package')
 
+    with open(path_to_lab_package) as path_file:
+            cfg_dir_path = path_file.read()
 
-    # cfg_dir_path = importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt').open('r').read()
-
-    # TODO handle no .txt file found
     return cfg_dir_path
 
+# %% Functions for finding and loading user configuration files
+
+def get_default_config():
+    return {'experimenter': 'JohnDoe',
+            'animal_metadata': {},
+            'current_rig_name': 'default',
+            'current_cfg_name': 'default',
+            'rig_config' : {'default': {'screen_center': [0, 0]
+                                        }
+                            }
+            }
+
+def user_config_directory_exists():
+    if os.path.exists(os.path.join(get_lab_package_directory(), 'configs')):
+        return True
+    else:
+        return False
+
 def get_available_config_files():
-    cfg_names = [os.path.split(f)[1] for f in glob.glob(os.path.join(get_lab_package_directory(), 'configs', '*.yaml'))]
+    if user_config_directory_exists() is True:
+        cfg_names = [os.path.split(f)[1] for f in glob.glob(os.path.join(get_lab_package_directory(), 'configs', '*.yaml'))]
+    else:
+        cfg_names = []
+        
     return cfg_names
 
+
 def get_configuration_file(cfg_name):
-     with open(os.path.join(get_lab_package_directory(), 'configs', cfg_name), 'r') as ymlfile:
-        cfg = yaml.safe_load(ymlfile)
-     return cfg
+    """Returns config, as dictionary, from  lab_package_directory/configs/ based on cfg_name.yaml"""
+    if os.path.exists(os.path.join(get_lab_package_directory(), 'configs', cfg_name)):
+        with open(os.path.join(get_lab_package_directory(), 'configs', cfg_name), 'r') as ymlfile:
+            cfg = yaml.safe_load(ymlfile)
+    else:
+        cfg = get_default_config()
+
+    return cfg
+
+# %% Functions for pulling stuff out of the config dictionary
 
 def get_available_rig_configs(cfg):
     return list(cfg.get('rig_config').keys())
@@ -33,26 +66,42 @@ def get_parameter_preset_directory(cfg):
     if presets_dir is not None:
         return os.path.join(get_lab_package_directory(), presets_dir)
     else:
-        raise Exception('You must define a parameter preset directory in your config file')
+        print('!!! No parameter preset directory is defined by configuration file !!!')
+        return os.getcwd()
+        
+
+# %% Functions for finding and loading user-defined modules
 
 def get_path_to_module(cfg, module_name):
-    module_path = cfg.get('module_paths', None).get(module_name, None)
-    if module_path is not None:
-        out_path = os.path.join(get_lab_package_directory(), module_path)
-        if os.path.exists(out_path):
-            return out_path
-        else:
-            raise Exception('User defined protocols module not found at {}, check your config file'.format(out_path))
-    else:
+    """Returns full path to user defined module as specified in cfg file"""
+
+    module_paths_entry = cfg.get('module_paths', None)
+    if module_paths_entry is None:
         return None
+    else:
+        module_path = module_paths_entry.get(module_name, None)
+
+    if module_path is None:
+        return None
+    else:
+        full_module_path = os.path.join(get_lab_package_directory(), module_path)
+
+    return full_module_path
+    
+def user_module_exists(cfg, module_name):
+    """Checks whether specified user module is defined and exists on this machine. Returns True/False."""
+
+    full_module_path = get_path_to_module(cfg, module_name)
+    if full_module_path is None:
+        return False
+    else:
+        return os.path.exists(full_module_path)
+
 
 def load_user_module(cfg, module_name):
-
-    path_to_module = get_path_to_module(cfg, module_name)
-    if path_to_module is None:
-        print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format(module_name))
-        return None
-    else:
+    """Imports user defined module and returns the loaded package."""
+    if user_module_exists(cfg, module_name):
+        path_to_module = get_path_to_module(cfg, module_name)
         spec = importlib.util.spec_from_file_location(module_name, path_to_module)
         loaded_mod = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = loaded_mod
@@ -60,21 +109,25 @@ def load_user_module(cfg, module_name):
 
         print('Loaded {} module from {}'.format(module_name, path_to_module))
         return loaded_mod
+    else:
+        return None
+    
 
 def load_trigger_device(cfg):
-    # load device modules
+    """Loads trigger device specified in rig config from the user daq module """
     daq = load_user_module(cfg, 'daq')
-
     # fetch the trigger device definition from the config
-    trigger_device_definition = cfg['rig_config'][cfg.get('current_rig_name')]['devices'].get('trigger', None)
+    trigger_device_definition = cfg.get('rig_config')[cfg.get('current_rig_name')].get('trigger', None)
 
-    if trigger_device_definition is None:
-        trigger_device = None
+    if daq is None or trigger_device_definition is None:
+        print('No trigger device defined')
+        return None
     else:
-        # eval the trigger device definition to make it
         trigger_device = eval('daq.{}'.format(trigger_device_definition))
+        print('Loaded trigger device from {}.{}'.format(get_path_to_module(cfg, 'daq'), trigger_device_definition))
+        return trigger_device
 
-    return trigger_device
+# %%
 
 def get_screen_center(cfg):
     if 'current_rig_name' in cfg:

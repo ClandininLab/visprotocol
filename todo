@@ -11,6 +11,8 @@ data: client bucket. Is this for something? Maybe save out current cfg settings?
 Example lab package:
     - Pointer to devices
 
+- Default config etc for being able to run just vp by itself, with no lab package
+- If lab/user stuff is there, then add or replace the base with it
 
 - Comment code
 - readme for install
