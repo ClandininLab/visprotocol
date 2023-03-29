@@ -76,6 +76,7 @@ class EpochRun():
 
         # Send triggering TTL through the DAQ device (if device is set)
         if client.trigger_device is not None:
+            print("Triggering acquisition devices.")
             client.trigger_device.send_trigger()
 
         client.manager.print_on_server(f'Epoch {protocol_object.num_epochs_completed}')

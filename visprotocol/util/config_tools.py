@@ -1,23 +1,27 @@
 import os
 import glob
-import  importlib.resources
+import importlib.resources
 import yaml
 import sys
 
 import visprotocol
 
 def get_lab_package_directory():
-    cfg_dir_path = importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt').open('r').read()
+    with open(importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt')) as path_file:
+        cfg_dir_path = path_file.read()
+
+
+    # cfg_dir_path = importlib.resources.files(visprotocol).joinpath('path_to_lab_package.txt').open('r').read()
 
     # TODO handle no .txt file found
     return cfg_dir_path
 
 def get_available_config_files():
-    cfg_names = [os.path.split(f)[1] for f in glob.glob(os.path.join(get_lab_package_directory(), '*.yaml'))]
+    cfg_names = [os.path.split(f)[1] for f in glob.glob(os.path.join(get_lab_package_directory(), 'configs', '*.yaml'))]
     return cfg_names
 
 def get_configuration_file(cfg_name):
-     with open(os.path.join(get_lab_package_directory(), cfg_name), 'r') as ymlfile:
+     with open(os.path.join(get_lab_package_directory(), 'configs', cfg_name), 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
      return cfg
 
@@ -56,6 +60,21 @@ def load_user_module(cfg, module_name):
 
         print('Loaded {} module from {}'.format(module_name, path_to_module))
         return loaded_mod
+
+def load_trigger_device(cfg):
+    # load device modules
+    daq = load_user_module(cfg, 'daq')
+
+    # fetch the trigger device definition from the config
+    trigger_device_definition = cfg['rig_config'][cfg.get('current_rig_name')]['devices'].get('trigger', None)
+
+    if trigger_device_definition is None:
+        trigger_device = None
+    else:
+        # eval the trigger device definition to make it
+        trigger_device = eval('daq.{}'.format(trigger_device_definition))
+
+    return trigger_device
 
 def get_screen_center(cfg):
     if 'current_rig_name' in cfg:

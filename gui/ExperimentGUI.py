@@ -40,6 +40,8 @@ class ExperimentGUI(QWidget):
         dialog.setFixedSize(200, 200)
         dialog.exec()
 
+        print('# # # Loading protocol, data and client modules # # #')
+
         user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
         if user_protocol_module is not None:
             self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)
@@ -48,6 +50,13 @@ class ExperimentGUI(QWidget):
             self.protocol_object =  protocol.BaseProtocol(self.cfg)
             self.available_protocols =  protocol.BaseProtocol.__subclasses__()
 
+        # start a data object
+        user_data_module = config_tools.load_user_module(self.cfg, 'data')
+        if user_data_module is not None:
+            self.data = user_data_module.Data(self.cfg)
+        else:  # use the built-in
+            self.data = data.BaseData(self.cfg)
+
         # start a client
         user_client_module = config_tools.load_user_module(self.cfg, 'client')
         if user_client_module is not None:
@@ -55,15 +64,11 @@ class ExperimentGUI(QWidget):
         else:  # use the built-in
             self.client = client.BaseClient(self.cfg)
 
-        # start a data object
-        user_data_module = config_tools.load_user_module(self.cfg, 'data')
-        if user_data_module is not None:
-            self.data = user_data_module.Data(self.cfg)
-        else:  # use the built-in
-            self.data = data.BaseData(self.cfg)
-        
         # get an epoch run object
         self.epoch_run = EpochRun()
+
+
+        print('# # # # # # # # # # # # # # # #')
 
         self.initUI()
 

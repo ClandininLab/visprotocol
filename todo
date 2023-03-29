@@ -9,8 +9,7 @@ data: client bucket. Is this for something? Maybe save out current cfg settings?
 - re-incorporate locomotion stuff. Is it enough to have a dedicated keyword param in the protocol?
 
 Example lab package:
-    - Point to user protocols instead of lab?
-    - Pointer to devices, load list of modules
+    - Pointer to devices
 
 
 - Comment code
