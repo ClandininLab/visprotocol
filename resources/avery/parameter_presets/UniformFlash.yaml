@@ -16,3 +16,37 @@ FullFieldFlash:
     - 1.0
     - 0.0
     randomize_order: true
+Mi1_Mapping:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 1.0
+    stim_time: 0.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 80.0
+    width: 40.0
+    center:
+    - -40.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: true
+AstA Perfusion:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 2.0
+    stim_time: 0.5
+    tail_time: 3.5
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: false

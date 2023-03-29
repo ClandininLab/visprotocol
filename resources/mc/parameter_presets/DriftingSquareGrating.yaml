@@ -19,3 +19,28 @@ JV_EG_OMR_SqGrating:
     - 0.0
     center_size: 180.0
     randomize_order: true
+JV_OMR_v1:
+  run_parameters:
+    protocol_ID: DriftingSquareGrating
+    num_epochs: 200.0
+    pre_time: 1.0
+    stim_time: 0.75
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    period: 60.0
+    rate: 60.0
+    contrast: 1.0
+    mean: 0.5
+    angle:
+    - 0.0
+    - 180.0
+    height:
+    - 170.0
+    hold_duration: 0.5
+    center:
+    - 0.0
+    - 0.0
+    center_size: 180.0
+    random_offset: true
+    randomize_order: true

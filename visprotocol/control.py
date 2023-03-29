@@ -121,4 +121,7 @@ class EpochRun():
 
         client.manager.print_on_server('Epoch completed.')
 
+        if save_metadata_flag:
+            data.endEpoch(protocol_object)
+
         protocol_object.advanceEpochCounter()

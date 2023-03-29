@@ -43,12 +43,14 @@ class LoomRandomlySpaced(BaseProtocol):
 
         loom_trajectory = {'name': 'Loom2', 'rv_ratio': self.protocol_parameters['rv_ratio'], 'start_size': self.protocol_parameters['start_size'], 'end_size': self.protocol_parameters['end_size']}
 
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        
         self.epoch_parameters = {'name': 'MovingSpot',
                                  'radius': loom_trajectory,
                                  'sphere_radius': 1,
                                  'color': current_color,
-                                 'phi': 0,
-                                 'theta': 0}
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1]}
 
         iti = self.itis[self.num_epochs_completed]
         self.run_parameters['tail_time'] = iti
@@ -60,6 +62,7 @@ class LoomRandomlySpaced(BaseProtocol):
                                     'start_size': 10.0,
                                     'end_size': 100.0,
                                     'color': [0.0],
+                                    'center': [0.0, 0.0],
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
