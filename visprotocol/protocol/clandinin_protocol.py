@@ -78,13 +78,30 @@ class BaseProtocol():
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
     def selectProtocolPreset(self, name):
+        '''
+        Parameters that are not present in the preset will use the current protocol's default values.
+        '''
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
         if name in self.parameter_presets:
-            self.run_parameters = self.parameter_presets[name]['run_parameters']
-            self.protocol_parameters = self.parameter_presets[name]['protocol_parameters']
+            if self.run_parameters.keys() != self.parameter_presets[name]['run_parameters'].keys():
+                print('Warning: run parameters of the selected preset do not match the current protocol.')
+            if self.protocol_parameters.keys() != self.parameter_presets[name]['protocol_parameters'].keys():
+                print('Warning: protocol parameters of the selected preset do not match the current protocol.')
+            
+            for k, v in self.parameter_presets[name]['run_parameters'].items():
+                if k in self.run_parameters.keys():
+                    self.run_parameters[k] = v
+                else:
+                    print(f'Warning: run parameter {k} not found in current protocol.')
+            for k, v in self.parameter_presets[name]['protocol_parameters'].items():
+                if k in self.protocol_parameters.keys():
+                    self.protocol_parameters[k] = v
+                else:
+                    print(f'Warning: protocol parameter {k} not found in current protocol.')
         else:
-            self.getRunParameterDefaults()
-            self.getParameterDefaults()
-
+            print('Warning: Preset not found.')
+            
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
 
