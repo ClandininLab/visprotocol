@@ -19,7 +19,7 @@ from PyQt5.QtCore import QThread
 import PyQt5.QtGui as QtGui
 
 from visprotocol.util import config_tools, h5io
-from visprotocol.control import EpochRun
+# from visprotocol.control import EpochRun
 from visprotocol import protocol, data, client
 
 
@@ -68,9 +68,6 @@ class ExperimentGUI(QWidget):
         else:  # use the built-in
             print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format('client'))
             self.client = client.BaseClient(self.cfg)
-
-        # get an epoch run object
-        self.epoch_run = EpochRun()
 
         print('# # # # # # # # # # # # # # # #')
 
@@ -357,19 +354,19 @@ class ExperimentGUI(QWidget):
             self.pause_button.setText('Pause')
 
         elif sender.text() == 'Pause':
-            self.epoch_run.pause_run()
+            self.client.pause_run()
             self.pause_button.setText('Resume')
             self.status_label.setText('Paused...')
             self.show()
 
         elif sender.text() == 'Resume':
-            self.epoch_run.resume_run()
+            self.client.resume_run()
             self.pause_button.setText('Pause')
             self.status_label.setText('Viewing...')
             self.show()
 
         elif sender.text() == 'Stop':
-            self.epoch_run.stop_run()
+            self.client.stop_run()
             self.pause_button.setText('Pause')
 
         elif sender.text() == 'Enter note':
@@ -572,11 +569,10 @@ class ExperimentGUI(QWidget):
         self.update_parameters_from_fillable_fields()
 
         # start the epoch run thread:
-        self.run_series_thread = runSeriesThread(self.epoch_run,
-                                               self.protocol_object,
-                                               self.data,
-                                               self.client,
-                                               save_metadata_flag)
+        self.run_series_thread = runSeriesThread(self.protocol_object,
+                                                 self.data,
+                                                 self.client,
+                                                 save_metadata_flag)
 
         self.run_series_thread.finished.connect(lambda: self.run_finished(save_metadata_flag))
         self.run_series_thread.started.connect(lambda: self.run_started(save_metadata_flag))
@@ -828,9 +824,8 @@ class InitializeRigGUI(QWidget):
 class runSeriesThread(QThread):
     # https://nikolak.com/pyqt-threading-tutorial/
     # https://stackoverflow.com/questions/41848769/pyqt5-object-has-no-attribute-connect
-    def __init__(self, epoch_run, protocol_object, data, client, save_metadata_flag):
+    def __init__(self, protocol_object, data, client, save_metadata_flag):
         QThread.__init__(self)
-        self.epoch_run = epoch_run
         self.protocol_object = protocol_object
         self.data = data
         self.client = client
@@ -840,7 +835,7 @@ class runSeriesThread(QThread):
         self.wait()
 
     def _send_run(self):
-        self.epoch_run.start_run(self.protocol_object, self.data, self.client, save_metadata_flag=self.save_metadata_flag)
+        self.client.start_run(self.protocol_object, self.data, save_metadata_flag=self.save_metadata_flag)
 
     def run(self):
         self._send_run()

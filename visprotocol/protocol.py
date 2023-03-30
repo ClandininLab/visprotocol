@@ -100,9 +100,9 @@ class BaseProtocol():
     def advance_epoch_counter(self):
         self.num_epochs_completed += 1
 
-    def load_stimuli(self, client, multicall=None):
+    def load_stimuli(self, manager, multicall=None):
         if multicall is None:
-            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+            multicall = flyrpc.multicall.MyMultiCall(manager)
 
         bg = self.run_parameters.get('idle_color')
         multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
@@ -115,12 +115,12 @@ class BaseProtocol():
 
         multicall()
 
-    def start_stimuli(self, client, append_stim_frames=False, print_profile=True, multicall=None):
+    def start_stimuli(self, manager, append_stim_frames=False, print_profile=True, multicall=None):
         # pre time
         sleep(self.run_parameters['pre_time'])
         
         if multicall is None:
-            multicall = flyrpc.multicall.MyMultiCall(client.manager)
+            multicall = flyrpc.multicall.MyMultiCall(manager)
 
         # stim time
         multicall.start_stim()
@@ -129,7 +129,7 @@ class BaseProtocol():
         sleep(self.run_parameters['stim_time'])
 
         # tail time
-        multicall = flyrpc.multicall.MyMultiCall(client.manager)
+        multicall = flyrpc.multicall.MyMultiCall(manager)
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
         multicall()
