@@ -74,6 +74,7 @@ class EpochRun():
 
         # # # Pre-run Time # # #
         if 'pre_run_time' in protocol_object.run_parameters:
+            client.manager.print_on_server(f'Starting pre-run time of {protocol_object.run_parameters["pre_run_time"]} seconds.')
             sleep(protocol_object.run_parameters['pre_run_time'])
 
         # # # Epoch run loop # # #
