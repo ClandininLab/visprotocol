@@ -1,12 +1,29 @@
 # visprotocol
+**visprotocol** is a python package for experimental acquisition and metadata handling in visual neuroscience experiments. It is designed to act as a relatively stable core package which can run on its own with very limited, demonstrative functionality. Functionality can be greatly expanded by using a lab or user-specific package, which should be maintained as a separate repository. Check out the wiki for instructions on how to build your own lab or user-specific package, and how to configure visprotocol for your use.
 
-To get set up as a new user, you'll need to make two user-specific files:
-1) A config.yaml file. Look under config/ to see examples. The file naming convention is [username]_config.yaml
-    This defines the fly metadata you will be able to enter, the default file locations, and your rig configuration parameters.
-    The first time you want to save protocol parameters, you'll have to make a directory at resources/username/parameter_presets to save the preset .yaml file in,  then you can commit and push as normal.
+## Installation
+Installation requires python3.9 or greater
 
-2) A protocol.py file. Look under protocol/ to see examples. The file naming convention is [username]_protocol.py.
-    This [username] in the filename should match the filename of your config.yaml file, and the username field of the config.yaml should match this as well.
-    This module should define your user-specific base parent class, which is a subclass of the clandinin_protocol.BaseProtocol.
-    It should also define any protocol classes you would like.
-    Finally, add your module to the import statement in protocol. _ init _ .py.
+First, install [flystim](https://github.com/ClandininLab/flystim) and [flyrpc](https://github.com/ClandininLab/flyrpc)
+
+I recommend using a conda or other virtual environment, for example:
+
+`conda create -n visprotocol python=3.9`
+
+`conda activate visprotocol`
+
+To install, cd to the top-level visprotocol directory, where setup.py lives, and run:
+
+`pip install -e .`
+
+## Getting started
+
+The easiest entry point to explore visprotocol and test it out is to run the gui
+
+cd to /gui and run
+
+`python ExperimentGUI.py`
+
+When you first run visprotocol, before configuring it, the experimental control window will pop up alongside a small stimulus presentation screen.
+
+This includes very limited animal metadata options and only a couple very basic visual stimulus protocols, and stimuli are rendered into that small display window. To configure and extend visprotocol, check out the [wiki](https://github.com/ClandininLab/visprotocol/wiki).
