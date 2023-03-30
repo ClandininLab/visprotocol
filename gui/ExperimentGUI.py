@@ -30,7 +30,6 @@ class ExperimentGUI(QWidget):
         self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
-        # self.ignore_warnings = False  # TODO does this do anything?
 
         # user input to select configuration file and rig name
         # sets self.cfg
@@ -70,33 +69,8 @@ class ExperimentGUI(QWidget):
             print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format('client'))
             self.client = client.BaseClient(self.cfg)
 
-    
-#  #######
-#         user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
-#         if user_protocol_module is not None:
-#             self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)
-#             self.available_protocols =  user_protocol_module.BaseProtocol.__subclasses__()
-#         else:   # use the built-in
-#             self.protocol_object =  protocol.BaseProtocol(self.cfg)
-#             self.available_protocols =  protocol.BaseProtocol.__subclasses__()
-
-#         # start a data object
-#         user_data_module = config_tools.load_user_module(self.cfg, 'data')
-#         if user_data_module is not None:
-#             self.data = user_data_module.Data(self.cfg)
-#         else:  # use the built-in
-#             self.data = data.BaseData(self.cfg)
-
-#         # start a client
-#         user_client_module = config_tools.load_user_module(self.cfg, 'client')
-#         if user_client_module is not None:
-#             self.client = user_client_module.Client(self.cfg)
-#         else:  # use the built-in
-#             self.client = client.BaseClient(self.cfg)
-
         # get an epoch run object
         self.epoch_run = EpochRun()
-
 
         print('# # # # # # # # # # # # # # # #')
 

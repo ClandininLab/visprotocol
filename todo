@@ -1,6 +1,4 @@
 
-control: set up triggering on each epoch vs. epoch run
-gui: ignore_warnings?
 Base devices:
     - trigger fxn
     - example for nidaq and labjack?
@@ -8,16 +6,11 @@ data: client bucket. Is this for something? Maybe save out current cfg settings?
 
 - re-incorporate locomotion stuff. Is it enough to have a dedicated keyword param in the protocol?
 
-Example lab package:
-    - Pointer to devices
-
-- Default config etc for being able to run just vp by itself, with no lab package
-- If lab/user stuff is there, then add or replace the base with it
-
 - Comment code
 - readme for install
 wiki for:
-    usage
+    core usage
+    overview of data structure
     making a lab package
     making a protocol
     adding devices

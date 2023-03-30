@@ -5,7 +5,6 @@ EpochRun object controls presentation of a sequence of epochs ("epoch run")
 """
 
 from PyQt5.QtWidgets import QApplication
-from time import sleep
 
 class EpochRun():
     def __init__(self):
@@ -44,10 +43,10 @@ class EpochRun():
             print('Warning - you are not saving your metadata!')
 
         # Trigger acquisition of scope and cameras by send triggering TTL through the DAQ device (if device is set)
-        # TODO: set up trigger on epoch run or each epoch
-        if client.trigger_device is not None:
-            print("Triggering acquisition devices.")
-            client.trigger_device.send_trigger()
+        if protocol_object.trigger_on_epoch_run is True:
+            if client.trigger_device is not None:
+                print("Triggering acquisition devices.")
+                client.trigger_device.send_trigger()
 
         # # # Epoch run loop # # #
         client.manager.print_on_server("Starting run.")
@@ -75,9 +74,10 @@ class EpochRun():
             data.create_epoch(protocol_object)
 
         # Send triggering TTL through the DAQ device (if device is set)
-        if client.trigger_device is not None:
-            print("Triggering acquisition devices.")
-            client.trigger_device.send_trigger()
+        if protocol_object.trigger_on_epoch is True:
+            if client.trigger_device is not None:
+                print("Triggering acquisition devices.")
+                client.trigger_device.send_trigger()
 
         client.manager.print_on_server(f'Epoch {protocol_object.num_epochs_completed}')
 

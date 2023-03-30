@@ -3,6 +3,15 @@
 """
 Protocol parent class. Override any methods in here in the user protocol subclass
 
+A user-defined protocol class needs to overwrite the following methods, at minimum:
+-get_epoch_parameters()
+-get_parameter_defaults()
+
+And probably also:
+-get_run_parameter_defaults()
+
+see the simple example protocol classes at the bottom of this module.
+
 -protocol_parameters: user-defined params that are mapped to flystim epoch params
                      *saved as attributes at the epoch run level
 -epoch_parameters: parameter set used to define flystim stimulus
@@ -12,7 +21,6 @@ Protocol parent class. Override any methods in here in the user protocol subclas
 """
 import numpy as np
 from time import sleep
-
 import os.path
 import os
 import yaml
@@ -26,13 +34,18 @@ class BaseProtocol():
 
         self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
-        self.send_ttl = False
+        self.trigger_on_epoch_run = True  # Used in control.EpochRun.start_run(), sends a TTL trigger to start acquisition devices
+        self.trigger_on_epoch = False  # Used in control.EpochRun.start_epoch(), sends a TTL trigger to start acquisition devices
+        self.save_metadata_flag = False  # Bool, whether or not to save this series. Set to True by GUI on 'record' but not 'view'.
+
+        # convenience_parameters used to store protocol parameters that will be saved out in an easily accessible place in the data file
+        # Fill this in with desired parameters in get_epoch_parameters(). Can also be used to control other features of the stimulus and used in load_stimuli()
         self.convenience_parameters = {}
+
         self.get_run_parameter_defaults()
         self.get_parameter_defaults()
         self.load_parameter_presets()
-        self.save_metadata_flag = False
-
+        
         self.parameter_preset_directory = config_tools.get_parameter_preset_directory(self.cfg)
         if self.parameter_preset_directory is not None:
             os.makedirs(self.parameter_preset_directory, exist_ok=True)
@@ -45,7 +58,7 @@ class BaseProtocol():
         return absolute_center
 
     def get_epoch_parameters(self):
-        print('Warning: get_epoch_parameters() method needs to be overwritten by child class definition')
+        """ Overwrite me in the child subclass"""
         self.epoch_parameters = None
 
     def get_run_parameter_defaults(self):
@@ -57,6 +70,7 @@ class BaseProtocol():
                                'idle_color': 0.5}
 
     def get_parameter_defaults(self):
+        """ Overwrite me in the child subclass"""
         self.protocol_parameters = {}
 
     def load_parameter_presets(self):
@@ -238,7 +252,7 @@ class BaseProtocol():
 # %% Some simple visual stimulus protocol classes
 
 """
-ddd
+Drifting square wave grating, painted on a cylinder
 """
 class DriftingSquareGrating(BaseProtocol):
     def __init__(self, cfg):
@@ -265,9 +279,6 @@ class DriftingSquareGrating(BaseProtocol):
 
         self.convenience_parameters = {'current_angle': current_angle}
 
-        self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
-                                'center': self.adjust_center(self.protocol_parameters['center'])}
-
     def get_parameter_defaults(self):
         self.protocol_parameters = {'period': 20.0,
                                     'rate': 20.0,
@@ -289,7 +300,7 @@ class DriftingSquareGrating(BaseProtocol):
 # %%
 
 """
-ddd
+Moving circular spot. Moves along a spherical trajectory
 """
 class MovingSpot(BaseProtocol):
     def __init__(self, cfg):
@@ -318,7 +329,7 @@ class MovingSpot(BaseProtocol):
                                     'randomize_order': True}
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'protocol_ID': 'ExpandingMovingSpot',
+        self.run_parameters = {'protocol_ID': 'MovingSpot',
                                'num_epochs': 70,
                                'pre_time': 0.5,
                                'stim_time': 3.0,
