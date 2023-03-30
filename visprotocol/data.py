@@ -6,7 +6,7 @@ Data file class
 Data File structure is:
 yyyy-mm-dd
     Client
-    Animals
+    Flies
         animal_id
             epoch_runs
                 series_00n (attrs = protocol_parameters)
@@ -38,7 +38,6 @@ class BaseData():
         # default data_directory, experiment_file_name, experimenter from cfg
         # may be overwritten by GUI or other before initialize_experiment_file() is called
         self.data_directory = config_tools.get_data_directory(self.cfg)
-        self.experiment_file_name = datetime.now().isoformat()[:-16]
         self.experimenter = config_tools.get_experimenter(self.cfg)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -66,7 +65,7 @@ class BaseData():
                 experiment_file.attrs[key] = rig_config.get(key)
 
             # Create a top-level group for epoch runs and user-entered notes
-            experiment_file.create_group('Animals')
+            experiment_file.create_group('Flies')
             experiment_file.create_group('Notes')
             
     def create_animal(self, animal_metadata):
@@ -79,7 +78,7 @@ class BaseData():
         if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
                 animal_init_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-                animals_group = experiment_file['/Animals']
+                animals_group = experiment_file['/Flies']
                 new_animal = animals_group.create_group(animal_metadata.get('animal_id'))
                 new_animal.attrs['init_time'] = animal_init_time
                 for key in animal_metadata:
@@ -99,7 +98,7 @@ class BaseData():
         if (self.current_animal_exists() and self.experiment_file_exists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
                 run_start_time = datetime.now().strftime('%H:%M:%S.%f')[:-4]
-                animal_group = experiment_file['/Animals/{}/epoch_runs'.format(self.current_animal)]
+                animal_group = experiment_file['/Flies/{}/epoch_runs'.format(self.current_animal)]
                 new_epoch_run = animal_group.create_group('series_{}'.format(str(self.series_count).zfill(3)))
                 new_epoch_run.attrs['run_start_time'] = run_start_time
                 for key in protocol_object.run_parameters:  # add run parameter attributes
@@ -111,6 +110,7 @@ class BaseData():
                 # add subgroups:
                 new_epoch_run.create_group('acquisition')
                 new_epoch_run.create_group('epochs')
+                new_epoch_run.create_group('rois')
                 new_epoch_run.create_group('stimulus_timing')
 
         else:
@@ -122,7 +122,7 @@ class BaseData():
         if (self.current_animal_exists() and self.experiment_file_exists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
                 epoch_time = datetime.now().strftime('%H:%M:%S.%f')
-                epoch_run_group = experiment_file['/Animals/{}/epoch_runs/series_{}/epochs'.format(self.current_animal, str(self.series_count).zfill(3))]
+                epoch_run_group = experiment_file['/Flies/{}/epoch_runs/series_{}/epochs'.format(self.current_animal, str(self.series_count).zfill(3))]
                 new_epoch = epoch_run_group.create_group('epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3)))
                 new_epoch.attrs['epoch_time'] = epoch_time
 
@@ -177,8 +177,8 @@ class BaseData():
     def get_existing_series(self):
         all_series = []
         with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
-            for animal_id in list(experiment_file['/Animals'].keys()):
-                new_series = list(experiment_file['/Animals/{}/epoch_runs'.format(animal_id)].keys())
+            for animal_id in list(experiment_file['/Flies'].keys()):
+                new_series = list(experiment_file['/Flies/{}/epoch_runs'.format(animal_id)].keys())
                 all_series.append(new_series)
         all_series = [val for s in all_series for val in s]
         series = [int(x.split('_')[-1]) for x in all_series]
@@ -196,8 +196,8 @@ class BaseData():
         animal_data_list = []
         if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
-                for animal in experiment_file['/Animals']:
-                    new_animal = experiment_file['/Animals'][animal]
+                for animal in experiment_file['/Flies']:
+                    new_animal = experiment_file['/Flies'][animal]
                     new_dict = {}
                     for at in new_animal.attrs:
                         new_dict[at] = new_animal.attrs[at]
@@ -220,8 +220,8 @@ class BaseData():
     def reload_series_count(self):
         all_series = []
         with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r') as experiment_file:
-            for animal_id in list(experiment_file['/Animals'].keys()):
-                new_series = list(experiment_file['/Animals/{}/epoch_runs'.format(animal_id)].keys())
+            for animal_id in list(experiment_file['/Flies'].keys()):
+                new_series = list(experiment_file['/Flies/{}/epoch_runs'.format(animal_id)].keys())
                 all_series.append(new_series)
         all_series = [val for s in all_series for val in s]
         series = [int(x.split('_')[-1]) for x in all_series]
