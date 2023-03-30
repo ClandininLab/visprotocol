@@ -1,0 +1,19 @@
+moita_loom:
+  run_parameters:
+    protocol_ID: Loom
+    num_epochs: 120.0
+    pre_time: 0.0
+    stim_time: 0.5
+    run_time: 1400.0
+    pre_run_time: 300.0
+    idle_color: 0.5
+  protocol_parameters:
+    rv_ratio: 0.04
+    start_size: 10.0
+    end_size: 100.0
+    color:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    randomize_order: true
