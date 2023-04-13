@@ -8,7 +8,10 @@ from math import pi
 import matplotlib.pyplot as plt
 
 from visprotocol.server.clandinin_server import Server
+from visprotocol.device.daq.labjack import LabJackTSeries
 from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
+
+# from jackfish.devices.cameras.flir import FlirCam
 
 def main():
     # Put lightcrafter(s) in pattern mode
@@ -44,12 +47,16 @@ def main():
 
     screens = [bruker_left_screen, bruker_right_screen, aux_screen]
 
+    # Initialize camera with proper settings
+    # jf_cam = FlirCam(serial_number='20243355', attrs_json_fn='/home/clandinin/src/jackfish/presets/MC/cam_20243355.json')
+    # jf_cam.close()
+    
     loco_class = FtClosedLoopManager
     loco_kwargs = {
         'host':          '127.0.0.1', 
         'port':          33334, 
-        'ft_bin':           "/home/clandininlab/lib/fictrac211/bin/fictrac",
-        'ft_config':        "/home/clandininlab/lib/fictrac211/config_210617.txt", 
+        'ft_bin':           "/home/clandininlab/lib/fictrac/bin/fictrac",
+        'ft_config':        "/home/clandininlab/lib/fictrac/configs/config_CL.txt", 
         'ft_theta_idx':     16, 
         'ft_x_idx':         14, 
         'ft_y_idx':         15, 
