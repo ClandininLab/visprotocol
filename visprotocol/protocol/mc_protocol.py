@@ -286,15 +286,15 @@ class OcclusionShape(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['angle', 'obj_start_theta', 'obj_width', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_width', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            ['angle', 'obj_start_theta', 'obj_wh', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_wh', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Set variables for convenience
         obj_ellipse = self.protocol_parameters['obj_ellipse']
         obj_start_theta = self.convenience_parameters['current_obj_start_theta'] #negative value starts from the opposite side of obj direction
         obj_end_theta = self.protocol_parameters['obj_end_theta']
-        obj_width = self.convenience_parameters['current_obj_width']
-        obj_height = self.protocol_parameters['obj_height']
+        obj_width = self.convenience_parameters['current_obj_wh'][0]
+        obj_height = self.convenience_parameters['current_obj_wh'][1]
         obj_prime_color = self.convenience_parameters['current_obj_prime_color']
         obj_probe_color = self.convenience_parameters['current_obj_probe_color']
         obj_speed = self.convenience_parameters['current_obj_speed']
@@ -302,8 +302,8 @@ class OcclusionShape(BaseProtocol):
 
         occluder_ellipse = self.protocol_parameters['occluder_ellipse']
         occluder_theta = self.protocol_parameters['occluder_theta']
-        occluder_width = self.convenience_parameters['current_occluder_width']
-        occluder_height = self.protocol_parameters['occluder_height']
+        occluder_width = self.convenience_parameters['current_occluder_wh'][0]
+        occluder_height = self.convenience_parameters['current_occluder_wh'][1]
         occluder_color = self.convenience_parameters['current_occluder_color']
         occluder_surface_radius = self.protocol_parameters['occluder_surface_radius']
 
@@ -415,8 +415,7 @@ class OcclusionShape(BaseProtocol):
         self.protocol_parameters = {'obj_ellipse': True,
                                     'obj_start_theta': [0.0],
                                     'obj_end_theta': 210.0,
-                                    'obj_width': 35.0,
-                                    'obj_height': 25.0,
+                                    'obj_wh': [[35.0, 25.0]],
                                     'obj_prime_color': [0.3],
                                     'obj_probe_color': 0.3,
                                     'obj_speed': [30.0, -30.0],
@@ -424,8 +423,7 @@ class OcclusionShape(BaseProtocol):
                                     
                                     'occluder_ellipse': False,
                                     'occluder_theta': 120.0,
-                                    'occluder_width': [0.0, 60.0],
-                                    'occluder_height': 100.0,
+                                    'occluder_wh': [[0.0, 100.0], [60.0, 100.0]],
                                     'occluder_color': [0.0],
                                     'occluder_surface_radius': 2.0,
                                     
