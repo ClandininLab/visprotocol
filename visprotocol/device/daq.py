@@ -13,6 +13,7 @@ class DAQ():
         pass
 
     def send_trigger(self):
+        print('Warning, send_trigger method has not been overwritten by a child class!')
         pass
 
 class DAQonServer(DAQ):
@@ -37,4 +38,3 @@ class DAQonServer(DAQ):
             return multicall
         if self.manager is not None:
             self.manager.daq_outputStep(**kwargs)
-

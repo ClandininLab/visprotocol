@@ -62,12 +62,12 @@ class BaseData():
             experiment_file.attrs['rig_config'] = self.cfg.get('current_rig_name', '')
             rig_config = self.cfg.get('rig_config').get(self.cfg.get('current_rig_name'))
             for key in rig_config:
-                experiment_file.attrs[key] = rig_config.get(key)
+                experiment_file.attrs[key] = str(rig_config.get(key))
 
             # Create a top-level group for epoch runs and user-entered notes
             experiment_file.create_group('Flies')
             experiment_file.create_group('Notes')
-            
+
     def create_animal(self, animal_metadata):
         """
         """
