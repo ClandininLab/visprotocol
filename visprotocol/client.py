@@ -103,4 +103,7 @@ class BaseClient():
 
         self.manager.print_on_server('Epoch completed.')
 
+        if save_metadata_flag:
+            data.end_epoch(protocol_object)
+        
         protocol_object.advance_epoch_counter()
