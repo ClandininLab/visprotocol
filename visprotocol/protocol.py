@@ -190,6 +190,27 @@ class BaseProtocol():
 
         return current_parameters
     
+    def select_parameters_from_protocol_parameter_names(self, parameter_names, all_combinations=True, randomize_order=False):
+        """
+        inputs
+        parameter_names:
+            list of protocol parameter names (keys of self.protocol_parameters)
+        all_combinations:
+            True will return all possible combinations of parameters, taking one from each parameter list. 
+            False keeps params associated across lists
+        randomize_order will randomize sequence or sequences at the beginning of each new sequence
+        
+        returns
+        current_parameters_dict:
+            dictionary of parameter names and values specific to this epoch. parameter names are prepended with 'current_'
+        """
+        parameter_tuple = tuple(self.protocol_parameters[parameter_name] for parameter_name in parameter_names)
+        current_parameters = self.select_parameters_from_lists(parameter_tuple, all_combinations=all_combinations, randomize_order=randomize_order)
+
+        current_parameters_dict = {"current_" + parameter_name: current_parameters[i] for i, parameter_name in enumerate(parameter_names)}
+        
+        return current_parameters_dict
+    
     def get_moving_spot_parameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
         if center is None: center = self.protocol_parameters['center']
         if angle is None: angle = self.protocol_parameters['angle']
