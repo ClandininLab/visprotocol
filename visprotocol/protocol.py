@@ -91,12 +91,37 @@ class BaseProtocol():
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
     def select_protocol_preset(self, name):
-        if name in self.parameter_presets:
-            self.run_parameters = self.parameter_presets[name]['run_parameters']
-            self.protocol_parameters = self.parameter_presets[name]['protocol_parameters']
-        else:
-            self.get_run_parameter_defaults()
-            self.get_parameter_defaults()
+        '''
+        Parameters that are not present in the preset will use the current protocol's default values.
+        '''
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+        if name not in self.parameter_presets:
+            warnings.warn(f'Warning: Preset {name} not found.', RuntimeWarning)
+            return
+
+        # Warn about any param that is not in the preset
+        for k in self.run_parameters.keys():
+            if k not in self.parameter_presets[name]['run_parameters'].keys():
+                warnings.warn(f'Warning: run parameter {k} not found in preset {name}; using default.', RuntimeWarning)
+        for k in self.protocol_parameters.keys():
+            if k not in self.parameter_presets[name]['protocol_parameters'].keys():
+                warnings.warn(f'Warning: protocol parameter {k} not found in preset {name}; using default.', RuntimeWarning)
+
+        # Update the protocol parameters
+        # Warn about any preset param that is not in the current protocol
+        for k, v in self.parameter_presets[name]['run_parameters'].items():
+            if k in self.run_parameters.keys():
+                self.run_parameters[k] = v
+            else:
+                warnings.warn(f'Warning: run parameter {k} not found in current protocol. Skipping preset parameter.', RuntimeWarning)
+        for k, v in self.parameter_presets[name]['protocol_parameters'].items():
+            if k in self.protocol_parameters.keys():
+                self.protocol_parameters[k] = v
+            else:
+                warnings.warn(f'Warning: protocol parameter {k} not found in current protocol. Skipping preset parameter.', RuntimeWarning)            
 
     def advance_epoch_counter(self):
         self.num_epochs_completed += 1
