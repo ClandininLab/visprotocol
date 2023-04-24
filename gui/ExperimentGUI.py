@@ -611,7 +611,7 @@ class ExperimentGUI(QWidget):
             except ValueError:
                 return False
 
-         def parse_param_str(s):
+        def parse_param_str(s):
             # Remove all whitespace
             s = ''.join(s.split())
 
