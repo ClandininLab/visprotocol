@@ -9,6 +9,7 @@ from datetime import datetime
 import os
 import sys
 import importlib
+import warnings
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
@@ -603,6 +604,47 @@ class ExperimentGUI(QWidget):
             self.populate_groups()
 
     def update_parameters_from_fillable_fields(self):
+        def is_number(s):
+            try:
+                float(s)
+                return True
+            except ValueError:
+                return False
+
+         def parse_param_str(s):
+            # Remove all whitespace
+            s = ''.join(s.split())
+
+            # Base case: number
+            if is_number(s):
+                return float(s)
+
+            # List
+            elif s[0] == '[' and s[-1] == ']':
+                l = []
+                bracket_level = 0
+                token = ''
+                # Process each character. If comma is found outside of brackets, end of token.
+                for c in s[1:-1]+',':
+                    if c == '[':
+                        bracket_level += 1
+                    if c == ']':
+                        bracket_level -= 1
+
+                    if bracket_level == 0 and c == ',': # End of token
+                        l.append(parse_param_str(token))
+                        token = ''
+                    else:
+                        token += c
+
+                if bracket_level != 0:
+                    warnings.warn('Could not parse paramter input: ' + s)
+
+                return l
+
+            else:
+                warnings.warn('Could not parse paramter input: ' + s)
+
         for key, value in self.run_parameter_input.items():
             if isinstance(self.run_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
@@ -615,15 +657,8 @@ class ExperimentGUI(QWidget):
             elif isinstance(self.protocol_object.protocol_parameters[key], str):
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
-                new_param_entry = self.protocol_parameter_input[key].text()
-
-                if new_param_entry[0] == '[':  # User trying to enter a list of values
-                    to_a_list = []
-                    for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
-                    self.protocol_object.protocol_parameters[key] = to_a_list
-                else:
-                    self.protocol_object.protocol_parameters[key] = float(new_param_entry)
-
+                self.protocol_object.protocol_parameters[key] = parse_param_str(self.protocol_parameter_input[key].text())
+                
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
         group_dset_dict = h5io.get_hierarchy(file_path, additional_exclusions='rois')

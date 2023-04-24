@@ -24,6 +24,7 @@ from time import sleep
 import os.path
 import os
 import yaml
+import itertools
 import flyrpc.multicall
 from visprotocol.util import config_tools
 
@@ -165,7 +166,7 @@ class BaseProtocol():
                 parameter_list = tuple(parameter_list_new)
 
                 # parameter_sequence is num_combinations by num params
-                parameter_sequence = np.array(np.meshgrid(*parameter_list)).T.reshape(np.prod(list(len(x) for x in parameter_list)), len(parameter_list))
+                parameter_sequence = list(itertools.product(*parameter_list))
             else:
                 # keep params in lists associated with one another
                 # requires param lists of equal length
@@ -181,9 +182,9 @@ class BaseProtocol():
         if draw_ind == 0 and randomize_order: # randomize sequence
             rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
             if len(np.shape(self.persistent_parameters['parameter_sequence'])) == 1:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds])
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'], dtype=object)[rand_inds])
             else:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds, :])
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'], dtype=object)[rand_inds, :])
 
         current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
 
