@@ -236,25 +236,28 @@ class BaseProtocol():
         
         return current_parameters_dict
     
-    def get_moving_spot_parameters(self, center=None, angle=None, speed=None, radius=None, color=None, distance_to_travel=None):
+    def get_moving_patch_parameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None, ellipse=None, render_on_cylinder=None):
         if center is None: center = self.protocol_parameters['center']
         if angle is None: angle = self.protocol_parameters['angle']
         if speed is None: speed = self.protocol_parameters['speed']
-        if radius is None: radius = self.protocol_parameters['radius']
+        if width is None: width = self.protocol_parameters['width']
+        if height is None: height = self.protocol_parameters['height']
         if color is None: color = self.protocol_parameters['color']
+        if ellipse is None: ellipse = self.protocol_parameters['ellipse'] if 'ellipse' in self.protocol_parameters else False
+        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder'] if 'render_on_cylinder' in self.protocol_parameters else False
 
         center = self.adjust_center(center)
 
-        center_x = center[0]
-        center_y = center[1]
+        centerX = center[0]
+        centerY = center[1]
         stim_time = self.run_parameters['stim_time']
         if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
             distance_to_travel = speed * stim_time
             # trajectory just has two points, at time=0 and time=stim_time
-            startX = (0, center_x - np.cos(np.radians(angle)) * distance_to_travel/2)
-            endX = (stim_time, center_x + np.cos(np.radians(angle)) * distance_to_travel/2)
-            startY = (0, center_y - np.sin(np.radians(angle)) * distance_to_travel/2)
-            endY = (stim_time, center_y + np.sin(np.radians(angle)) * distance_to_travel/2)
+            startX = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            endX = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            startY = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            endY = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
             x = [startX, endX]
             y = [startY, endY]
 
@@ -267,16 +270,16 @@ class BaseProtocol():
             else:
                 hang_time = (stim_time - travel_time)/2
 
-            # split up hang time in pre and post such that trajectory always hits center_x,center_y at stim_time/2
-            x_1 = (0, center_x - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_2 = (hang_time, center_x - np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_3 = (stim_time-hang_time, center_x + np.cos(np.radians(angle)) * distance_to_travel/2)
-            x_4 = (stim_time, center_x + np.cos(np.radians(angle)) * distance_to_travel/2)
+            # split up hang time in pre and post such that trajectory always hits centerX,centerY at stim_time/2
+            x_1 = (0, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_2 = (hang_time, centerX - np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_3 = (stim_time-hang_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
+            x_4 = (stim_time, centerX + np.cos(np.radians(angle)) * distance_to_travel/2)
 
-            y_1 = (0, center_y - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_2 = (hang_time, center_y - np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_3 = (stim_time-hang_time, center_y + np.sin(np.radians(angle)) * distance_to_travel/2)
-            y_4 = (stim_time, center_y + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_1 = (0, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_2 = (hang_time, centerY - np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_3 = (stim_time-hang_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
+            y_4 = (stim_time, centerY + np.sin(np.radians(angle)) * distance_to_travel/2)
 
             x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
@@ -288,13 +291,19 @@ class BaseProtocol():
                         'tv_pairs': y,
                         'kind': 'linear'}
 
-        spot_parameters = {'name': 'MovingSpot',
-                           'radius': radius,
-                           'color': color,
-                           'theta': x_trajectory,
-                           'phi': y_trajectory}
-        return spot_parameters
-
+        if render_on_cylinder:
+            flystim_stim_name = 'MovingEllipseOnCylinder' if ellipse else 'MovingPatchOnCylinder'
+        else:
+            flystim_stim_name = 'MovingEllipse' if ellipse else 'MovingPatch'
+        
+        patch_parameters = {'name': flystim_stim_name,
+                            'width': width,
+                            'height': height,
+                            'color': color,
+                            'theta': x_trajectory,
+                            'phi': y_trajectory,
+                            'angle': angle}
+        return patch_parameters
 
 # %% Some simple visual stimulus protocol classes
 
@@ -346,10 +355,10 @@ class DriftingSquareGrating(BaseProtocol):
 
 # %%
 
-"""
-Moving circular spot. Moves along a spherical trajectory
-"""
-class MovingSpot(BaseProtocol):
+class MovingPatch(BaseProtocol):
+    """
+    Moving patch, either rectangular or elliptical. Moves along a spherical or cylindrical trajectory
+    """
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -357,28 +366,33 @@ class MovingSpot(BaseProtocol):
         self.get_parameter_defaults()
 
     def get_epoch_parameters(self):
-        current_diameter, current_intensity, current_speed = self.select_parameters_from_lists((self.protocol_parameters['diameter'], self.protocol_parameters['intensity'], self.protocol_parameters['speed']), randomize_order=self.protocol_parameters['randomize_order'])
+        # Select protocol parameters for this epoch
+        self.convenience_parameters = self.select_parameters_from_protocol_parameter_names(
+            ['width_height', 'intensity', 'speed', 'angle'], 
+            randomize_order = self.protocol_parameters['randomize_order'])
 
-        self.epoch_parameters = self.get_moving_spot_parameters(radius=current_diameter/2,
-                                                                color=current_intensity,
-                                                                speed=current_speed)
-
-        self.convenience_parameters = {'current_diameter': current_diameter,
-                                       'current_intensity': current_intensity,
-                                       'current_speed': current_speed}
+        # Create flystim epoch parameters dictionary
+        self.epoch_parameters = self.get_moving_patch_parameters(angle=self.convenience_parameters['current_angle'],
+                                                                speed=self.convenience_parameters['current_speed'],
+                                                                width=self.convenience_parameters['current_width_height'][0],
+                                                                height=self.convenience_parameters['current_width_height'][1],
+                                                                color=self.convenience_parameters['current_intensity'])
 
     def get_parameter_defaults(self):
-        self.protocol_parameters = {'diameter': [5, 10, 15, 20, 25, 30],
-                                    'intensity': [0.0, 1.0],
+        self.protocol_parameters = {'ellipse': True,
+                                    'width_height': [[5, 5], [10, 10], [15, 15], [20, 20], [25, 25], [30, 30]],
+                                    'intensity': [0.0],
                                     'center': [0, 0],
                                     'speed': [80.0],
-                                    'angle': 0.0,
+                                    'angle': [0.0],
+                                    'render_on_cylinder': False,
                                     'randomize_order': True}
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'protocol_ID': 'MovingSpot',
-                               'num_epochs': 70,
+        self.run_parameters = {'protocol_ID': 'MovingPatch',
+                               'num_epochs': 40,
                                'pre_time': 0.5,
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
