@@ -407,7 +407,8 @@ class MovingPatch(BaseProtocol):
         self.convenience_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
         # Create flystim epoch parameters dictionary
-        self.epoch_parameters = self.get_moving_patch_parameters(angle=self.convenience_parameters['angle'],
+        self.epoch_parameters = self.get_moving_patch_parameters(center=self.convenience_parameters['center'],
+                                                                angle=self.convenience_parameters['angle'],
                                                                 speed=self.convenience_parameters['speed'],
                                                                 width=self.convenience_parameters['width_height'][0],
                                                                 height=self.convenience_parameters['width_height'][1],
