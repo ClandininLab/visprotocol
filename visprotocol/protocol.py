@@ -342,7 +342,7 @@ class DriftingSquareGrating(BaseProtocol):
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'angle': [0.0, 90.0, 180.0, 270.0],
-                                    'center': [0, 0],
+                                    'center': (0, 0),
                                     'center_size': 180.0,
                                     'randomize_order': True}
 
@@ -381,9 +381,9 @@ class MovingPatch(BaseProtocol):
 
     def get_parameter_defaults(self):
         self.protocol_parameters = {'ellipse': True,
-                                    'width_height': [[5, 5], [10, 10], [15, 15], [20, 20], [25, 25], [30, 30]],
+                                    'width_height': [(5, 5), (10, 10), (15, 15), (20, 20), (25, 25), (30, 30)],
                                     'intensity': [0.0],
-                                    'center': [0, 0],
+                                    'center': (0, 0),
                                     'speed': [80.0],
                                     'angle': [0.0],
                                     'render_on_cylinder': False,
