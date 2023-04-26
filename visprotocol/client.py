@@ -49,6 +49,9 @@ class BaseClient():
         self.pause = False
         protocol_object.save_metadata_flag = save_metadata_flag
 
+        # Precompute useful variables prior to epoch run loop
+        protocol_object.precompute_variables()
+
         # Set background to idle_color
         self.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
 

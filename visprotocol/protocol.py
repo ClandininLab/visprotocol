@@ -126,6 +126,18 @@ class BaseProtocol():
 
     def advance_epoch_counter(self):
         self.num_epochs_completed += 1
+        
+    def precompute_variables(self):
+        '''
+        Use this method to precompute any variables that will be used in the epoch loop.
+        '''
+        # get names of parameters that are in lists and those that are not
+        self.list_protocol_parameter_names     = [k for k,v in self.protocol_parameters.items() if     isinstance(v, list)]
+        self.nonlist_protocol_parameter_names  = [k for k,v in self.protocol_parameters.items() if not isinstance(v, list)]
+
+        # get names of variable and static parameters
+        self.variable_protocol_parameter_names = [k for k,v in self.protocol_parameters.items() if      isinstance(v, list) and len(v) > 1]
+        self.static_protocol_parameter_names   = [k for k,v in self.protocol_parameters.items() if not (isinstance(v, list) and len(v) > 1)]
 
     def load_stimuli(self, manager, multicall=None):
         if multicall is None:
@@ -216,7 +228,7 @@ class BaseProtocol():
 
         return current_parameters
     
-    def select_parameters_from_protocol_parameter_names(self, parameter_names, all_combinations=True, randomize_order=False):
+    def select_protocol_parameters_from_names(self, parameter_names, all_combinations=True, randomize_order=False, prepend_current=True):
         """
         inputs
         parameter_names:
@@ -225,15 +237,40 @@ class BaseProtocol():
             True will return all possible combinations of parameters, taking one from each parameter list. 
             False keeps params associated across lists
         randomize_order will randomize sequence or sequences at the beginning of each new sequence
+        prepend_current will prepend 'current_' to the parameter names in the returned dictionary
         
         returns
         current_parameters_dict:
-            dictionary of parameter names and values specific to this epoch. parameter names are prepended with 'current_'
+            dictionary of parameter names and values specific to this epoch. 
         """
         parameter_tuple = tuple(self.protocol_parameters[parameter_name] for parameter_name in parameter_names)
         current_parameters = self.select_parameters_from_lists(parameter_tuple, all_combinations=all_combinations, randomize_order=randomize_order)
 
-        current_parameters_dict = {"current_" + parameter_name: current_parameters[i] for i, parameter_name in enumerate(parameter_names)}
+        current_parameters_dict = {("current_" + parameter_name if prepend_current else parameter_name): current_parameters[i] for i, parameter_name in enumerate(parameter_names)}
+        
+        return current_parameters_dict
+
+    def select_protocol_parameters_in_lists_automatically(self, all_combinations=True, randomize_order=False, prepend_current=False, include_all_params=True):
+        """
+        inputs
+        all_combinations:
+            True will return all possible combinations of parameters, taking one from each parameter list. 
+            False keeps params associated across lists
+        randomize_order will randomize sequence or sequences at the beginning of each new sequence
+        prepend_current will prepend 'current_' to the parameter names in the returned dictionary
+        include_all_params will include all parameters in the returned dictionary, not just those in lists
+
+        returns
+        current_parameters_dict:
+            dictionary of parameter names and values specific to this epoch. parameter names are prepended with 'current_'
+        """
+        
+        current_parameters_dict = self.select_protocol_parameters_from_names(self.list_protocol_parameter_names, all_combinations=all_combinations, randomize_order=randomize_order, prepend_current=prepend_current)
+        
+        if include_all_params:
+            # Add parameters that are not in lists to current_parameters_dic
+            for k in self.nonlist_protocol_parameter_names:
+                current_parameters_dict[k] = self.protocol_parameters[k]
         
         return current_parameters_dict
     
@@ -308,10 +345,10 @@ class BaseProtocol():
 
 # %% Some simple visual stimulus protocol classes
 
-"""
-Drifting square wave grating, painted on a cylinder
-"""
 class DriftingSquareGrating(BaseProtocol):
+    """
+    Drifting square wave grating, painted on a cylinder
+    """
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -319,29 +356,28 @@ class DriftingSquareGrating(BaseProtocol):
         self.get_parameter_defaults()
 
     def get_epoch_parameters(self):
-        current_angle = self.select_parameters_from_lists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+        # Get protocol parameters for this epoch
+        self.convenience_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
         self.epoch_parameters = {'name': 'RotatingGrating',
-                                 'period': self.protocol_parameters['period'],
-                                 'rate': self.protocol_parameters['rate'],
+                                 'period': self.convenience_parameters['period'],
+                                 'rate': self.convenience_parameters['rate'],
                                  'color': [1, 1, 1, 1],
-                                 'mean': self.protocol_parameters['mean'],
-                                 'contrast': self.protocol_parameters['contrast'],
-                                 'angle': current_angle,
+                                 'mean': self.convenience_parameters['mean'],
+                                 'contrast': self.convenience_parameters['contrast'],
+                                 'angle': self.convenience_parameters['angle'],
                                  'offset': 0.0,
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
                                  'profile': 'square',
                                  'theta': self.screen_center[0]}
 
-        self.convenience_parameters = {'current_angle': current_angle}
-
     def get_parameter_defaults(self):
         self.protocol_parameters = {'period': 20.0,
                                     'rate': 20.0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
-                                    'angle': [0.0, 90.0, 180.0, 270.0],
+                                    'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                                     'center': (0, 0),
                                     'center_size': 180.0,
                                     'randomize_order': True}
@@ -367,25 +403,23 @@ class MovingPatch(BaseProtocol):
         self.get_parameter_defaults()
 
     def get_epoch_parameters(self):
-        # Select protocol parameters for this epoch
-        self.convenience_parameters = self.select_parameters_from_protocol_parameter_names(
-            ['width_height', 'intensity', 'speed', 'angle'], 
-            randomize_order = self.protocol_parameters['randomize_order'])
+        # Get protocol parameters for this epoch
+        self.convenience_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
         # Create flystim epoch parameters dictionary
-        self.epoch_parameters = self.get_moving_patch_parameters(angle=self.convenience_parameters['current_angle'],
-                                                                speed=self.convenience_parameters['current_speed'],
-                                                                width=self.convenience_parameters['current_width_height'][0],
-                                                                height=self.convenience_parameters['current_width_height'][1],
-                                                                color=self.convenience_parameters['current_intensity'])
+        self.epoch_parameters = self.get_moving_patch_parameters(angle=self.convenience_parameters['angle'],
+                                                                speed=self.convenience_parameters['speed'],
+                                                                width=self.convenience_parameters['width_height'][0],
+                                                                height=self.convenience_parameters['width_height'][1],
+                                                                color=self.convenience_parameters['intensity'])
 
     def get_parameter_defaults(self):
         self.protocol_parameters = {'ellipse': True,
                                     'width_height': [(5, 5), (10, 10), (15, 15), (20, 20), (25, 25), (30, 30)],
-                                    'intensity': [0.0],
+                                    'intensity': 0.0,
                                     'center': (0, 0),
-                                    'speed': [80.0],
-                                    'angle': [0.0],
+                                    'speed': 80.0,
+                                    'angle': 0.0,
                                     'render_on_cylinder': False,
                                     'randomize_order': True}
 
@@ -396,4 +430,3 @@ class MovingPatch(BaseProtocol):
                                'stim_time': 3.0,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
-

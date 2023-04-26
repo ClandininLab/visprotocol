@@ -471,10 +471,6 @@ class ExperimentGUI(QWidget):
                 self.protocol_parameter_input[key].setChecked(value)
             else:
                 self.protocol_parameter_input[key] = QLineEdit()
-                if isinstance(value, int):
-                    self.protocol_parameter_input[key].setValidator(QtGui.QIntValidator())
-                elif isinstance(value, float):
-                    self.protocol_parameter_input[key].setValidator(QtGui.QDoubleValidator())
 
                 self.protocol_parameter_input[key].setText(str(value))  # set to default value
             self.protocol_grid.addWidget(self.protocol_parameter_input[key], row_offset, 1, 1, 2)
