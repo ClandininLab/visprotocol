@@ -96,8 +96,8 @@ class BaseProtocol():
         Parameters that are not present in the preset will use the current protocol's default values.
         '''
 
-        self.getRunParameterDefaults()
-        self.getParameterDefaults()
+        self.get_run_parameter_defaults()
+        self.get_parameter_defaults()
 
         if name not in self.parameter_presets:
             warnings.warn(f'Warning: Preset {name} not found.', RuntimeWarning)
