@@ -627,27 +627,36 @@ class ExperimentGUI(QWidget):
             if is_number(s):
                 return float(s)
 
-            # List
-            elif s[0] == '[' and s[-1] == ']':
+            # List or tuple
+            elif (s[0] == '[' and s[-1] == ']') or (s[0] == '(' and s[-1] == ')'):                
                 l = []
-                bracket_level = 0
+                sq_bracket_level = 0
+                parantheses_level = 0
                 token = ''
                 # Process each character. If comma is found outside of brackets, end of token.
                 for c in s[1:-1]+',':
                     if c == '[':
-                        bracket_level += 1
+                        sq_bracket_level += 1
                     if c == ']':
-                        bracket_level -= 1
+                        sq_bracket_level -= 1
+                    if c == '(':
+                        parantheses_level += 1
+                    if c == ')':
+                        parantheses_level -= 1
 
-                    if bracket_level == 0 and c == ',': # End of token
+                    if sq_bracket_level == 0 and parantheses_level == 0 and c == ',': # End of token
                         l.append(parse_param_str(token))
                         token = ''
                     else:
                         token += c
 
-                if bracket_level != 0:
+                if sq_bracket_level != 0 or parantheses_level != 0:
                     warnings.warn('Could not parse paramter input: ' + s)
 
+                # If input was a tuple, convert l to a tuple
+                if s[0] == '(':
+                    l = tuple(l)
+                    
                 return l
 
             else:
