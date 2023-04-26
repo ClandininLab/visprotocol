@@ -79,7 +79,7 @@ class BaseProtocol():
         fname = os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID']) + '.yaml'
         if os.path.isfile(fname):
             with open(fname, 'r') as ymlfile:
-                self.parameter_presets = yaml.safe_load(ymlfile)
+                self.parameter_presets = yaml.load(ymlfile, Loader=yaml.Loader)
         else:
             self.parameter_presets = {}
 
