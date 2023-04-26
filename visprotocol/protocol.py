@@ -359,6 +359,10 @@ class DriftingSquareGrating(BaseProtocol):
         # Get protocol parameters for this epoch
         self.convenience_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
+        center = self.adjust_center(self.convenience_parameters['center'])
+        centerX = center[0]
+        centerY = center[1]
+
         self.epoch_parameters = {'name': 'RotatingGrating',
                                  'period': self.convenience_parameters['period'],
                                  'rate': self.convenience_parameters['rate'],
@@ -370,7 +374,8 @@ class DriftingSquareGrating(BaseProtocol):
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
                                  'profile': 'square',
-                                 'theta': self.screen_center[0]}
+                                 'theta': centerX,
+                                 'phi': centerY}
 
     def get_parameter_defaults(self):
         self.protocol_parameters = {'period': 20.0,
@@ -379,7 +384,6 @@ class DriftingSquareGrating(BaseProtocol):
                                     'mean': 0.5,
                                     'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                                     'center': (0, 0),
-                                    'center_size': 180.0,
                                     'randomize_order': True}
 
     def get_run_parameter_defaults(self):
