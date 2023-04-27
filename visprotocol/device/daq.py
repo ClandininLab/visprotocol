@@ -19,7 +19,7 @@ class DAQ():
 class DAQonServer(DAQ):
     '''
     Dummy DAQ class for when the DAQ resides on the server, so that we can call methods as if the DAQ is on the client side.
-    Assumes that server has registered functions "daq_sendTrigger" and "daq_outputStep".
+    Assumes that server has registered functions "daq_send_trigger" and "daq_output_step".
     '''
     def __init__(self):
         super().__init__()  # call the parent class init method
@@ -28,13 +28,13 @@ class DAQonServer(DAQ):
         self.manager = manager
     def send_trigger(self, multicall=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.daq_sendTrigger(**kwargs)
+            multicall.daq_send_trigger(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.daq_sendTrigger(**kwargs)
+            self.manager.daq_send_trigger(**kwargs)
     def output_step(self, multicall=None, **kwargs):
         if multicall is not None and isinstance(multicall, MyMultiCall):
-            multicall.daq_outputStep(**kwargs)
+            multicall.daq_output_step(**kwargs)
             return multicall
         if self.manager is not None:
-            self.manager.daq_outputStep(**kwargs)
+            self.manager.daq_output_step(**kwargs)
