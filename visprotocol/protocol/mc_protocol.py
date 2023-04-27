@@ -223,7 +223,6 @@ class OcclusionDuration(BaseProtocol):
                                               freq=self.convenience_parameters['current_opto_freq'], 
                                               amp=self.convenience_parameters['current_opto_amp'], 
                                               pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
-                                              amp=self.convenience_parameters['current_opto_amp'],
                                               pulse_width=self.convenience_parameters['current_opto_pulse_width'],
                                               scanRate=5000)
         multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'],
