@@ -6,6 +6,7 @@ Created on Thu Jun 21 10:51:42 2018
 @author: mhturner
 """
 import sys
+import warnings
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
@@ -684,6 +685,48 @@ class ImagingExperimentGUI(QWidget):
             self.populateGroups()
 
     def updateParametersFromFillableFields(self):
+        def is_number(s):
+            try:
+                float(s)
+                return True
+            except ValueError:
+                return False
+
+        def parse_param_str(s):
+            # Remove all whitespace
+            s = ''.join(s.split())
+            
+            # Base case: number
+            if is_number(s):
+                return float(s)
+            
+            # List
+            elif s[0] == '[' and s[-1] == ']':
+                l = []
+                bracket_level = 0
+                token = ''
+                # Process each character. If comma is found outside of brackets, end of token.
+                for c in s[1:-1]+',':
+                    if c == '[':
+                        bracket_level += 1
+                    if c == ']':
+                        bracket_level -= 1
+
+                    if bracket_level == 0 and c == ',': # End of token
+                        l.append(parse_param_str(token))
+                        token = ''
+                    else:
+                        token += c
+                        
+                if bracket_level != 0:
+                    warnings.warn('Could not parse paramter input: ' + s)
+                
+                return l
+            
+            else:
+                warnings.warn('Could not parse paramter input: ' + s)
+            
+
         # Empty the parameters before filling them from the GUI
         self.protocol_object.run_parameters = {'protocol_ID': self.protocol_object.run_parameters['protocol_ID']}
         self.protocol_object.protocol_parameters = {}
@@ -700,14 +743,7 @@ class ImagingExperimentGUI(QWidget):
             elif isinstance(self.protocol_parameter_input[key], str):
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
-                new_param_entry = self.protocol_parameter_input[key].text()
-
-                if new_param_entry[0] == '[':  # User trying to enter a list of values
-                    to_a_list = []
-                    for x in new_param_entry[1:-1].split(','): to_a_list.append(float(x))
-                    self.protocol_object.protocol_parameters[key] = to_a_list
-                else:
-                    self.protocol_object.protocol_parameters[key] = float(new_param_entry)
+                self.protocol_object.protocol_parameters[key] = parse_param_str(self.protocol_parameter_input[key].text())
 
         if self.cfg['loco_avail']:
             self.data.cfg['do_loco'] = self.loco_checkbox.isChecked() # loco

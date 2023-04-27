@@ -10,8 +10,9 @@ occluder_present_notp_v0:
     obj_start_theta:
     - 0.0
     obj_end_theta: 210.0
-    obj_width: 35.0
-    obj_height: 25.0
+    obj_wh:
+    - - 35.0
+      - 25.0
     obj_prime_color:
     - 0.3
     obj_probe_color: 0.3
@@ -21,7 +22,7 @@ occluder_present_notp_v0:
     obj_surface_radius: 3.0
     occluder_ellipse: false
     occluder_theta: 120.0
-    occluder_width:
+    occluder_wh:
     - 0.0
     - 60.0
     occluder_height: 100.0
@@ -60,8 +61,9 @@ inv_occluder_present_notp_v0:
     obj_start_theta:
     - 0.0
     obj_end_theta: 210.0
-    obj_width: 35.0
-    obj_height: 25.0
+    obj_wh:
+    - - 35.0
+      - 25.0
     obj_prime_color:
     - 0.3
     obj_probe_color: 0.0
@@ -71,10 +73,11 @@ inv_occluder_present_notp_v0:
     obj_surface_radius: 3.0
     occluder_ellipse: false
     occluder_theta: 120.0
-    occluder_width:
-    - 0.0
-    - 60.0
-    occluder_height: 100.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 60.0
+      - 100.0
     occluder_color:
     - 1.0
     occluder_surface_radius: 2.0
@@ -110,8 +113,9 @@ inv_occluder_present_notp_v1:
     obj_start_theta:
     - 0.0
     obj_end_theta: 210.0
-    obj_width: 35.0
-    obj_height: 25.0
+    obj_wh:
+    - - 35.0
+      - 25.0
     obj_prime_color:
     - 0.3
     obj_probe_color: 0.3
@@ -121,10 +125,11 @@ inv_occluder_present_notp_v1:
     obj_surface_radius: 3.0
     occluder_ellipse: false
     occluder_theta: 120.0
-    occluder_width:
-    - 0.0
-    - 60.0
-    occluder_height: 100.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 60.0
+      - 100.0
     occluder_color:
     - 1.0
     occluder_surface_radius: 2.0
@@ -137,6 +142,370 @@ inv_occluder_present_notp_v1:
     closed_loop:
     - 1.0
     preprime_duration: 1.0
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+infinite_occluder_short_trial:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 480.0
+    pre_time: 0.5
+    tail_time: 0.0
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 200.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    obj_prime_color:
+    - 0.3
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 120.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 60.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+long_occluder_short_trial:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 340.0
+    pre_time: 0.5
+    tail_time: 0.0
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 180.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    obj_prime_color:
+    - 0.0
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 215.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 250.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+long_occluder_short_trial_v2:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 340.0
+    pre_time: 0.25
+    tail_time: 0.25
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 180.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    obj_prime_color:
+    - 0.0
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 215.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 250.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+long_occluder_longer_trial:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 400.0
+    pre_time: 0.25
+    tail_time: 0.25
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 240.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    obj_prime_color:
+    - 0.0
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 215.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 250.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+no_occluder_shorter_trial:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 200.0
+    pre_time: 0.25
+    tail_time: 0.25
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 240.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    obj_prime_color:
+    - 0.0
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 215.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 2.5
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+long_occluder_longer_trial_NO_OPTO:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 400.0
+    pre_time: 0.25
+    tail_time: 0.25
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 240.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    obj_prime_color:
+    - 0.0
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 215.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    - - 250.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
+    pause_duration:
+    - 0.0
+    opto_pre_time:
+    - 0.0
+    opto_freq:
+    - 50.0
+    opto_amp:
+    - 0.0
+    opto_pulse_width:
+    - 0.01
+    randomize_order: true
+size_sweep:
+  run_parameters:
+    protocol_ID: OcclusionShape
+    num_epochs: 360.0
+    pre_time: 0.25
+    tail_time: 0.25
+    idle_color: 1.0
+  protocol_parameters:
+    obj_ellipse: true
+    obj_start_theta:
+    - 0.0
+    obj_end_theta: 180.0
+    obj_wh:
+    - - 35.0
+      - 25.0
+    - - 25.0
+      - 17.86
+    - - 15.0
+      - 10.71
+    obj_prime_color:
+    - 0.0
+    obj_probe_color: 1.0
+    obj_speed:
+    - 30.0
+    - -30.0
+    obj_surface_radius: 3.0
+    occluder_ellipse: false
+    occluder_theta: 215.0
+    occluder_wh:
+    - - 0.0
+      - 100.0
+    occluder_color:
+    - 1.0
+    occluder_surface_radius: 2.0
+    render_on_cylinder: true
+    center:
+    - 0.0
+    - 0.0
+    angle:
+    - 0.0
+    closed_loop:
+    - 1.0
+    preprime_duration: 0.5
     pause_duration:
     - 0.0
     opto_pre_time:

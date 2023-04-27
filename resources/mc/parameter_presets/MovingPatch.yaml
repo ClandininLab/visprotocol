@@ -1,0 +1,27 @@
+prediction:
+  run_parameters:
+    protocol_ID: MovingPatch
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 4.0
+    tail_time: 1.0
+    idle_color: 0.0
+  protocol_parameters:
+    ellipse: false
+    width:
+    - 15.0
+    height:
+    - 150.0
+    intensity:
+    - 1.0
+    center:
+    - 53.0
+    - -15.0
+    speed:
+    - 30.0
+    angle:
+    - 55.0
+    render_on_cylinder: true
+    closed_loop:
+    - 0.0
+    randomize_order: true

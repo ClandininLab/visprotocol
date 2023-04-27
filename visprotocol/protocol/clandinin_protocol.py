@@ -10,6 +10,7 @@ Protocol parent class. Override any methods in here in the user protocol subclas
 -convenience_parameters: user-defined params to save to epoch data, to simplify downstream analysis
                      *saved as attributes at the individual epoch level
 """
+import itertools
 import numpy as np
 from time import sleep
 
@@ -17,6 +18,7 @@ import os.path
 import os
 import yaml
 import inspect
+import warnings
 import flyrpc.multicall
 
 import visprotocol
@@ -78,13 +80,37 @@ class BaseProtocol():
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
     def selectProtocolPreset(self, name):
-        if name in self.parameter_presets:
-            self.run_parameters = self.parameter_presets[name]['run_parameters']
-            self.protocol_parameters = self.parameter_presets[name]['protocol_parameters']
-        else:
-            self.getRunParameterDefaults()
-            self.getParameterDefaults()
-
+        '''
+        Parameters that are not present in the preset will use the current protocol's default values.
+        '''
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+        
+        if name not in self.parameter_presets:
+            warnings.warn(f'Warning: Preset {name} not found.', RuntimeWarning)
+            return
+        
+        # Warn about any param that is not in the preset
+        for k in self.run_parameters.keys():
+            if k not in self.parameter_presets[name]['run_parameters'].keys():
+                warnings.warn(f'Warning: run parameter {k} not found in preset {name}; using default.', RuntimeWarning)
+        for k in self.protocol_parameters.keys():
+            if k not in self.parameter_presets[name]['protocol_parameters'].keys():
+                warnings.warn(f'Warning: protocol parameter {k} not found in preset {name}; using default.', RuntimeWarning)
+        
+        # Update the protocol parameters
+        # Warn about any preset param that is not in the current protocol
+        for k, v in self.parameter_presets[name]['run_parameters'].items():
+            if k in self.run_parameters.keys():
+                self.run_parameters[k] = v
+            else:
+                warnings.warn(f'Warning: run parameter {k} not found in current protocol. Skipping preset parameter.', RuntimeWarning)
+        for k, v in self.parameter_presets[name]['protocol_parameters'].items():
+            if k in self.protocol_parameters.keys():
+                self.protocol_parameters[k] = v
+            else:
+                warnings.warn(f'Warning: protocol parameter {k} not found in current protocol. Skipping preset parameter.', RuntimeWarning)
+            
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1
 
@@ -172,9 +198,9 @@ class BaseProtocol():
                     else:
                         parameter_list_new.append(param)
                 parameter_list = tuple(parameter_list_new)
-
+                
                 # parameter_sequence is num_combinations by num params
-                parameter_sequence = np.array(np.meshgrid(*parameter_list)).T.reshape(np.prod(list(len(x) for x in parameter_list)), len(parameter_list))
+                parameter_sequence = list(itertools.product(*parameter_list))
             else:
                 # keep params in lists associated with one another
                 # requires param lists of equal length
@@ -190,9 +216,9 @@ class BaseProtocol():
         if draw_ind == 0 and randomize_order: # randomize sequence
             rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
             if len(np.shape(self.persistent_parameters['parameter_sequence'])) == 1:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds])
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'], dtype=object)[rand_inds])
             else:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'])[rand_inds, :])
+                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'], dtype=object)[rand_inds, :])
 
         current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
 

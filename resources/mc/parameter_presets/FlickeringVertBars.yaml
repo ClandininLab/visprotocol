@@ -107,3 +107,51 @@ left_mapping_v2:
     - 4.0
     render_on_cylinder: true
     randomize_order: true
+left_mapping_v3:
+  run_parameters:
+    protocol_ID: FlickeringVertBars
+    num_epochs: 115.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 1.0
+    idle_color: 0.0
+  protocol_parameters:
+    center:
+    - 53.0
+    - -15.0
+    angle:
+    - 55.0
+    height: 150.0
+    width: 10.0
+    theta:
+    - 45.0
+    - 40.0
+    - 35.0
+    - 30.0
+    - 25.0
+    - 20.0
+    - 15.0
+    - 10.0
+    - 5.0
+    - 0.0
+    - -5.0
+    - -10.0
+    - -15.0
+    - -20.0
+    - -25.0
+    - -30.0
+    - -35.0
+    - -40.0
+    - -45.0
+    - 2.5
+    - -2.5
+    - -27.5
+    - -32.5
+    phi: 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 4.0
+    render_on_cylinder: true
+    fly_heading: 0.0
+    randomize_order: true
