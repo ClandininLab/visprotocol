@@ -16,8 +16,6 @@ class BaseClient():
         self.pause = False
         self.cfg = cfg
         
-        self.do_loco = False
-
         # # # Load server options from config file and selections # # #
         self.server_options = config_tools.get_server_options(self.cfg)
         self.trigger_device = config_tools.load_trigger_device(self.cfg)
@@ -66,7 +64,7 @@ class BaseClient():
             print('Warning - you are not saving your metadata!')
 
         # Set up locomotion data saving on the server and start locomotion device / software
-        if self.do_loco:
+        if protocol_object.run_parameters['do_loco']:
             self.start_loco(data, save_metadata_flag=save_metadata_flag)
             
         # Trigger acquisition of scope and cameras by send triggering TTL through the DAQ device (if device is set)
@@ -76,7 +74,7 @@ class BaseClient():
                 self.trigger_device.send_trigger()
 
         # Start locomotion loop on the server, which is superfluous if closed loop is not needed for the exp.
-        if self.do_loco:
+        if protocol_object.run_parameters['do_loco']:
             self.start_loco_loop()
 
         # # # Epoch run loop # # #
@@ -97,7 +95,7 @@ class BaseClient():
         self.manager.black_corner_square()
 
         # Stop locomotion device / software
-        if self.do_loco:
+        if protocol_object.run_parameters['do_loco']:
             self.stop_loco()
 
         self.manager.print_on_server('Stopping run.')

@@ -54,6 +54,9 @@ class BaseProtocol():
 
         # Rig-specific screen center
         self.screen_center = config_tools.get_screen_center(self.cfg)
+        
+        # Rig-specific loco_available
+        self.loco_available = config_tools.get_loco_available(self.cfg)
 
     def adjust_center(self, relative_center):
         absolute_center = [sum(x) for x in zip(relative_center, self.screen_center)]
@@ -91,7 +94,7 @@ class BaseProtocol():
         with open(os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID'] + '.yaml'), 'w+') as ymlfile:
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
-    def select_protocol_preset(self, name):
+    def select_protocol_preset(self, name='Default'):
         '''
         Parameters that are not present in the preset will use the current protocol's default values.
         '''
@@ -99,10 +102,17 @@ class BaseProtocol():
         self.get_run_parameter_defaults()
         self.get_parameter_defaults()
 
-        if name not in self.parameter_presets:
+        # If loco is available, add/set "do_loco" boolean to run parameters
+        if self.loco_available:
+            self.run_parameters['do_loco'] = False
+
+        # If name is 'Default' or is not in parameter_presets, just use the current protocol's defaults
+        if name == 'Default':
+            return
+        elif name not in self.parameter_presets:
             warnings.warn(f'Warning: Preset {name} not found.', RuntimeWarning)
             return
-
+        
         # Warn about any param that is not in the preset
         for k in self.run_parameters.keys():
             if k not in self.parameter_presets[name]['run_parameters'].keys():
@@ -155,25 +165,46 @@ class BaseProtocol():
         multicall()
 
     def start_stimuli(self, manager, append_stim_frames=False, print_profile=True, multicall=None):
-        # pre time
+        
+        # locomotion setting variables
+        do_loco = self.run_parameters.get('do_loco', False)
+        loco_closed_loop = do_loco and self.convenience_parameters.get('closed_loop', False)
+        save_pos_history = loco_closed_loop and self.save_metadata_flag
+        
+        ### pre time
         sleep(self.run_parameters['pre_time'])
         
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(manager)
 
-        # stim time
+        ### stim time
+        # locomotion / closed loop
+        if do_loco:
+            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_data_prev=True, write_log=self.save_metadata_flag)
+        if loco_closed_loop:
+            multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
+            multicall.loco_loop_start_closed_loop()
+        
         multicall.start_stim()
         multicall.start_corner_square()
         multicall()
         sleep(self.run_parameters['stim_time'])
 
-        # tail time
+        ### tail time
         multicall = flyrpc.multicall.MyMultiCall(manager)
         multicall.stop_stim(print_profile=print_profile)
         multicall.black_corner_square()
+
+        # locomotion / closed loop
+        if loco_closed_loop:
+            multicall.loco_loop_stop_closed_loop()
+        if save_pos_history:
+            multicall.save_pos_history_to_file(epoch_id=f'{self.num_epochs_completed:03d}')
+
         multicall()
 
         sleep(self.run_parameters['tail_time'])
+        
 # %% Convenience methods
     def select_parameters_from_lists(self, parameter_list, all_combinations=True, randomize_order=False):
         """
