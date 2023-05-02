@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from time import sleep
+import posixpath
+from PyQt5.QtWidgets import QApplication
+
 from flyrpc.transceiver import MySocketClient
 from flystim.stim_server import launch_stim_server
 from flystim.screen import Screen
-from PyQt5.QtWidgets import QApplication
 from visprotocol.util import config_tools
 
 class BaseClient():
@@ -12,6 +15,8 @@ class BaseClient():
         self.stop = False
         self.pause = False
         self.cfg = cfg
+        
+        self.do_loco = False
 
         # # # Load server options from config file and selections # # #
         self.server_options = config_tools.get_server_options(self.cfg)
@@ -60,11 +65,19 @@ class BaseClient():
         else:
             print('Warning - you are not saving your metadata!')
 
+        # Set up locomotion data saving on the server and start locomotion device / software
+        if self.do_loco:
+            self.start_loco(data, save_metadata_flag=save_metadata_flag)
+            
         # Trigger acquisition of scope and cameras by send triggering TTL through the DAQ device (if device is set)
         if protocol_object.trigger_on_epoch_run is True:
             if self.trigger_device is not None:
                 print("Triggering acquisition devices.")
                 self.trigger_device.send_trigger()
+
+        # Start locomotion loop on the server, which is superfluous if closed loop is not needed for the exp.
+        if self.do_loco:
+            self.start_loco_loop()
 
         # # # Epoch run loop # # #
         self.manager.print_on_server("Starting run.")
@@ -82,6 +95,11 @@ class BaseClient():
 
         # Set frame tracker to dark
         self.manager.black_corner_square()
+
+        # Stop locomotion device / software
+        if self.do_loco:
+            self.stop_loco()
+
         self.manager.print_on_server('Stopping run.')
 
     def start_epoch(self, protocol_object, data, save_metadata_flag=True):
@@ -110,3 +128,36 @@ class BaseClient():
             data.end_epoch(protocol_object)
         
         protocol_object.advance_epoch_counter()
+
+    #%% Locomotion methods
+    def start_loco(self, data, save_metadata_flag=True):
+        '''
+        Set up locomotion data saving on the server and start locomotion device / software
+        '''
+        if save_metadata_flag:
+            server_data_directory = self.server_options.get('data_directory', None)
+            if server_data_directory is not None:
+                # set server-side directory in which to save animal positions from each screen.
+                server_series_dir = posixpath.join(server_data_directory, data.experiment_file_name, str(data.series_count))
+                server_pos_history_dir = posixpath.join(server_series_dir, 'flystim_pos')
+                self.manager.set_save_pos_history_dir(server_pos_history_dir)
+
+                # set server-side directory in which to save locomotion data
+                server_loco_dir = posixpath.join(self.server_series_dir, 'loco')
+                self.manager.loco_set_save_directory(server_loco_dir)
+            else:
+                print("Warning: Locomotion data won't be saved without server's data_directory specified in config file.")
+        self.manager.loco_start()
+        sleep(3) # Give locomotion device / software time to load
+    
+    def start_loco_loop(self):
+        '''
+        Start locomotion loop on the server for closed-loop updating
+        '''
+        sleep(2) # Give loco time to start acquiring
+        self.manager.loco_loop_start() # start loop, which is superfluous if closed loop is not needed for the exp.
+        
+    def stop_loco(self):
+        self.manager.loco_close()
+        self.manager.loco_set_save_directory(None)
+    

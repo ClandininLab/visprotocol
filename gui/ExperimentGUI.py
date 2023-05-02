@@ -71,6 +71,9 @@ class ExperimentGUI(QWidget):
             self.client = client.BaseClient(self.cfg)
 
         print('# # # # # # # # # # # # # # # #')
+        
+        # Store whether locomotion is available
+        self.loco_available = config_tools.get_loco_available(self.cfg)
 
         self.initUI()
 
@@ -168,6 +171,14 @@ class ExperimentGUI(QWidget):
         self.epoch_count.setFrameShadow(QFrame.Shadow(1))
         self.protocol_control_grid.addWidget(self.epoch_count, 1, 1)
         self.epoch_count.setText('')
+
+        # loco checkbox:
+        if self.loco_available:
+            loco_label = QLabel('Locomotion:')
+            self.protocol_control_grid.addWidget(loco_label, 1, 2)
+            self.loco_checkbox = QCheckBox()
+            self.loco_checkbox.setChecked(False)
+            self.protocol_control_grid.addWidget(self.loco_checkbox, 1, 3)
 
         # View button:
         self.view_button = QPushButton("View", self)
@@ -675,7 +686,10 @@ class ExperimentGUI(QWidget):
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
                 self.protocol_object.protocol_parameters[key] = parse_param_str(self.protocol_parameter_input[key].text())
-                
+
+        # Check and store whether to use locomotion
+        self.client.do_loco = self.loco_available and self.loco_checkbox.isChecked() # loco
+
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
         group_dset_dict = h5io.get_hierarchy(file_path, additional_exclusions='rois')

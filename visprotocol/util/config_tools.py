@@ -28,7 +28,8 @@ def get_default_config():
             'current_cfg_name': 'default',
             'rig_config' : {'default': {'screen_center': [0, 0]
                                         }
-                            }
+                            },
+            'loco_available': False
             }
 
 def user_config_directory_exists():
@@ -145,7 +146,8 @@ def get_server_options(cfg):
         print('No rig selected, using default server settings')
         server_options = {'host': '0.0.0.0',
                           'port': 60629,
-                          'use_server': False}
+                          'use_server': False,
+                          'data_directory': None}
     return server_options
 
 def get_data_directory(cfg):
@@ -155,6 +157,14 @@ def get_data_directory(cfg):
         print('No rig selected, using default data directory')
         data_directory = os.getcwd()
     return data_directory
+
+def get_loco_available(cfg):
+    if 'current_rig_name' in cfg:
+        loco_available = cfg.get('rig_config').get(cfg.get('current_rig_name')).get('loco_available', False)
+    else:
+        print('No rig selected, not using locomotion')
+        loco_available = False
+    return loco_available
 
 def get_experimenter(cfg):
     return cfg.get('experimenter', '')
