@@ -3,7 +3,7 @@ import socket, select
 import threading
 import json
 from math import degrees
-from time import time, sleep
+from time import time
 
 class LocoManager():
     def __init__(self) -> None:
@@ -43,19 +43,6 @@ class LocoSocketManager():
         if self.sock is None:
             return
         
-        ##
-        # if wait_for is None:
-        #     ready = select.select([self.sock], [], [])[0]
-        # else:
-        #     ready = select.select([self.sock], [], [], wait_for)[0]
-
-        # if ready:
-        #     new_data = self.sock.recv(4096)
-        # else:
-        #     return self.get_line(wait_for=wait_for)
-        ##
-
-        ##
         ready = []
         while not ready:
             if self.sock == -1:
