@@ -3,7 +3,7 @@ import signal, sys
 from flystim.screen import Screen
 from flystim.stim_server import launch_stim_server, StimServer
 
-from visprotocol.device.loco_managers import LocoClosedLoopManager
+from visprotocol.device.loco_managers import LocoManager, LocoClosedLoopManager
 from visprotocol.device.daq import DAQ
 
 class BaseServer():
@@ -17,7 +17,7 @@ class BaseServer():
         self.daq_device = None        
 
         if loco_class is not None:
-            assert isinstance(loco_class, LocoClosedLoopManager)
+            assert isinstance(loco_class, LocoManager)
             self.__set_up_loco__(loco_class, **loco_kwargs)
         if daq_class is not None:
             assert isinstance(daq_class, DAQ)
@@ -47,13 +47,15 @@ class BaseServer():
         self.manager.register_function_on_root(self.loco_manager.set_save_directory, "loco_set_save_directory")
         self.manager.register_function_on_root(self.loco_manager.start, "loco_start")
         self.manager.register_function_on_root(self.loco_manager.close, "loco_close")
-        self.manager.register_function_on_root(self.loco_manager.set_pos_0, "loco_set_pos_0")
-        self.manager.register_function_on_root(self.loco_manager.write_to_log, "loco_write_to_log")
-        self.manager.register_function_on_root(self.loco_manager.loop_start, "loco_loop_start")
-        self.manager.register_function_on_root(self.loco_manager.loop_stop, "loco_loop_stop")
-        self.manager.register_function_on_root(self.loco_manager.loop_start_closed_loop, "loco_loop_start_closed_loop")
-        self.manager.register_function_on_root(self.loco_manager.loop_stop_closed_loop, "loco_loop_stop_closed_loop")
-        self.manager.register_function_on_root(self.loco_manager.loop_update_closed_loop_vars, "loco_loop_update_closed_loop_vars")
+        
+        if isinstance(loco_class, LocoClosedLoopManager):
+            self.manager.register_function_on_root(self.loco_manager.set_pos_0, "loco_set_pos_0")
+            self.manager.register_function_on_root(self.loco_manager.write_to_log, "loco_write_to_log")
+            self.manager.register_function_on_root(self.loco_manager.loop_start, "loco_loop_start")
+            self.manager.register_function_on_root(self.loco_manager.loop_stop, "loco_loop_stop")
+            self.manager.register_function_on_root(self.loco_manager.loop_start_closed_loop, "loco_loop_start_closed_loop")
+            self.manager.register_function_on_root(self.loco_manager.loop_stop_closed_loop, "loco_loop_stop_closed_loop")
+            self.manager.register_function_on_root(self.loco_manager.loop_update_closed_loop_vars, "loco_loop_update_closed_loop_vars")
 
     def __set_up_daq__(self, daq_class, **kwargs):
         self.daq_device = daq_class(**kwargs)

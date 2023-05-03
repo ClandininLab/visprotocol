@@ -73,8 +73,8 @@ class BaseClient():
                 print("Triggering acquisition devices.")
                 self.trigger_device.send_trigger()
 
-        # Start locomotion loop on the server, which is superfluous if closed loop is not needed for the exp.
-        if protocol_object.run_parameters['do_loco']:
+        # Start locomotion loop on the server only if closed_loop is an option for the protocol.
+        if protocol_object.run_parameters['do_loco'] and 'loco_pos_closed_loop' in protocol_object.protocol_parameters:
             self.start_loco_loop()
 
         # # # Epoch run loop # # #

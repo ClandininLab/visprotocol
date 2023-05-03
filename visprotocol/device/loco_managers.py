@@ -8,6 +8,15 @@ from time import time
 class LocoManager():
     def __init__(self) -> None:
         pass
+    
+    def set_save_directory(self, save_dir):
+        pass
+    
+    def start(self):
+        pass
+    
+    def close(self):
+        pass
 
 class LocoSocketManager():
     def __init__(self, host, port, udp=True) -> None:

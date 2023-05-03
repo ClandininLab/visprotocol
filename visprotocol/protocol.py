@@ -168,8 +168,9 @@ class BaseProtocol():
         
         # locomotion setting variables
         do_loco = self.run_parameters.get('do_loco', False)
-        loco_closed_loop = do_loco and self.convenience_parameters.get('closed_loop', False)
-        save_pos_history = loco_closed_loop and self.save_metadata_flag
+        do_loco_closed_loop = do_loco and self.convenience_parameters.get('loco_pos_closed_loop', False)
+        loco_pos_closed_loop_in_param = 'loco_pos_closed_loop' in self.protocol_parameters
+        save_pos_history = do_loco_closed_loop and self.save_metadata_flag
         
         ### pre time
         sleep(self.run_parameters['pre_time'])
@@ -179,9 +180,9 @@ class BaseProtocol():
 
         ### stim time
         # locomotion / closed loop
-        if do_loco:
+        if do_loco and loco_pos_closed_loop_in_param:
             multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_data_prev=True, write_log=self.save_metadata_flag)
-        if loco_closed_loop:
+        if do_loco_closed_loop:
             multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
             multicall.loco_loop_start_closed_loop()
         
@@ -196,7 +197,7 @@ class BaseProtocol():
         multicall.black_corner_square()
 
         # locomotion / closed loop
-        if loco_closed_loop:
+        if do_loco_closed_loop:
             multicall.loco_loop_stop_closed_loop()
         if save_pos_history:
             multicall.save_pos_history_to_file(epoch_id=f'{self.num_epochs_completed:03d}')
