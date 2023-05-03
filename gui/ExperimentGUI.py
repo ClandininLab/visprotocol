@@ -551,7 +551,7 @@ class ExperimentGUI(QWidget):
 
     def send_run(self, save_metadata_flag=True):
         # check to make sure a protocol has been selected
-        if self.protocol_object.run_parameters['protocol_ID'] == '':
+        if self.protocol_object.__class__.__name__ == 'BaseProtocol':
             self.status_label.setText('Select a protocol')
             return  # no protocol exists, don't send anything
 
@@ -654,7 +654,7 @@ class ExperimentGUI(QWidget):
                 warnings.warn('Could not parse paramter input: ' + s)
 
         # Empty the parameters before filling them from the GUI
-        self.protocol_object.run_parameters = {'protocol_ID': self.protocol_object.run_parameters['protocol_ID']}
+        self.protocol_object.run_parameters = {}
         self.protocol_object.protocol_parameters = {}
 
         for key, value in self.run_parameter_input.items():

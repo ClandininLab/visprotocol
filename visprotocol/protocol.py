@@ -5,7 +5,7 @@ Protocol parent class. Override any methods in here in the user protocol subclas
 
 A user-defined protocol class needs to overwrite the following methods, at minimum:
 -get_epoch_parameters()
--get_parameter_defaults()
+-get_protocol_parameter_defaults()
 
 And probably also:
 -get_run_parameter_defaults()
@@ -14,9 +14,9 @@ see the simple example protocol classes at the bottom of this module.
 
 -protocol_parameters: user-defined params that are mapped to flystim epoch params
                      *saved as attributes at the epoch run level
--epoch_parameters: parameter set used to define flystim stimulus
+-epoch_protocol_parameters: epoch-specific user-defined params that are mapped to flystim epoch params
                      *saved as attributes at the individual epoch level
--convenience_parameters: user-defined params to save to epoch data, to simplify downstream analysis
+-epoch_stim_parameters: parameter set used to define flystim stimulus
                      *saved as attributes at the individual epoch level
 """
 import numpy as np
@@ -40,12 +40,12 @@ class BaseProtocol():
         self.trigger_on_epoch = False  # Used in control.EpochRun.start_epoch(), sends a TTL trigger to start acquisition devices
         self.save_metadata_flag = False  # Bool, whether or not to save this series. Set to True by GUI on 'record' but not 'view'.
 
-        # convenience_parameters used to store protocol parameters that will be saved out in an easily accessible place in the data file
+        # epoch_protocol_parameters used to store protocol parameters that will be saved out in an easily accessible place in the data file
         # Fill this in with desired parameters in get_epoch_parameters(). Can also be used to control other features of the stimulus and used in load_stimuli()
-        self.convenience_parameters = {}
+        self.epoch_protocol_parameters = {}
 
         self.get_run_parameter_defaults()
-        self.get_parameter_defaults()
+        self.get_protocol_parameter_defaults()
         self.load_parameter_presets()
         
         self.parameter_preset_directory = config_tools.get_parameter_preset_directory(self.cfg)
@@ -64,22 +64,19 @@ class BaseProtocol():
 
     def get_epoch_parameters(self):
         """ Overwrite me in the child subclass"""
-        self.epoch_parameters = None
+        self.epoch_protocol_parameters = None
+        self.epoch_stim_parameters = None
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'protocol_ID': '',
-                               'num_epochs': 5,
-                               'pre_time': 1.0,
-                               'stim_time': 4.0,
-                               'tail_time': 1.0,
+        self.run_parameters = {'num_epochs': 40, 
                                'idle_color': 0.5}
 
-    def get_parameter_defaults(self):
+    def get_protocol_parameter_defaults(self):
         """ Overwrite me in the child subclass"""
         self.protocol_parameters = {}
 
     def load_parameter_presets(self):
-        fname = os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID']) + '.yaml'
+        fname = os.path.join(self.parameter_preset_directory, self.__class__.__name__) + '.yaml'
         if os.path.isfile(fname):
             with open(fname, 'r') as ymlfile:
                 self.parameter_presets = yaml.load(ymlfile, Loader=yaml.Loader)
@@ -91,7 +88,7 @@ class BaseProtocol():
         new_preset = {'run_parameters': self.run_parameters,
                       'protocol_parameters': self.protocol_parameters}
         self.parameter_presets[name] = new_preset
-        with open(os.path.join(self.parameter_preset_directory, self.run_parameters['protocol_ID'] + '.yaml'), 'w+') as ymlfile:
+        with open(os.path.join(self.parameter_preset_directory, self.__class__.__name__ + '.yaml'), 'w+') as ymlfile:
             yaml.dump(self.parameter_presets, ymlfile, default_flow_style=False, sort_keys=False)
 
     def select_protocol_preset(self, name='Default'):
@@ -100,7 +97,7 @@ class BaseProtocol():
         '''
 
         self.get_run_parameter_defaults()
-        self.get_parameter_defaults()
+        self.get_protocol_parameter_defaults()
 
         # If loco is available, add/set "do_loco" boolean to run parameters
         if self.loco_available:
@@ -149,6 +146,22 @@ class BaseProtocol():
         self.variable_protocol_parameter_names = [k for k,v in self.protocol_parameters.items() if      isinstance(v, list) and len(v) > 1]
         self.static_protocol_parameter_names   = [k for k,v in self.protocol_parameters.items() if not (isinstance(v, list) and len(v) > 1)]
 
+    def check_required_run_parameters(self):
+        required_run_parameters = ['num_epochs', 'idle_color']
+        if self.loco_available:
+            required_run_parameters.append('do_loco')
+        
+        for p in required_run_parameters:
+            if p not in self.run_parameters:
+                raise ValueError(f'Run parameter {p} is required but not found in {self.run_parameters}')
+    
+    def check_required_epoch_protocol_parameters(self):
+        required_protocol_parameters = ['pre_time', 'stim_time', 'tail_time']
+        
+        for p in required_protocol_parameters:
+            if p not in self.epoch_protocol_parameters:
+                raise ValueError(f'Epoch protocol parameter {p} is required but not found in {self.epoch_protocol_parameters}')
+
     def load_stimuli(self, manager, multicall=None):
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(manager)
@@ -156,11 +169,11 @@ class BaseProtocol():
         bg = self.run_parameters.get('idle_color')
         multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
 
-        if isinstance(self.epoch_parameters, list):
-            for ep in self.epoch_parameters:
+        if isinstance(self.epoch_stim_parameters, list):
+            for ep in self.epoch_stim_parameters:
                 multicall.load_stim(**ep.copy(), hold=True)
         else:
-            multicall.load_stim(**self.epoch_parameters.copy(), hold=True)
+            multicall.load_stim(**self.epoch_stim_parameters.copy(), hold=True)
 
         multicall()
 
@@ -168,12 +181,12 @@ class BaseProtocol():
         
         # locomotion setting variables
         do_loco = self.run_parameters.get('do_loco', False)
-        do_loco_closed_loop = do_loco and self.convenience_parameters.get('loco_pos_closed_loop', False)
+        do_loco_closed_loop = do_loco and self.epoch_protocol_parameters.get('loco_pos_closed_loop', False)
         loco_pos_closed_loop_in_param = 'loco_pos_closed_loop' in self.protocol_parameters
         save_pos_history = do_loco_closed_loop and self.save_metadata_flag
         
         ### pre time
-        sleep(self.run_parameters['pre_time'])
+        sleep(self.epoch_protocol_parameters['pre_time'])
         
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(manager)
@@ -189,7 +202,7 @@ class BaseProtocol():
         multicall.start_stim()
         multicall.start_corner_square()
         multicall()
-        sleep(self.run_parameters['stim_time'])
+        sleep(self.epoch_protocol_parameters['stim_time'])
 
         ### tail time
         multicall = flyrpc.multicall.MyMultiCall(manager)
@@ -204,7 +217,7 @@ class BaseProtocol():
 
         multicall()
 
-        sleep(self.run_parameters['tail_time'])
+        sleep(self.epoch_protocol_parameters['tail_time'])
         
 # %% Convenience methods
     def select_parameters_from_lists(self, parameter_list, all_combinations=True, randomize_order=False):
@@ -320,7 +333,7 @@ class BaseProtocol():
 
         centerX = center[0]
         centerY = center[1]
-        stim_time = self.run_parameters['stim_time']
+        stim_time = self.epoch_protocol_parameters['stim_time']
         if distance_to_travel is None:  # distance_to_travel is set by speed and stim_time
             distance_to_travel = speed * stim_time
             # trajectory just has two points, at time=0 and time=stim_time
@@ -385,23 +398,25 @@ class DriftingSquareGrating(BaseProtocol):
         super().__init__(cfg)
 
         self.get_run_parameter_defaults()
-        self.get_parameter_defaults()
+        self.get_protocol_parameter_defaults()
 
     def get_epoch_parameters(self):
+        super().get_epoch_parameters()
+        
         # Get protocol parameters for this epoch
-        self.convenience_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
+        self.epoch_protocol_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
-        center = self.adjust_center(self.convenience_parameters['center'])
+        center = self.adjust_center(self.epoch_protocol_parameters['center'])
         centerX = center[0]
         centerY = center[1]
 
-        self.epoch_parameters = {'name': 'RotatingGrating',
-                                 'period': self.convenience_parameters['period'],
-                                 'rate': self.convenience_parameters['rate'],
+        self.epoch_stim_parameters = {'name': 'RotatingGrating',
+                                 'period': self.epoch_protocol_parameters['period'],
+                                 'rate': self.epoch_protocol_parameters['rate'],
                                  'color': [1, 1, 1, 1],
-                                 'mean': self.convenience_parameters['mean'],
-                                 'contrast': self.convenience_parameters['contrast'],
-                                 'angle': self.convenience_parameters['angle'],
+                                 'mean': self.epoch_protocol_parameters['mean'],
+                                 'contrast': self.epoch_protocol_parameters['contrast'],
+                                 'angle': self.epoch_protocol_parameters['angle'],
                                  'offset': 0.0,
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
@@ -409,8 +424,12 @@ class DriftingSquareGrating(BaseProtocol):
                                  'theta': centerX,
                                  'phi': centerY}
 
-    def get_parameter_defaults(self):
-        self.protocol_parameters = {'period': 20.0,
+    def get_protocol_parameter_defaults(self):
+        self.protocol_parameters = {'pre_time': 1.0,
+                                    'stim_time': 4.0,
+                                    'tail_time': 1.0,
+                                    
+                                    'period': 20.0,
                                     'rate': 20.0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
@@ -419,11 +438,7 @@ class DriftingSquareGrating(BaseProtocol):
                                     'randomize_order': True}
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'protocol_ID': 'DriftingSquareGrating',
-                               'num_epochs': 40,
-                               'pre_time': 1.0,
-                               'stim_time': 4.0,
-                               'tail_time': 1.0,
+        self.run_parameters = {'num_epochs': 40,
                                'idle_color': 0.5}
 
 # %%
@@ -436,22 +451,28 @@ class MovingPatch(BaseProtocol):
         super().__init__(cfg)
 
         self.get_run_parameter_defaults()
-        self.get_parameter_defaults()
+        self.get_protocol_parameter_defaults()
 
     def get_epoch_parameters(self):
+        super().get_epoch_parameters()
+
         # Get protocol parameters for this epoch
-        self.convenience_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
+        self.epoch_protocol_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
         # Create flystim epoch parameters dictionary
-        self.epoch_parameters = self.get_moving_patch_parameters(center=self.convenience_parameters['center'],
-                                                                angle=self.convenience_parameters['angle'],
-                                                                speed=self.convenience_parameters['speed'],
-                                                                width=self.convenience_parameters['width_height'][0],
-                                                                height=self.convenience_parameters['width_height'][1],
-                                                                color=self.convenience_parameters['intensity'])
+        self.epoch_stim_parameters = self.get_moving_patch_parameters(center=self.epoch_protocol_parameters['center'],
+                                                                angle=self.epoch_protocol_parameters['angle'],
+                                                                speed=self.epoch_protocol_parameters['speed'],
+                                                                width=self.epoch_protocol_parameters['width_height'][0],
+                                                                height=self.epoch_protocol_parameters['width_height'][1],
+                                                                color=self.epoch_protocol_parameters['intensity'])
 
-    def get_parameter_defaults(self):
-        self.protocol_parameters = {'ellipse': True,
+    def get_protocol_parameter_defaults(self):
+        self.protocol_parameters = {'pre_time': 0.5,
+                                    'stim_time': 3.0,
+                                    'tail_time': 1.0,
+                                    
+                                    'ellipse': True,
                                     'width_height': [(5, 5), (10, 10), (15, 15), (20, 20), (25, 25), (30, 30)],
                                     'intensity': 0.0,
                                     'center': (0, 0),
@@ -461,9 +482,5 @@ class MovingPatch(BaseProtocol):
                                     'randomize_order': True}
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'protocol_ID': 'MovingPatch',
-                               'num_epochs': 40,
-                               'pre_time': 0.5,
-                               'stim_time': 3.0,
-                               'tail_time': 1.0,
+        self.run_parameters = {'num_epochs': 40,
                                'idle_color': 0.5}

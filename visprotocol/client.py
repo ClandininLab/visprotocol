@@ -55,6 +55,9 @@ class BaseClient():
         # Precompute useful variables prior to epoch run loop
         protocol_object.precompute_variables()
 
+        # Check that all required run parameters are set
+        protocol_object.check_required_run_parameters()
+        
         # Set background to idle_color
         self.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
 
@@ -64,7 +67,7 @@ class BaseClient():
             print('Warning - you are not saving your metadata!')
 
         # Set up locomotion data saving on the server and start locomotion device / software
-        if protocol_object.run_parameters['do_loco']:
+        if protocol_object.loco_available and protocol_object.run_parameters['do_loco']:
             self.start_loco(data, save_metadata_flag=save_metadata_flag)
             
         # Trigger acquisition of scope and cameras by send triggering TTL through the DAQ device (if device is set)
@@ -74,7 +77,7 @@ class BaseClient():
                 self.trigger_device.send_trigger()
 
         # Start locomotion loop on the server only if closed_loop is an option for the protocol.
-        if protocol_object.run_parameters['do_loco'] and 'loco_pos_closed_loop' in protocol_object.protocol_parameters:
+        if protocol_object.loco_available and protocol_object.run_parameters['do_loco'] and 'loco_pos_closed_loop' in protocol_object.protocol_parameters:
             self.start_loco_loop()
 
         # # # Epoch run loop # # #
@@ -95,7 +98,7 @@ class BaseClient():
         self.manager.black_corner_square()
 
         # Stop locomotion device / software
-        if protocol_object.run_parameters['do_loco']:
+        if protocol_object.loco_available and protocol_object.run_parameters['do_loco']:
             self.stop_loco()
 
         self.manager.print_on_server('Stopping run.')
@@ -103,6 +106,9 @@ class BaseClient():
     def start_epoch(self, protocol_object, data, save_metadata_flag=True):
         #  get stimulus parameters for this epoch
         protocol_object.get_epoch_parameters()
+        
+        # Check that all required epoch protocol parameters are set
+        protocol_object.check_required_epoch_protocol_parameters()
 
         if save_metadata_flag:
             data.create_epoch(protocol_object)

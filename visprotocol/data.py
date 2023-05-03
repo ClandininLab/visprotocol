@@ -111,6 +111,7 @@ class BaseData():
                 new_epoch_run.attrs['run_start_unix_time'] = run_start_unix_time
                 for key in protocol_object.run_parameters:  # add run parameter attributes
                     new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
+                new_epoch_run.attrs['protocol_ID'] = protocol_object.__class__.__name__
 
                 for key in protocol_object.protocol_parameters:  # add user-entered protocol params
                     new_epoch_run.attrs[key] = protocol_object.protocol_parameters[key]
@@ -137,21 +138,21 @@ class BaseData():
                 new_epoch.attrs['epoch_time'] = epoch_time
                 new_epoch.attrs['epoch_unix_time'] = epoch_unix_time
 
-                epoch_parameters_group = new_epoch
-                if type(protocol_object.epoch_parameters) is tuple:  # stimulus is tuple of multiple stims layered on top of one another
-                    num_stims = len(protocol_object.epoch_parameters)
+                epoch_stim_parameters_group = new_epoch
+                if type(protocol_object.epoch_stim_parameters) is tuple:  # stimulus is tuple of multiple stims layered on top of one another
+                    num_stims = len(protocol_object.epoch_stim_parameters)
                     for stim_ind in range(num_stims):
-                        for key in protocol_object.epoch_parameters[stim_ind]:
+                        for key in protocol_object.epoch_stim_parameters[stim_ind]:
                             prefix = 'stim{}_'.format(str(stim_ind))
-                            epoch_parameters_group.attrs[prefix + key] = hdf5ify_parameter(protocol_object.epoch_parameters[stim_ind][key])
+                            epoch_stim_parameters_group.attrs[prefix + key] = hdf5ify_parameter(protocol_object.epoch_stim_parameters[stim_ind][key])
 
-                elif type(protocol_object.epoch_parameters) is dict:  # single stim class
-                    for key in protocol_object.epoch_parameters:
-                        epoch_parameters_group.attrs[key] = hdf5ify_parameter(protocol_object.epoch_parameters[key])
+                elif type(protocol_object.epoch_stim_parameters) is dict:  # single stim class
+                    for key in protocol_object.epoch_stim_parameters:
+                        epoch_stim_parameters_group.attrs[key] = hdf5ify_parameter(protocol_object.epoch_stim_parameters[key])
 
-                convenience_parameters_group = new_epoch
-                for key in protocol_object.convenience_parameters:  # save out convenience parameters
-                    convenience_parameters_group.attrs[key] = hdf5ify_parameter(protocol_object.convenience_parameters[key])
+                epoch_protocol_parameters_group = new_epoch
+                for key in protocol_object.epoch_protocol_parameters:  # save out convenience parameters
+                    epoch_protocol_parameters_group.attrs[key] = hdf5ify_parameter(protocol_object.epoch_protocol_parameters[key])
 
         else:
             print('Create a data file and/or define a animal first')
