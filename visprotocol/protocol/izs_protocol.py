@@ -20,7 +20,7 @@ Each protocol class should define these methods:
 It may define/overwrite these methods that are typically handled by the parent class
 
 """
-class LoomRandomlySpaced2(BaseProtocol):
+class LoomRandomlySpaced(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -40,9 +40,9 @@ class LoomRandomlySpaced2(BaseProtocol):
     def getEpochParameters(self):
         current_color = self.selectParametersFromLists(self.protocol_parameters['color'], randomize_order = self.protocol_parameters['randomize_order'])
         self.epoch_parameters = {'name': 'LoomingCircle',
-                                 'radius': 1,
+                                 'radius': self.protocol_parameters['radius'],
                                  'color': current_color,
-                                 'starting_location': (0, self.protocol_parameters['start_distance'], 0),
+                                 'starting_distance': self.protocol_parameters['start_distance'],
                                  'speed': self.protocol_parameters['speed'],
                                  'n_steps': 36}
         iti = self.itis[self.num_epochs_completed]
@@ -58,7 +58,7 @@ class LoomRandomlySpaced2(BaseProtocol):
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'Loom',
+        self.run_parameters = {'protocol_ID': 'LoomRandomlySpaced',
                                'num_epochs': 2,
                                'pre_time': 0.0,
                                'stim_time': 2.0,
@@ -78,7 +78,7 @@ class Loom(BaseProtocol):
         self.epoch_parameters = {'name': 'LoomingCircle',
                                  'radius': self.protocol_parameters['radius'],
                                  'color': self.protocol_parameters['color'],
-                                 'starting_location': (0, self.protocol_parameters['start_distance'], 0),
+                                 'starting_distance': self.protocol_parameters['start_distance'],
                                  'speed': self.protocol_parameters['speed'],
                                  'n_steps': 36}
 
@@ -98,7 +98,7 @@ class Loom(BaseProtocol):
                                'idle_color': 1.0}
 
 
-class LoomRandomlySpaced(BaseProtocol):
+class LoomRandomlySpacedRV(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -143,7 +143,7 @@ class LoomRandomlySpaced(BaseProtocol):
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'Loom',
+        self.run_parameters = {'protocol_ID': 'LoomRandomlySpacedRV',
                                'num_epochs': 40,
                                'pre_time': 0.0,
                                'stim_time': 0.5,
