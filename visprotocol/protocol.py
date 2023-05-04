@@ -307,7 +307,7 @@ class BaseProtocol():
 
         returns
         current_parameters_dict:
-            dictionary of parameter names and values specific to this epoch. parameter names are prepended with 'current_'
+            dictionary of parameter names and values specific to this epoch. parameter names are prepended with 'current_' if prepend_current is True
         """
         
         current_parameters_dict = self.select_protocol_parameters_from_names(self.list_protocol_parameter_names, all_combinations=all_combinations, randomize_order=randomize_order, prepend_current=prepend_current)
@@ -320,14 +320,14 @@ class BaseProtocol():
         return current_parameters_dict
     
     def get_moving_patch_parameters(self, center=None, angle=None, speed=None, width=None, height=None, color=None, distance_to_travel=None, ellipse=None, render_on_cylinder=None):
-        if center is None: center = self.protocol_parameters['center']
-        if angle is None: angle = self.protocol_parameters['angle']
-        if speed is None: speed = self.protocol_parameters['speed']
-        if width is None: width = self.protocol_parameters['width']
-        if height is None: height = self.protocol_parameters['height']
-        if color is None: color = self.protocol_parameters['color']
-        if ellipse is None: ellipse = self.protocol_parameters['ellipse'] if 'ellipse' in self.protocol_parameters else False
-        if render_on_cylinder is None: render_on_cylinder = self.protocol_parameters['render_on_cylinder'] if 'render_on_cylinder' in self.protocol_parameters else False
+        if center is None: center = self.epoch_protocol_parameters['center']
+        if angle is None: angle = self.epoch_protocol_parameters['angle']
+        if speed is None: speed = self.epoch_protocol_parameters['speed']
+        if width is None: width = self.epoch_protocol_parameters['width']
+        if height is None: height = self.epoch_protocol_parameters['height']
+        if color is None: color = self.epoch_protocol_parameters['color']
+        if ellipse is None: ellipse = self.epoch_protocol_parameters['ellipse'] if 'ellipse' in self.epoch_protocol_parameters else False
+        if render_on_cylinder is None: render_on_cylinder = self.epoch_protocol_parameters['render_on_cylinder'] if 'render_on_cylinder' in self.epoch_protocol_parameters else False
 
         center = self.adjust_center(center)
 
