@@ -20,7 +20,7 @@ yyyy-mm-dd
 """
 import h5py
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 import numpy as np
 
 from visprotocol.util import config_tools
@@ -52,12 +52,10 @@ class BaseData():
             # Experiment date/time
             init_now = datetime.now()
             date = init_now.isoformat()[:-16]
-            init_time = init_now.strftime("%H:%M:%S")
-            init_unix_time = init_now.astimezone(timezone.utc).timestamp()
+            init_unix_time = init_now.timestamp()
             
             # Write experiment metadata as top-level attributes
             experiment_file.attrs['date'] = date
-            experiment_file.attrs['init_time'] = init_time
             experiment_file.attrs['init_unix_time'] = init_unix_time
             experiment_file.attrs['data_directory'] = self.data_directory
             experiment_file.attrs['experimenter'] = self.experimenter
@@ -79,12 +77,9 @@ class BaseData():
 
         if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                animal_init_now = datetime.now()
-                animal_init_time = animal_init_now.strftime('%H:%M:%S.%f')[:-4]
-                animal_init_unix_time = animal_init_now.astimezone(timezone.utc).timestamp()
+                animal_init_unix_time = datetime.now().timestamp()
                 animals_group = experiment_file['/Flies']
                 new_animal = animals_group.create_group(animal_metadata.get('animal_id'))
-                new_animal.attrs['init_time'] = animal_init_time
                 new_animal.attrs['init_unix_time'] = animal_init_unix_time
                 for key in animal_metadata:
                     new_animal.attrs[key] = animal_metadata.get(key)
@@ -102,12 +97,9 @@ class BaseData():
         # create a new epoch run group in the data file
         if (self.current_animal_exists() and self.experiment_file_exists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                run_start_now = datetime.now()
-                run_start_time = run_start_now.strftime('%H:%M:%S.%f')[:-4]
-                run_start_unix_time = run_start_now.astimezone(timezone.utc).timestamp()
+                run_start_unix_time = datetime.now().timestamp()
                 animal_group = experiment_file['/Flies/{}/epoch_runs'.format(self.current_animal)]
                 new_epoch_run = animal_group.create_group('series_{}'.format(str(self.series_count).zfill(3)))
-                new_epoch_run.attrs['run_start_time'] = run_start_time
                 new_epoch_run.attrs['run_start_unix_time'] = run_start_unix_time
                 for key in protocol_object.run_parameters:  # add run parameter attributes
                     new_epoch_run.attrs[key] = protocol_object.run_parameters[key]
@@ -130,12 +122,9 @@ class BaseData():
         """
         if (self.current_animal_exists() and self.experiment_file_exists()):
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                epoch_now = datetime.now()
-                epoch_time = epoch_now.strftime('%H:%M:%S.%f')
-                epoch_unix_time = epoch_now.astimezone(timezone.utc).timestamp()
+                epoch_unix_time = datetime.now().timestamp()
                 epoch_run_group = experiment_file['/Flies/{}/epoch_runs/series_{}/epochs'.format(self.current_animal, str(self.series_count).zfill(3))]
                 new_epoch = epoch_run_group.create_group('epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3)))
-                new_epoch.attrs['epoch_time'] = epoch_time
                 new_epoch.attrs['epoch_unix_time'] = epoch_unix_time
 
                 epoch_stim_parameters_group = new_epoch
@@ -162,24 +151,19 @@ class BaseData():
         Save the timestamp when the epoch ends
         """
         with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-            epoch_end_now = datetime.now()
-            epoch_end_time = epoch_end_now.strftime('%H:%M:%S.%f')
-            epoch_end_unix_time = epoch_end_now.astimezone(timezone.utc).timestamp()
+            epoch_end_unix_time = datetime.now().timestamp()
             epoch_run_group = experiment_file['/Flies/{}/epoch_runs/series_{}/epochs'.format(self.current_animal, str(self.series_count).zfill(3))]
             epoch_group = epoch_run_group['epoch_{}'.format(str(protocol_object.num_epochs_completed+1).zfill(3))]
-            epoch_group.attrs['epoch_end_time'] = epoch_end_time
             epoch_group.attrs['epoch_end_unix_time'] = epoch_end_unix_time
 
-    def create_note(self, noteText):
+    def create_note(self, note_text):
         ""
         ""
         if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                note_now = datetime.now()
-                note_time = note_now.strftime('%H:%M:%S.%f')[:-4]
-                note_unix_time = note_now.astimezone(timezone.utc).timestamp()
+                note_unix_time = datetime.now().timestamp()
                 notes = experiment_file['/Notes']
-                notes.attrs[note_time] = f'[{note_unix_time}] {noteText}'
+                notes.attrs[note_unix_time] = note_text
         else:
             print('Initialize a data file before writing a note')
 
