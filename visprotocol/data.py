@@ -250,5 +250,8 @@ def hdf5ify_parameter(value):
         value = str(value)
     if type(value) is np.str_:
         value = str(value)
+    if type(value) is np.ndarray:
+        if value.dtype == 'object':
+            value = value.astype('float')
 
     return value
