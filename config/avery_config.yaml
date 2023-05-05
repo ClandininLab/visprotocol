@@ -1,6 +1,6 @@
 experimenter: Avery
 prep_choices: [Left optic lobe, Right optic lobe, Whole brain, Optic glomeruli]
-driver_choices: [646.AstA-Lex, 578.AstA-R1-Gal4]
+driver_choices: [646.AstA-LexA, Mi1-Gal4, 578.AstA-R1-Gal4]
 indicator_choices: [GCaMP6f, Syt1GCaMP6f, csChrimson::TdTomato ]
 
 rig_config:

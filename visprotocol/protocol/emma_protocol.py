@@ -64,3 +64,60 @@ class UniformFlash(BaseProtocol):
                                'stim_time': 0.5,
                                'tail_time': 1.0,
                                'idle_color': 0.5}
+
+
+# %%
+
+
+class LoomingSpot(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        stim_time = self.run_parameters['stim_time']
+        start_size = self.protocol_parameters['start_size']
+        end_size = self.protocol_parameters['end_size']
+
+        # adjust center to screen center
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        rv_ratio = self.protocol_parameters['rv_ratio']  # msec
+        current_rv_ratio, current_intensity = self.selectParametersFromLists((rv_ratio, self.protocol_parameters['intensity']),
+                                                                             randomize_order=self.protocol_parameters['randomize_order'])
+
+        current_rv_ratio = current_rv_ratio / 1e3  # msec -> sec
+        r_traj = {'name': 'Loom2',
+                  'rv_ratio': current_rv_ratio,
+                  'start_size': start_size,
+                  'end_size': end_size}
+
+        self.epoch_parameters = {'name': 'MovingSpot',
+                                 'radius': r_traj,
+                                 'sphere_radius': 1,
+                                 'color': current_intensity,
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1]}
+
+        self.convenience_parameters = {'current_rv_ratio': current_rv_ratio, 'current_intensity': current_intensity}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'intensity': [0.0, 1.0],
+                                    'center': [0, 0],
+                                    'start_size': 2.5,
+                                    'end_size': 80.0,
+                                    'rv_ratio': [5.0, 10.0, 20.0, 40.0, 80.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'LoomingSpot',
+                               'num_epochs': 75,
+                               'pre_time': 0.5,
+                               'stim_time': 1.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+
+# %%

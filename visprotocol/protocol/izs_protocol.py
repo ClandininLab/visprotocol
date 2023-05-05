@@ -20,8 +20,85 @@ Each protocol class should define these methods:
 It may define/overwrite these methods that are typically handled by the parent class
 
 """
-
 class LoomRandomlySpaced(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def precomputeEpochParameters(self):
+        # Calculate ITIs probabilistically (tail_time)
+        # Randomly spaced ITIs, drawn from a uniform distribution between avg_iti - 1 and avg_iti + 1
+        total_loom_dur = self.run_parameters['num_epochs'] * self.run_parameters['stim_time']
+        num_itis = self.run_parameters['num_epochs'] - 1
+        avg_iti = (self.run_parameters['run_time'] - total_loom_dur) / num_itis
+        iti_lo = max(avg_iti - 1, 0)
+        iti_hi = min(avg_iti + 1, self.run_parameters['run_time'])
+        self.itis = np.random.uniform(iti_lo, iti_hi, int(self.run_parameters['num_epochs']))
+
+    def getEpochParameters(self):
+        current_color = self.selectParametersFromLists(self.protocol_parameters['color'], randomize_order = self.protocol_parameters['randomize_order'])
+        self.epoch_parameters = {'name': 'LoomingCircle',
+                                 'radius': self.protocol_parameters['radius'],
+                                 'color': current_color,
+                                 'starting_distance': self.protocol_parameters['start_distance'],
+                                 'speed': self.protocol_parameters['speed'],
+                                 'n_steps': 36}
+        iti = self.itis[self.num_epochs_completed]
+        self.run_parameters['tail_time'] = iti
+
+        self.convenience_parameters = {'current_color': current_color, 'current_tail_time': iti}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'radius': 0.005,
+                                    'start_distance': 0.5,
+                                    'speed': -0.25,
+                                    'color': [0.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'LoomRandomlySpaced',
+                               'num_epochs': 2,
+                               'pre_time': 0.0,
+                               'stim_time': 2.0,
+                               'run_time': 6.0,
+                               'pre_run_time': 0.0,
+                               'idle_color': 0.5}
+
+class Loom(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        
+        self.epoch_parameters = {'name': 'LoomingCircle',
+                                 'radius': self.protocol_parameters['radius'],
+                                 'color': self.protocol_parameters['color'],
+                                 'starting_distance': self.protocol_parameters['start_distance'],
+                                 'speed': self.protocol_parameters['speed'],
+                                 'n_steps': 36}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'radius': 0.005,
+                                    'start_distance': 0.125,
+                                    'speed': -0.25,
+                                    'color': 0.0,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'Loom',
+                               'num_epochs': 2,
+                               'pre_time': 0.5,
+                               'stim_time': 0.5,
+                               'tail_time': 0.5,
+                               'idle_color': 1.0}
+
+
+class LoomRandomlySpacedRV(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -66,7 +143,7 @@ class LoomRandomlySpaced(BaseProtocol):
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
-        self.run_parameters = {'protocol_ID': 'Loom',
+        self.run_parameters = {'protocol_ID': 'LoomRandomlySpacedRV',
                                'num_epochs': 40,
                                'pre_time': 0.0,
                                'stim_time': 0.5,

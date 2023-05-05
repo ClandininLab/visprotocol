@@ -109,7 +109,7 @@ class BaseProtocol():
             if k in self.protocol_parameters.keys():
                 self.protocol_parameters[k] = v
             else:
-                warnings.warn(f'Warning: protocol parameter {k} not found in current protocol. Skipping preset parameter.', RuntimeWarning)            
+                warnings.warn(f'Warning: protocol parameter {k} not found in current protocol. Skipping preset parameter.', RuntimeWarning)
             
     def advanceEpochCounter(self):
         self.num_epochs_completed += 1

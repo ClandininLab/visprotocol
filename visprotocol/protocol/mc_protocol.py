@@ -224,7 +224,7 @@ class OcclusionDuration(BaseProtocol):
                                               amp=self.convenience_parameters['current_opto_amp'], 
                                               pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
                                               scanRate=5000)
-        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'],
                                        stim_time=self.convenience_parameters['current_opto_stim_time'],
                                        scanRate=5000, scansPerRead=1000)
 
@@ -238,12 +238,12 @@ class OcclusionDuration(BaseProtocol):
                                     'obj_start_theta': -90.0,
                                     'obj_speed': [-35.0, -25.0, -15.0, 15.0, 25.0, 35.0],
                                     'obj_surface_radius': 3.0,
-                                    
+
                                     'occluder_ellipse': False,
                                     'occluder_height': 170.0,
                                     'occluder_color': 0.0,
                                     'occluder_surface_radius': 2.0,
-                                    
+
                                     'render_on_cylinder': False,
                                     'center': [0, 0],
                                     'closed_loop': [0],
@@ -253,7 +253,7 @@ class OcclusionDuration(BaseProtocol):
                                     'occlusion_duration': [0.5, 2.0],
                                     'pause_duration': [0.0, 1.0],
                                     'probe_duration': 1.5,
-                                    
+
                                     'opto_pre_time': [0.0],
                                     'opto_stim_time': [1.0],
                                     'opto_freq': [50.0],
@@ -275,7 +275,7 @@ class OcclusionShape(BaseProtocol):
     '''
     Occluder is defined by its shape (width and height, ellipse vs rectangle)
     '''
-    
+
     def __init__(self, cfg):
         super().__init__(cfg)
 
@@ -286,7 +286,7 @@ class OcclusionShape(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['angle', 'obj_start_theta', 'obj_wh', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_wh', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            ['angle', 'obj_start_theta', 'obj_wh', 'obj_prime_color', 'obj_probe_color', 'obj_speed', 'occluder_wh', 'occluder_color', 'pause_duration', 'closed_loop', 'opto_pre_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'],
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Set variables for convenience
@@ -366,7 +366,7 @@ class OcclusionShape(BaseProtocol):
             obj_flystim_stim_name = 'MovingEllipse' if obj_ellipse else 'MovingPatch'
             occluder_flystim_stim_name = 'MovingEllipse' if occluder_ellipse else 'MovingPatch'
             surface_dim_name = 'sphere_radius'
-        
+
         obj_parameters = {'name': obj_flystim_stim_name,
                             'width': obj_width,
                             'height': obj_height,
@@ -382,8 +382,8 @@ class OcclusionShape(BaseProtocol):
                             'theta': occluder_theta_traj,
                             'phi': 0,
                             'angle': angle,
-                            surface_dim_name: occluder_surface_radius}        
-        
+                            surface_dim_name: occluder_surface_radius}
+
         self.epoch_parameters = [obj_parameters, occluder_parameters]
         self.convenience_parameters['current_stim_time'] = stim_duration
 
@@ -395,17 +395,17 @@ class OcclusionShape(BaseProtocol):
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        
+
         conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
         multicall.print_on_server(f'{conv_params_to_print}')
 
         # set up opto pulse wave
-        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
-                                              freq=self.convenience_parameters['current_opto_freq'], 
-                                              amp=self.convenience_parameters['current_opto_amp'], 
-                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0',
+                                              freq=self.convenience_parameters['current_opto_freq'],
+                                              amp=self.convenience_parameters['current_opto_amp'],
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'],
                                               scanRate=5000)
-        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'],
                                        stim_time=self.convenience_parameters['current_opto_stim_time'],
                                        scanRate=5000, scansPerRead=1000)
 
@@ -420,21 +420,21 @@ class OcclusionShape(BaseProtocol):
                                     'obj_probe_color': 0.3,
                                     'obj_speed': [30.0, -30.0],
                                     'obj_surface_radius': 3.0,
-                                    
+
                                     'occluder_ellipse': False,
                                     'occluder_theta': 120.0,
                                     'occluder_wh': [[0.0, 100.0], [60.0, 100.0]],
                                     'occluder_color': [0.0],
                                     'occluder_surface_radius': 2.0,
-                                    
+
                                     'render_on_cylinder': True,
                                     'center': [0, 0],
                                     'angle': [0.0],
                                     'closed_loop': [0],
-                                    
+
                                     'preprime_duration': 1.0,
                                     'pause_duration': [0.0],
-                                    
+
                                     'opto_pre_time': [0.0],
                                     'opto_freq': [50.0],
                                     'opto_amp': [2.5],
@@ -463,13 +463,13 @@ class PatchFixation(BaseProtocol):
         if self.protocol_parameters['theta_random']:
 
             self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-                ['width', 'height', 'intensity', 'angle', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+                ['width', 'height', 'intensity', 'angle', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'],
                 randomize_order = self.protocol_parameters['randomize_order'])
-            
+
             self.convenience_parameters['current_theta'] = np.random.uniform(*self.protocol_parameters['theta_random_range'])
         else:
             self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-                ['width', 'height', 'intensity', 'angle', 'theta', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+                ['width', 'height', 'intensity', 'angle', 'theta', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'],
                 randomize_order = self.protocol_parameters['randomize_order'])
 
         # Create epoch parameters dictionary
@@ -491,17 +491,17 @@ class PatchFixation(BaseProtocol):
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        
+
         conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
         multicall.print_on_server(f'{conv_params_to_print}')
 
         # set up opto pulse wave
-        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
-                                              freq=self.convenience_parameters['current_opto_freq'], 
-                                              amp=self.convenience_parameters['current_opto_amp'], 
-                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0',
+                                              freq=self.convenience_parameters['current_opto_freq'],
+                                              amp=self.convenience_parameters['current_opto_amp'],
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'],
                                               scanRate=5000)
-        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'],
                                        stim_time=self.convenience_parameters['current_opto_stim_time'],
                                        scanRate=5000, scansPerRead=1000)
 
@@ -548,7 +548,7 @@ class PatchFixationOptoPaired(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['width', 'height', 'intensity', 'angle', 'theta', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            ['width', 'height', 'intensity', 'angle', 'theta', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'],
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Create epoch parameters dictionary
@@ -570,17 +570,17 @@ class PatchFixationOptoPaired(BaseProtocol):
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        
+
         conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
         multicall.print_on_server(f'{conv_params_to_print}')
 
         # set up opto pulse wave
-        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
-                                              freq=self.convenience_parameters['current_opto_freq'], 
-                                              amp=self.convenience_parameters['current_opto_amp'], 
-                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0',
+                                              freq=self.convenience_parameters['current_opto_freq'],
+                                              amp=self.convenience_parameters['current_opto_amp'],
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'],
                                               scanRate=5000)
-        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'],
                                        stim_time=self.convenience_parameters['current_opto_stim_time'],
                                        scanRate=5000, scansPerRead=1000)
 
@@ -630,7 +630,7 @@ class MovingPatch(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['width', 'height', 'intensity', 'speed', 'angle', 'closed_loop'], 
+            ['width', 'height', 'intensity', 'speed', 'angle', 'closed_loop'],
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Create flystim epoch parameters dictionary
@@ -644,7 +644,7 @@ class MovingPatch(BaseProtocol):
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        
+
         conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
         multicall.print_on_server(f'{conv_params_to_print}')
 
@@ -658,7 +658,7 @@ class MovingPatch(BaseProtocol):
                                     'center': [0, 0],
                                     'speed': [80.0],
                                     'angle': [0.0],
-                                    
+
                                     'render_on_cylinder': True,
                                     'closed_loop': [0],
 
@@ -685,7 +685,7 @@ class MovingPatchWithOpto(BaseProtocol):
 
         # Select protocol parameters for this epoch
         self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-            ['width', 'height', 'intensity', 'speed', 'angle', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'], 
+            ['width', 'height', 'intensity', 'speed', 'angle', 'closed_loop', 'opto_pre_time', 'opto_stim_time', 'opto_freq', 'opto_amp', 'opto_pulse_width'],
             randomize_order = self.protocol_parameters['randomize_order'])
 
         # Create flystim epoch parameters dictionary
@@ -699,17 +699,17 @@ class MovingPatchWithOpto(BaseProtocol):
 
         if multicall is None:
             multicall = flyrpc.multicall.MyMultiCall(client.manager)
-        
+
         conv_params_to_print = {k[8:]:v for k,v in self.convenience_parameters.items()}
         multicall.print_on_server(f'{conv_params_to_print}')
 
         # set up opto pulse wave
-        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0', 
-                                              freq=self.convenience_parameters['current_opto_freq'], 
-                                              amp=self.convenience_parameters['current_opto_amp'], 
-                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'], 
+        multicall.daq_setupPulseWaveStreamOut(output_channel='DAC0',
+                                              freq=self.convenience_parameters['current_opto_freq'],
+                                              amp=self.convenience_parameters['current_opto_amp'],
+                                              pulse_width=self.convenience_parameters['current_opto_pulse_width'],
                                               scanRate=5000)
-        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'], 
+        multicall.daq_streamWithTiming(pre_time=self.convenience_parameters['current_opto_pre_time'],
                                        stim_time=self.convenience_parameters['current_opto_stim_time'],
                                        scanRate=5000, scansPerRead=1000)
 
@@ -806,12 +806,12 @@ class ExpandingEdges(BaseProtocol):
         # Select protocol parameters for this epoch
         if self.protocol_parameters['theta_offset_random']:
             self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-                ['rate', 'expand_dark'], 
+                ['rate', 'expand_dark'],
                 randomize_order = self.protocol_parameters['randomize_order'])
             self.convenience_parameters['current_theta_offset'] = np.random.uniform(0, 360)
         else:
             self.convenience_parameters = self.selectParametersFromProtocolParameterNames(
-                ['rate', 'expand_dark', 'theta_offset'], 
+                ['rate', 'expand_dark', 'theta_offset'],
                 randomize_order = self.protocol_parameters['randomize_order'])
 
         self.epoch_parameters = {'name': 'ExpandingEdges',
@@ -866,6 +866,10 @@ class DriftingSquareGrating(BaseProtocol):
         # TODO: center size with aperture (center and center_size)
         current_angle, current_height = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['height']), randomize_order = self.protocol_parameters['randomize_order'])
 
+        center = self.adjustCenter(self.protocol_parameters['center'])
+        centerX = center[0]
+        centerY = center[1]
+
         height_in_radians = np.deg2rad(current_height)
 
         radius_in_meters = 1
@@ -883,7 +887,8 @@ class DriftingSquareGrating(BaseProtocol):
                                  'cylinder_radius': radius_in_meters,
                                  'cylinder_height': height_in_meters,
                                  'profile': 'square',
-                                 'theta': self.screen_center[0]}
+                                 'theta': centerX,
+                                 'phi': centerY}
 
         self.convenience_parameters = {'current_angle': current_angle, 'current_height': current_height}
 
@@ -935,7 +940,7 @@ class SplitDriftingSquareGrating(BaseProtocol):
     def getEpochParameters(self):
         # TODO: center size with aperture (center and center_size)
         current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
-                                 
+
         offset = np.rad2deg(np.random.uniform(0, 2*np.pi)) if self.protocol_parameters['random_offset'] else 0
 
         self.epoch_parameters_0 = {'name': 'RotatingGrating',
@@ -1041,7 +1046,11 @@ class FlickeringVertBars(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        current_angle, current_temporal_frequency, current_theta_loc = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta_loc']), randomize_order=self.protocol_parameters['randomize_order'])
+        current_angle, current_temporal_frequency, current_theta = self.selectParametersFromLists((self.protocol_parameters['angle'], self.protocol_parameters['temporal_frequency'], self.protocol_parameters['theta']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        center = self.adjustCenter(self.protocol_parameters['center'])
+        centerX = center[0]
+        centerY = center[1]
 
         # make color trajectory
         color_traj = {'name': 'Sinusoid',
@@ -1055,8 +1064,8 @@ class FlickeringVertBars(BaseProtocol):
                                     'height': self.protocol_parameters['height'],
                                     'cylinder_radius': 1,
                                     'color': color_traj,
-                                    'theta': current_theta_loc,
-                                    'phi': self.protocol_parameters['phi_loc'],
+                                    'theta': centerX + current_theta,
+                                    'phi': centerY + self.protocol_parameters['phi'],
                                     'angle': current_angle}
         else:
             self.epoch_parameters = {'name': 'MovingPatch',
@@ -1064,13 +1073,13 @@ class FlickeringVertBars(BaseProtocol):
                                     'height': self.protocol_parameters['height'],
                                     'sphere_radius': 1,
                                     'color': color_traj,
-                                    'theta': current_theta_loc,
-                                    'phi': self.protocol_parameters['phi_loc'],
+                                    'theta': centerX + current_theta,
+                                    'phi': centerY + self.protocol_parameters['phi'],
                                     'angle': current_angle}
 
         self.convenience_parameters = {'current_angle': current_angle,
                                        'current_temporal_frequency': current_temporal_frequency,
-                                       'current_theta_loc': current_theta_loc}
+                                       'current_theta': current_theta}
 
     def loadStimuli(self, client, multicall=None):
         bg = self.run_parameters.get('idle_color')
@@ -1084,16 +1093,17 @@ class FlickeringVertBars(BaseProtocol):
         multicall()
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'angle': [0.0],
+        self.protocol_parameters = {'center': [0.0, 0.0],
+                                    'angle': [0.0],
                                     'height': 150.0,
                                     'width': 10.0,
-                                    'theta_loc': [0.0, 10.0],
-                                    'phi_loc': 0,
+                                    'theta': [0.0, 10.0],
+                                    'phi': 0,
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'temporal_frequency': [10.0],
-                                    'fly_heading': 0.0,
                                     'render_on_cylinder': True,
+                                    'fly_heading': 0.0,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
