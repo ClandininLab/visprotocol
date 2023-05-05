@@ -17,10 +17,10 @@ class BaseServer():
         self.daq_device = None        
 
         if loco_class is not None:
-            assert isinstance(loco_class, LocoManager)
+            assert issubclass(loco_class, LocoManager)
             self.__set_up_loco__(loco_class, **loco_kwargs)
         if daq_class is not None:
-            assert isinstance(daq_class, DAQ)
+            assert issubclass(daq_class, DAQ)
             self.__set_up_daq__(daq_class, **daq_kwargs)
 
         self.manager.black_corner_square()
@@ -48,7 +48,7 @@ class BaseServer():
         self.manager.register_function_on_root(self.loco_manager.start, "loco_start")
         self.manager.register_function_on_root(self.loco_manager.close, "loco_close")
         
-        if isinstance(loco_class, LocoClosedLoopManager):
+        if issubclass(loco_class, LocoClosedLoopManager):
             self.manager.register_function_on_root(self.loco_manager.set_pos_0, "loco_set_pos_0")
             self.manager.register_function_on_root(self.loco_manager.write_to_log, "loco_write_to_log")
             self.manager.register_function_on_root(self.loco_manager.loop_start, "loco_loop_start")

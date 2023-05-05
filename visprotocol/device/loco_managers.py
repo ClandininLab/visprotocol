@@ -80,7 +80,7 @@ class LocoSocketManager():
 
         return line
 
-class LocoClosedLoopManager():
+class LocoClosedLoopManager(LocoManager):
     def __init__(self, fs_manager, host, port, save_directory=None, start_at_init=False, udp=True) -> None:
         super().__init__()
         self.fs_manager = fs_manager
