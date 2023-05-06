@@ -9,6 +9,7 @@ from flyrpc.transceiver import MySocketClient
 from flystim.stim_server import launch_stim_server
 from flystim.screen import Screen
 from visprotocol.util import config_tools
+from visprotocol.device import daq
 
 class BaseClient():
     def __init__(self, cfg):
@@ -23,6 +24,10 @@ class BaseClient():
         # # # Start the stim manager and set the frame tracker square to black # # #
         if self.server_options['use_server']:
             self.manager = MySocketClient(host=self.server_options['host'], port=self.server_options['port'])
+            
+            # if the trigger device is on the server, set the manager for the trigger device
+            if isinstance(self.trigger_device, daq.DAQonServer):
+                self.trigger_device.set_manager(self.manager)
         else:
             aux_screen = Screen(server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
             self.manager = launch_stim_server(aux_screen)
