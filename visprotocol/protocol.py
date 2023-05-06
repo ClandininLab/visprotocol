@@ -63,9 +63,14 @@ class BaseProtocol():
         return absolute_center
 
     def get_epoch_parameters(self):
-        """ Overwrite me in the child subclass"""
+        """ Inherit / overwrite me in the child subclass"""
         self.epoch_protocol_parameters = None
         self.epoch_stim_parameters = None
+
+        # Get protocol parameters for this epoch
+        self.epoch_protocol_parameters = self.select_protocol_parameters_in_lists_automatically(
+                                                        all_combinations=self.run_parameters.get('all_combinations', True), 
+                                                        randomize_order=self.run_parameters.get('randomize_order', False))
 
     def get_run_parameter_defaults(self):
         self.run_parameters = {'num_epochs': 40, 
@@ -404,26 +409,23 @@ class DriftingSquareGrating(BaseProtocol):
     def get_epoch_parameters(self):
         super().get_epoch_parameters()
         
-        # Get protocol parameters for this epoch
-        self.epoch_protocol_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
-
         center = self.adjust_center(self.epoch_protocol_parameters['center'])
         centerX = center[0]
         centerY = center[1]
 
         self.epoch_stim_parameters = {'name': 'RotatingGrating',
-                                 'period': self.epoch_protocol_parameters['period'],
-                                 'rate': self.epoch_protocol_parameters['rate'],
-                                 'color': [1, 1, 1, 1],
-                                 'mean': self.epoch_protocol_parameters['mean'],
-                                 'contrast': self.epoch_protocol_parameters['contrast'],
-                                 'angle': self.epoch_protocol_parameters['angle'],
-                                 'offset': 0.0,
-                                 'cylinder_radius': 1,
-                                 'cylinder_height': 10,
-                                 'profile': 'square',
-                                 'theta': centerX,
-                                 'phi': centerY}
+                                      'period': self.epoch_protocol_parameters['period'],
+                                      'rate': self.epoch_protocol_parameters['rate'],
+                                      'color': [1, 1, 1, 1],
+                                      'mean': self.epoch_protocol_parameters['mean'],
+                                      'contrast': self.epoch_protocol_parameters['contrast'],
+                                      'angle': self.epoch_protocol_parameters['angle'],
+                                      'offset': 0.0,
+                                      'cylinder_radius': 1,
+                                      'cylinder_height': 10,
+                                      'profile': 'square',
+                                      'theta': centerX,
+                                      'phi': centerY}
 
     def get_protocol_parameter_defaults(self):
         self.protocol_parameters = {'pre_time': 1.0,
@@ -436,11 +438,13 @@ class DriftingSquareGrating(BaseProtocol):
                                     'mean': 0.5,
                                     'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
                                     'center': (0, 0),
-                                    'randomize_order': True}
+                                    }
 
     def get_run_parameter_defaults(self):
         self.run_parameters = {'num_epochs': 40,
-                               'idle_color': 0.5}
+                               'idle_color': 0.5,
+                               'all_combinations': True,
+                               'randomize_order': True}
 
 # %%
 
@@ -456,9 +460,6 @@ class MovingPatch(BaseProtocol):
 
     def get_epoch_parameters(self):
         super().get_epoch_parameters()
-
-        # Get protocol parameters for this epoch
-        self.epoch_protocol_parameters = self.select_protocol_parameters_in_lists_automatically(randomize_order=self.protocol_parameters['randomize_order'])
 
         # Create flystim epoch parameters dictionary
         self.epoch_stim_parameters = self.get_moving_patch_parameters(center=self.epoch_protocol_parameters['center'],
@@ -480,8 +481,10 @@ class MovingPatch(BaseProtocol):
                                     'speed': 80.0,
                                     'angle': 0.0,
                                     'render_on_cylinder': False,
-                                    'randomize_order': True}
+                                    }
 
     def get_run_parameter_defaults(self):
         self.run_parameters = {'num_epochs': 40,
-                               'idle_color': 0.5}
+                               'idle_color': 0.5,
+                               'all_combinations': True,
+                               'randomize_order': True}
