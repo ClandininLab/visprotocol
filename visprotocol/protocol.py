@@ -253,7 +253,7 @@ class BaseProtocol():
             else:
                 # keep params in lists associated with one another
                 # requires param lists of equal length
-                parameter_sequence = np.vstack(parameter_list).T
+                parameter_sequence = np.vstack(np.array(parameter_list, dtype=object)).T
 
         else: # user probably entered a single value (int or float), convert to list
             parameter_sequence = [parameter_list]
