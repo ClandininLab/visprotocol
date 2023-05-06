@@ -264,10 +264,11 @@ class BaseProtocol():
         draw_ind = np.mod(self.num_epochs_completed, len(self.persistent_parameters['parameter_sequence']))
         if draw_ind == 0 and randomize_order: # randomize sequence
             rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
-            if len(np.shape(self.persistent_parameters['parameter_sequence'])) == 1:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'], dtype=object)[rand_inds])
+            parameter_sequence_np = np.array(self.persistent_parameters['parameter_sequence'], dtype=object)
+            if len(parameter_sequence_np.shape) == 1:
+                self.persistent_parameters['parameter_sequence'] = list(parameter_sequence_np[rand_inds])
             else:
-                self.persistent_parameters['parameter_sequence'] = list(np.array(self.persistent_parameters['parameter_sequence'], dtype=object)[rand_inds, :])
+                self.persistent_parameters['parameter_sequence'] = list(parameter_sequence_np[rand_inds, :])
 
         current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
 
