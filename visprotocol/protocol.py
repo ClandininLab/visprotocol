@@ -73,8 +73,8 @@ class BaseProtocol():
                                                         randomize_order=self.run_parameters.get('randomize_order', False))
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'num_epochs': 40, 
-                               'idle_color': 0.5}
+        """ Overwrite me in the child subclass"""
+        self.run_parameters = {}
 
     def get_protocol_parameter_defaults(self):
         """ Overwrite me in the child subclass"""

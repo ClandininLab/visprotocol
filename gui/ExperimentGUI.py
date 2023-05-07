@@ -199,9 +199,6 @@ class ExperimentGUI(QWidget):
         self.notes_edit.setFixedHeight(30)
         self.protocol_control_grid.addWidget(self.notes_edit, 3, 1, 1, 3)
 
-        # Run paramters input:
-        self.update_run_parameters_input()
-
         # # # TAB 2: Current animal metadata information
         # # Animal info:
         new_label = QLabel('Load existing animal')
@@ -457,15 +454,15 @@ class ExperimentGUI(QWidget):
     def update_protocol_parameters_input(self):
         # update display window to show parameters for this protocol
         new_label = QLabel('Protocol parameters:')
-        self.protocol_grid.addWidget(new_label, self.run_params_ct, 0) # add label after run_params
-        
+        new_label.setStyleSheet('font-weight: bold; text-decoration: underline; margin-top: 10px;')
+        self.protocol_grid.addWidget(new_label, self.protocol_grid_row_ct, 0) # add label after run_params
+        self.protocol_grid_row_ct += 1 # +1 for label 'Protocol parameters:'
+
         self.protocol_parameter_input = {}  # clear old input params dict
-        ct = 0
+
         for key, value in self.protocol_object.protocol_parameters.items():
-            ct += 1
             new_label = QLabel(key + ':')
-            row_offset = self.run_params_ct + 1 + ct # +1 for label 'Protocol parameters:'
-            self.protocol_grid.addWidget(new_label, row_offset, 0)
+            self.protocol_grid.addWidget(new_label, self.protocol_grid_row_ct, 0)
 
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
@@ -474,8 +471,9 @@ class ExperimentGUI(QWidget):
                 self.protocol_parameter_input[key] = QLineEdit()
 
                 self.protocol_parameter_input[key].setText(str(value))  # set to default value
-            self.protocol_grid.addWidget(self.protocol_parameter_input[key], row_offset, 1, 1, 2)
+            self.protocol_grid.addWidget(self.protocol_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 2)
 
+            self.protocol_grid_row_ct += 1
 
     def update_parameter_preset_selector(self):
         self.parameter_preset_comboBox = QComboBox(self)
@@ -513,33 +511,36 @@ class ExperimentGUI(QWidget):
             self.animal_metadata_inputs[key].setCurrentText(animal_data_dict[key])
 
     def update_run_parameters_input(self):
-        self.run_params_ct = 0
+        new_label = QLabel('Run parameters:')
+        new_label.setStyleSheet('font-weight: bold; text-decoration: underline')
+        self.protocol_grid.addWidget(new_label, 0, 0) # add label after run_params
+        self.protocol_grid_row_ct = 1
+
         self.run_parameter_input = {}  # clear old input params dict
         
         # Run parameters list
         for key, value in self.protocol_object.run_parameters.items():
-            if key not in ['protocol_ID', 'run_start_time']:
-                # write new labels:
-                new_label = QLabel(key + ':')
-                self.protocol_grid.addWidget(new_label, self.run_params_ct, 0)
+            # write new labels:
+            new_label = QLabel(key + ':')
+            self.protocol_grid.addWidget(new_label, self.protocol_grid_row_ct, 0)
 
-                if isinstance(value, bool):
-                    self.run_parameter_input[key] = QCheckBox()
-                    self.run_parameter_input[key].setChecked(value)
-                else:
-                    self.run_parameter_input[key] = QLineEdit()
-                    if isinstance(value, int):
-                        validator = QtGui.QIntValidator()
-                        validator.setBottom(0)
-                    elif isinstance(value, float):
-                        validator = QtGui.QDoubleValidator()
-                        validator.setBottom(0)
-                    self.run_parameter_input[key].setValidator(validator)
-                    self.run_parameter_input[key].setText(str(value))
+            if isinstance(value, bool):
+                self.run_parameter_input[key] = QCheckBox()
+                self.run_parameter_input[key].setChecked(value)
+            else:
+                self.run_parameter_input[key] = QLineEdit()
+                if isinstance(value, int):
+                    validator = QtGui.QIntValidator()
+                    validator.setBottom(0)
+                elif isinstance(value, float):
+                    validator = QtGui.QDoubleValidator()
+                    validator.setBottom(0)
+                self.run_parameter_input[key].setValidator(validator)
+                self.run_parameter_input[key].setText(str(value))
 
-                self.protocol_grid.addWidget(self.run_parameter_input[key], self.run_params_ct, 1, 1, 1)
+            self.protocol_grid.addWidget(self.run_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 1)
 
-                self.run_params_ct += 1
+            self.protocol_grid_row_ct += 1
 
     def on_entered_series_count(self):
         self.data.update_series_count(self.series_counter_input.value())
