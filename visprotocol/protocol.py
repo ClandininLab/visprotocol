@@ -151,6 +151,20 @@ class BaseProtocol():
         self.variable_protocol_parameter_names = [k for k,v in self.protocol_parameters.items() if      isinstance(v, list) and len(v) > 1]
         self.static_protocol_parameter_names   = [k for k,v in self.protocol_parameters.items() if not (isinstance(v, list) and len(v) > 1)]
 
+    def estimate_run_time(self):
+        '''
+        If pre_time, stim_time, and tail_time are specified in the protocol parameters, this method will estimate the total run time.
+        '''
+        pre_time = self.protocol_parameters.get('pre_time', 0)
+        stim_time = self.protocol_parameters.get('stim_time', 0)
+        tail_time = self.protocol_parameters.get('tail_time', 0)
+
+        pre_time = np.mean(self.protocol_parameters.get('pre_time', 0)) if pre_time is not None else 0
+        stim_time = np.mean(self.protocol_parameters.get('stim_time', 0)) if stim_time is not None else 0
+        tail_time = np.mean(self.protocol_parameters.get('tail_time', 0)) if tail_time is not None else 0
+
+        self.est_run_time = self.run_parameters.get('num_epochs', 0) * (pre_time + stim_time + tail_time)
+
     def check_required_run_parameters(self):
         required_run_parameters = ['num_epochs', 'idle_color']
         if self.loco_available:

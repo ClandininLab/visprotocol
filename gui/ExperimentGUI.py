@@ -147,7 +147,7 @@ class ExperimentGUI(QWidget):
         self.status_label = QLabel()
         self.status_label.setFrameShadow(QFrame.Shadow(1))
         self.protocol_control_grid.addWidget(self.status_label, 0, 1)
-        self.status_label.setText('')
+        self.status_label.setText('Select a protocol')
 
         # Current series counter
         new_label = QLabel('Series counter:')
@@ -159,14 +159,22 @@ class ExperimentGUI(QWidget):
         self.series_counter_input.valueChanged.connect(self.on_entered_series_count)
         self.protocol_control_grid.addWidget(self.series_counter_input, 0, 3)
 
+        # Run duration estimate window:
+        new_label = QLabel('Est. run [s]:')
+        self.protocol_control_grid.addWidget(new_label, 1, 0)
+        self.est_run_time_label = QLabel()
+        self.est_run_time_label.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_control_grid.addWidget(self.est_run_time_label, 1, 1)
+        self.est_run_time_label.setText('')
+
         # Epoch count refresh button:
         check_epoch_count_button = QPushButton("Check epochs:", self)
         check_epoch_count_button.clicked.connect(self.on_pressed_button)
-        self.protocol_control_grid.addWidget(check_epoch_count_button, 1, 0)
+        self.protocol_control_grid.addWidget(check_epoch_count_button, 1, 2)
         # Epoch count window:
         self.epoch_count = QLabel()
         self.epoch_count.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_control_grid.addWidget(self.epoch_count, 1, 1)
+        self.protocol_control_grid.addWidget(self.epoch_count, 1, 3)
         self.epoch_count.setText('')
 
         # View button:
@@ -339,6 +347,8 @@ class ExperimentGUI(QWidget):
         self.update_window_width()
         self.show()
 
+        self.status_label.setText('Ready')
+
     def on_pressed_button(self):
         sender = self.sender()
         if sender.text() == 'Record':
@@ -467,13 +477,21 @@ class ExperimentGUI(QWidget):
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
                 self.protocol_parameter_input[key].setChecked(value)
+                self.protocol_parameter_input[key].stateChanged.connect(self.on_parameter_updated)
             else:
                 self.protocol_parameter_input[key] = QLineEdit()
-
                 self.protocol_parameter_input[key].setText(str(value))  # set to default value
+                self.protocol_parameter_input[key].editingFinished.connect(self.on_parameter_updated)
+
             self.protocol_grid.addWidget(self.protocol_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 2)
 
             self.protocol_grid_row_ct += 1
+
+    def on_parameter_updated(self):
+        self.update_parameters_from_fillable_fields()
+        self.protocol_object.estimate_run_time()
+
+        self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
 
     def update_parameter_preset_selector(self):
         self.parameter_preset_comboBox = QComboBox(self)
@@ -527,6 +545,7 @@ class ExperimentGUI(QWidget):
             if isinstance(value, bool):
                 self.run_parameter_input[key] = QCheckBox()
                 self.run_parameter_input[key].setChecked(value)
+                self.run_parameter_input[key].stateChanged.connect(self.on_parameter_updated)
             else:
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
@@ -537,6 +556,7 @@ class ExperimentGUI(QWidget):
                     validator.setBottom(0)
                 self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
+                self.run_parameter_input[key].editingFinished.connect(self.on_parameter_updated)
 
             self.protocol_grid.addWidget(self.run_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 1)
 
@@ -618,6 +638,10 @@ class ExperimentGUI(QWidget):
             # Base case: number
             if is_number(s):
                 return float(s)
+            
+            # If string is empty, return 0 as default
+            elif len(s) == 0:
+                return 0
 
             # List or tuple
             elif (s[0] == '[' and s[-1] == ']') or (s[0] == '(' and s[-1] == ')'):                
@@ -662,7 +686,8 @@ class ExperimentGUI(QWidget):
             if isinstance(self.run_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.run_parameters[key] = self.run_parameter_input[key].isChecked()
             else: # QLineEdit
-                self.protocol_object.run_parameters[key] = float(self.run_parameter_input[key].text())
+                run_parameter_input_text = self.run_parameter_input[key].text()
+                self.protocol_object.run_parameters[key] = float(run_parameter_input_text) if len(run_parameter_input_text)>0 else 0
 
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
