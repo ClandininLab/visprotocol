@@ -537,23 +537,23 @@ class DriftingSquareGrating(BaseProtocol):
                                       'phi': centerY}
 
     def get_protocol_parameter_defaults(self):
-        self.protocol_parameters = {'pre_time': 1.0,
-                                    'stim_time': 4.0,
-                                    'tail_time': 1.0,
-                                    
-                                    'period': 20.0,
-                                    'rate': 20.0,
-                                    'contrast': 1.0,
-                                    'mean': 0.5,
-                                    'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
-                                    'center': (0, 0),
-                                    }
+        return {'pre_time': 1.0,
+                'stim_time': 4.0,
+                'tail_time': 1.0,
+                
+                'period': 20.0,
+                'rate': 20.0,
+                'contrast': 1.0,
+                'mean': 0.5,
+                'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
+                'center': (0, 0),
+                }
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'num_epochs': 40,
-                               'idle_color': 0.5,
-                               'all_combinations': True,
-                               'randomize_order': True}
+        return {'num_epochs': 40,
+                'idle_color': 0.5,
+                'all_combinations': True,
+                'randomize_order': True}
 
 # %%
 
@@ -579,21 +579,21 @@ class MovingPatch(BaseProtocol):
                                                                 color=self.epoch_protocol_parameters['intensity'])
 
     def get_protocol_parameter_defaults(self):
-        self.protocol_parameters = {'pre_time': 0.5,
-                                    'stim_time': 3.0,
-                                    'tail_time': 1.0,
-                                    
-                                    'ellipse': True,
-                                    'width_height': [(5, 5), (10, 10), (15, 15), (20, 20), (25, 25), (30, 30)],
-                                    'intensity': 0.0,
-                                    'center': (0, 0),
-                                    'speed': 80.0,
-                                    'angle': 0.0,
-                                    'render_on_cylinder': False,
-                                    }
+        return {'pre_time': 0.5,
+                'stim_time': 3.0,
+                'tail_time': 1.0,
+                
+                'ellipse': True,
+                'width_height': [(5, 5), (10, 10), (15, 15), (20, 20), (25, 25), (30, 30)],
+                'intensity': 0.0,
+                'center': (0, 0),
+                'speed': 80.0,
+                'angle': 0.0,
+                'render_on_cylinder': False,
+                }
 
     def get_run_parameter_defaults(self):
-        self.run_parameters = {'num_epochs': 40,
-                               'idle_color': 0.5,
-                               'all_combinations': True,
-                               'randomize_order': True}
+        return {'num_epochs': 40,
+                'idle_color': 0.5,
+                'all_combinations': True,
+                'randomize_order': True}
