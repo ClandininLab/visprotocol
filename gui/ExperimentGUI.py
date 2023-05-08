@@ -341,12 +341,14 @@ class ExperimentGUI(QWidget):
         # update display lists of run & protocol parameters
         self.protocol_object.load_parameter_presets()
         self.protocol_object.select_protocol_preset(name='Default')
+        self.protocol_object.prepare_run()
         self.update_parameter_preset_selector()
         self.update_run_parameters_input()
         self.update_protocol_parameters_input()
         self.update_window_width()
         self.show()
 
+        self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
         self.status_label.setText('Ready')
 
     def on_pressed_button(self):
@@ -489,7 +491,7 @@ class ExperimentGUI(QWidget):
 
     def on_parameter_updated(self):
         self.update_parameters_from_fillable_fields()
-        self.protocol_object.estimate_run_time()
+        self.protocol_object.prepare_run(recompute_epoch_parameters=True)
 
         self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
 
@@ -637,10 +639,11 @@ class ExperimentGUI(QWidget):
 
             # Base case: number
             if is_number(s):
-                return float(s)
+                return eval(s)
             
             # If string is empty, return 0 as default
             elif len(s) == 0:
+                warnings.warn('Could not parse paramter input: ' + s)
                 return 0
 
             # List or tuple
@@ -668,6 +671,7 @@ class ExperimentGUI(QWidget):
 
                 if sq_bracket_level != 0 or parantheses_level != 0:
                     warnings.warn('Could not parse paramter input: ' + s)
+                    return 0
 
                 # If input was a tuple, convert l to a tuple
                 if s[0] == '(':
@@ -677,6 +681,7 @@ class ExperimentGUI(QWidget):
 
             else:
                 warnings.warn('Could not parse paramter input: ' + s)
+                return 0
 
         # Empty the parameters before filling them from the GUI
         self.protocol_object.run_parameters = {}

@@ -23,6 +23,7 @@ import numpy as np
 from time import sleep
 import os.path
 import os
+import math
 import yaml
 import itertools
 import warnings
@@ -34,11 +35,15 @@ class BaseProtocol():
     def __init__(self, cfg):
         self.cfg = cfg
 
-        self.num_epochs_completed = 0
         self.parameter_preset_directory = os.path.curdir
         self.trigger_on_epoch_run = True  # Used in control.EpochRun.start_run(), sends a TTL trigger to start acquisition devices
         self.trigger_on_epoch = False  # Used in control.EpochRun.start_epoch(), sends a TTL trigger to start acquisition devices
         self.save_metadata_flag = False  # Bool, whether or not to save this series. Set to True by GUI on 'record' but not 'view'.
+        self.use_precomputed_epoch_parameters = True  # Bool, whether or not to precompute epoch parameters
+
+        self.num_epochs_completed = 0
+        self.persistent_parameters = {}
+        self.precomputed_epoch_parameters = {}
 
         # epoch_protocol_parameters used to store protocol parameters that will be saved out in an easily accessible place in the data file
         # Fill this in with desired parameters in get_epoch_parameters(). Can also be used to control other features of the stimulus and used in load_stimuli()
@@ -139,47 +144,117 @@ class BaseProtocol():
     def advance_epoch_counter(self):
         self.num_epochs_completed += 1
         
-    def precompute_variables(self):
+    def get_persistent_parameters(self):
         '''
-        Use this method to precompute any variables that will be used in the epoch loop.
+        Use this method to precompute any persistent parameters that will be used in the epoch loop.
+        '''
+        pass
+
+    def __classify_protocol_parameters(self):
+        '''
+        list and nonlist parameter names are there to be backwards compatible with having "current_" prepended to the parameter name
         '''
         # get names of parameters that are in lists and those that are not
-        self.list_protocol_parameter_names     = [k for k,v in self.protocol_parameters.items() if     isinstance(v, list)]
-        self.nonlist_protocol_parameter_names  = [k for k,v in self.protocol_parameters.items() if not isinstance(v, list)]
+        list_protocol_parameter_names     = [k for k,v in self.protocol_parameters.items() if     isinstance(v, list)]
+        nonlist_protocol_parameter_names  = [k for k,v in self.protocol_parameters.items() if not isinstance(v, list)]
 
         # get names of variable and static parameters
-        self.variable_protocol_parameter_names = [k for k,v in self.protocol_parameters.items() if      isinstance(v, list) and len(v) > 1]
-        self.static_protocol_parameter_names   = [k for k,v in self.protocol_parameters.items() if not (isinstance(v, list) and len(v) > 1)]
+        variable_protocol_parameter_names = [k for k,v in self.protocol_parameters.items() if      isinstance(v, list) and len(v) > 1]
+        static_protocol_parameter_names   = [k for k,v in self.protocol_parameters.items() if not (isinstance(v, list) and len(v) > 1)]
 
-    def estimate_run_time(self):
+        self.persistent_parameters['list_protocol_parameter_names']     = list_protocol_parameter_names
+        self.persistent_parameters['nonlist_protocol_parameter_names']  = nonlist_protocol_parameter_names
+        self.persistent_parameters['variable_protocol_parameter_names'] = variable_protocol_parameter_names
+        self.persistent_parameters['static_protocol_parameter_names']   = static_protocol_parameter_names
+
+    def __precompute_epoch_parameters(self, refresh=False):
+        if refresh:
+            self.precomputed_epoch_parameters = {}
+
+        if len(self.precomputed_epoch_parameters) == 0:
+            precomputed_epoch_stim_parameters = []
+            precomputed_epoch_protocol_parameters = []
+            for e in range(int(self.run_parameters['num_epochs'])):
+                self.num_epochs_completed = e
+                self.get_epoch_parameters()
+                self.check_required_epoch_protocol_parameters()
+                precomputed_epoch_stim_parameters.append(self.epoch_stim_parameters)
+                precomputed_epoch_protocol_parameters.append(self.epoch_protocol_parameters)
+            self.precomputed_epoch_parameters = {'stim': precomputed_epoch_stim_parameters,
+                                                'protocol': precomputed_epoch_protocol_parameters}
+            self.num_epochs_completed = 0
+
+    def load_precomputed_epoch_parameters(self):
+        self.epoch_stim_parameters = self.precomputed_epoch_parameters['stim'][self.num_epochs_completed]
+        self.epoch_protocol_parameters = self.precomputed_epoch_parameters['protocol'][self.num_epochs_completed]
+
+    def __estimate_run_time(self):
         '''
         If pre_time, stim_time, and tail_time are specified in the protocol parameters, this method will estimate the total run time.
         '''
-        pre_time = self.protocol_parameters.get('pre_time', 0)
-        stim_time = self.protocol_parameters.get('stim_time', 0)
-        tail_time = self.protocol_parameters.get('tail_time', 0)
-
-        pre_time = np.mean(self.protocol_parameters.get('pre_time', 0)) if pre_time is not None else 0
-        stim_time = np.mean(self.protocol_parameters.get('stim_time', 0)) if stim_time is not None else 0
-        tail_time = np.mean(self.protocol_parameters.get('tail_time', 0)) if tail_time is not None else 0
-
-        self.est_run_time = self.run_parameters.get('num_epochs', 0) * (pre_time + stim_time + tail_time)
+        epoch_protocol_params = self.precomputed_epoch_parameters['protocol']
+        self.est_run_time = np.sum([p.get('pre_time', 0) + p.get('stim_time', 0) + p.get('tail_time', 0) for p in epoch_protocol_params])
 
     def check_required_run_parameters(self):
-        required_run_parameters = ['num_epochs', 'idle_color']
+        """
+        required_run_parameters: list of tuples (parameter_name, parameter_dtype)
+            parameter is cast to parameter_dtype; if no cast is needed, use None
+        """
+        required_run_parameters = [('num_epochs', int), ('idle_color', float)]
         if self.loco_available:
-            required_run_parameters.append('do_loco')
+            required_run_parameters.append(('do_loco', bool))
         
-        for p in required_run_parameters:
+        for p, dtype in required_run_parameters:
             if p not in self.run_parameters:
                 raise ValueError(f'Run parameter {p} is required but not found in {self.run_parameters}')
+            else:
+                if dtype is not None:
+                    try:
+                        self.run_parameters[p] = dtype(self.run_parameters[p])
+                    except:
+                        raise ValueError(f'Run parameter {p} could not be cast to {dtype}')
     
     def check_required_epoch_protocol_parameters(self):
-        required_protocol_parameters = ['pre_time', 'stim_time', 'tail_time']
+        """
+        required_run_parameters: list of tuples (parameter_name, parameter_dtype)
+            parameter is cast to parameter_dtype; if no cast is needed, use None
+        """
+        required_protocol_parameters = [('pre_time', float), ('stim_time', float), ('tail_time', float)]
         
-        for p in required_protocol_parameters:
+        for p, dtype in required_protocol_parameters:
             if p not in self.epoch_protocol_parameters:
                 raise ValueError(f'Epoch protocol parameter {p} is required but not found in {self.epoch_protocol_parameters}')
+            else:
+                if dtype is not None:
+                    try:
+                        self.epoch_protocol_parameters[p] = dtype(self.epoch_protocol_parameters[p])
+                    except:
+                        raise ValueError(f'Epoch protocol parameter {p} could not be cast to {dtype}')
+
+    def prepare_run(self, recompute_epoch_parameters=True):
+        """
+        recompute_epoch_parameters: bool
+            If True, precompute epoch parameters even if they have been computed already
+            If False, do not recompute epoch parameters if they have been computed already
+        """
+        self.num_epochs_completed = 0
+        self.persistent_parameters = {}
+        self.epoch_protocol_parameters = {}
+
+        # Check that all required run parameters are set
+        self.check_required_run_parameters()
+        
+        # Get persistent parameters prior to epoch run loop
+        self.get_persistent_parameters()
+
+        # Classify protocol parameters
+        self.__classify_protocol_parameters()
+
+        # Precompute epoch parameters
+        self.__precompute_epoch_parameters(refresh=recompute_epoch_parameters)
+
+        # Estimate run time
+        self.__estimate_run_time()
 
     def load_stimuli(self, manager, multicall=None):
         if multicall is None:
@@ -239,7 +314,7 @@ class BaseProtocol():
         sleep(self.epoch_protocol_parameters['tail_time'])
         
 # %% Convenience methods
-    def select_parameters_from_lists(self, parameter_list, all_combinations=True, randomize_order=False):
+    def get_parameter_sequence(self, parameter_list, all_combinations=True, randomize_order=False):
         """
         inputs
         parameter_list can be:
@@ -277,19 +352,39 @@ class BaseProtocol():
         else: # user probably entered a single value (int or float), convert to list
             parameter_sequence = [parameter_list]
 
-        if self.num_epochs_completed == 0: # new run: initialize persistent sequences
-            self.persistent_parameters = {'parameter_sequence': parameter_sequence}
+        # Get sequence order
+        num_epochs_in_sequence = len(parameter_sequence)
+        num_epoch_sequences = math.ceil(self.run_parameters['num_epochs'] / num_epochs_in_sequence)
+        
+        # index in parameter_sequence for each epoch
+        if randomize_order:
+            parameter_sequence_epoch_inds = np.concatenate([np.random.permutation(num_epochs_in_sequence) for _ in range(num_epoch_sequences)])[:self.run_parameters['num_epochs']]
+        else:
+            parameter_sequence_epoch_inds = np.arange(self.run_parameters['num_epochs']) % num_epochs_in_sequence
 
-        draw_ind = np.mod(self.num_epochs_completed, len(self.persistent_parameters['parameter_sequence']))
-        if draw_ind == 0 and randomize_order: # randomize sequence
-            rand_inds = np.random.permutation(len(self.persistent_parameters['parameter_sequence']))
-            parameter_sequence_np = np.array(self.persistent_parameters['parameter_sequence'], dtype=object)
-            if len(parameter_sequence_np.shape) == 1:
-                self.persistent_parameters['parameter_sequence'] = list(parameter_sequence_np[rand_inds])
-            else:
-                self.persistent_parameters['parameter_sequence'] = list(parameter_sequence_np[rand_inds, :])
+        self.persistent_parameters['parameter_sequence'] = parameter_sequence
+        self.persistent_parameters['parameter_sequence_epoch_inds'] = parameter_sequence_epoch_inds
 
-        current_parameters = self.persistent_parameters['parameter_sequence'][draw_ind]
+    def select_parameters_from_lists(self, parameter_list, all_combinations=True, randomize_order=False):
+        """
+        inputs
+        parameter_list can be:
+            -list/array of parameters
+            -single value (int, float etc)
+            -tuple of lists, where each list contains values for a single parameter
+                    in this case, all_combinations = True will return all possible combinations of parameters, taking
+                    one from each parameter list. If all_combinations = False, keeps params associated across lists
+        randomize_order will randomize sequence or sequences at the beginning of each new sequence
+        """
+
+        # new run: initialize parameter sequences if not already done
+        if self.num_epochs_completed == 0 and 'parameter_sequence' not in self.persistent_parameters:
+            self.get_parameter_sequence(parameter_list, all_combinations=all_combinations, randomize_order=randomize_order)
+
+        # get current parameters
+        parameter_sequence = self.persistent_parameters['parameter_sequence']
+        parameter_sequence_epoch_inds = self.persistent_parameters['parameter_sequence_epoch_inds']
+        current_parameters = parameter_sequence[parameter_sequence_epoch_inds[self.num_epochs_completed]]
 
         return current_parameters
     
@@ -329,12 +424,12 @@ class BaseProtocol():
         current_parameters_dict:
             dictionary of parameter names and values specific to this epoch. parameter names are prepended with 'current_' if prepend_current is True
         """
-        
-        current_parameters_dict = self.select_protocol_parameters_from_names(self.list_protocol_parameter_names, all_combinations=all_combinations, randomize_order=randomize_order, prepend_current=prepend_current)
+
+        current_parameters_dict = self.select_protocol_parameters_from_names(self.persistent_parameters['list_protocol_parameter_names'], all_combinations=all_combinations, randomize_order=randomize_order, prepend_current=prepend_current)
         
         if include_all_params:
             # Add parameters that are not in lists to current_parameters_dic
-            for k in self.nonlist_protocol_parameter_names:
+            for k in self.persistent_parameters['nonlist_protocol_parameter_names']:
                 current_parameters_dict[k] = self.protocol_parameters[k]
         
         return current_parameters_dict

@@ -57,12 +57,10 @@ class BaseClient():
         self.pause = False
         protocol_object.save_metadata_flag = save_metadata_flag
 
-        # Precompute useful variables prior to epoch run loop
-        protocol_object.precompute_variables()
+        # Check run parameters, compute persistent parameters, and precompute epoch parameters
+        # Do not recompute epoch parameters if they have been computed already
+        protocol_object.prepare_run(recompute_epoch_parameters=False)
 
-        # Check that all required run parameters are set
-        protocol_object.check_required_run_parameters()
-        
         # Set background to idle_color
         self.manager.set_idle_background(protocol_object.run_parameters['idle_color'])
 
@@ -106,11 +104,16 @@ class BaseClient():
         if protocol_object.loco_available and protocol_object.run_parameters['do_loco']:
             self.stop_loco()
 
-        self.manager.print_on_server('Stopping run.')
+        self.manager.print_on_server('Run ended.')
+
+        protocol_object.prepare_run(recompute_epoch_parameters=True)
 
     def start_epoch(self, protocol_object, data, save_metadata_flag=True):
         #  get stimulus parameters for this epoch
-        protocol_object.get_epoch_parameters()
+        if protocol_object.use_precomputed_epoch_parameters:
+            protocol_object.load_precomputed_epoch_parameters()
+        else:
+            protocol_object.get_epoch_parameters()
         
         # Check that all required epoch protocol parameters are set
         protocol_object.check_required_epoch_protocol_parameters()
