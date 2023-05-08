@@ -633,7 +633,7 @@ class ExperimentGUI(QWidget):
             except ValueError:
                 return False
 
-        def parse_param_str(s):
+        def parse_param_str(s): # TODO: Need a better mechanism for passing parse error
             # Remove all whitespace
             s = ''.join(s.split())
 
@@ -643,8 +643,8 @@ class ExperimentGUI(QWidget):
             
             # If string is empty, return 0 as default
             elif len(s) == 0:
-                warnings.warn('Could not parse paramter input: ' + s)
-                return 0
+                warnings.warn('Could not parse paramter token: ' + s)
+                return None
 
             # List or tuple
             elif (s[0] == '[' and s[-1] == ']') or (s[0] == '(' and s[-1] == ')'):                
@@ -670,8 +670,8 @@ class ExperimentGUI(QWidget):
                         token += c
 
                 if sq_bracket_level != 0 or parantheses_level != 0:
-                    warnings.warn('Could not parse paramter input: ' + s)
-                    return 0
+                    warnings.warn('Could not parse paramter token: ' + s)
+                    return None
 
                 # If input was a tuple, convert l to a tuple
                 if s[0] == '(':
@@ -680,8 +680,8 @@ class ExperimentGUI(QWidget):
                 return l
 
             else:
-                warnings.warn('Could not parse paramter input: ' + s)
-                return 0
+                warnings.warn('Could not parse paramter token: ' + s)
+                return None
 
         # Empty the parameters before filling them from the GUI
         self.protocol_object.run_parameters = {}
@@ -700,7 +700,14 @@ class ExperimentGUI(QWidget):
             elif isinstance(self.protocol_parameter_input[key], str):
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
-                self.protocol_object.protocol_parameters[key] = parse_param_str(self.protocol_parameter_input[key].text())
+                raw_input = self.protocol_parameter_input[key].text()
+                parsed_input = parse_param_str(raw_input)
+                if parsed_input is not None: # TODO: Need a better mechanism for passing parse error
+                    self.protocol_object.protocol_parameters[key] = parsed_input
+                else:
+                    warnings.warn(f'Could not parse paramter input: {raw_input}. Using default value.')
+                    self.protocol_object.protocol_parameters[key] = self.protocol_object.get_protocol_parameter_defaults()[key]
+                    self.protocol_parameter_input[key].setText(str(self.protocol_object.protocol_parameters[key]))
 
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')

@@ -49,8 +49,8 @@ class BaseProtocol():
         # Fill this in with desired parameters in get_epoch_parameters(). Can also be used to control other features of the stimulus and used in load_stimuli()
         self.epoch_protocol_parameters = {}
 
-        self.get_run_parameter_defaults()
-        self.get_protocol_parameter_defaults()
+        self.run_parameters = self.get_run_parameter_defaults()
+        self.protocol_parameters = self.get_protocol_parameter_defaults()
         self.load_parameter_presets()
         
         self.parameter_preset_directory = config_tools.get_parameter_preset_directory(self.cfg)
@@ -79,11 +79,11 @@ class BaseProtocol():
 
     def get_run_parameter_defaults(self):
         """ Overwrite me in the child subclass"""
-        self.run_parameters = {}
+        return {}
 
     def get_protocol_parameter_defaults(self):
         """ Overwrite me in the child subclass"""
-        self.protocol_parameters = {}
+        return {}
 
     def load_parameter_presets(self):
         fname = os.path.join(self.parameter_preset_directory, self.__class__.__name__) + '.yaml'
@@ -106,8 +106,8 @@ class BaseProtocol():
         Parameters that are not present in the preset will use the current protocol's default values.
         '''
 
-        self.get_run_parameter_defaults()
-        self.get_protocol_parameter_defaults()
+        self.run_parameters = self.get_run_parameter_defaults()
+        self.protocol_parameters = self.get_protocol_parameter_defaults()
 
         # If loco is available, add/set "do_loco" boolean to run parameters
         if self.loco_available:
@@ -512,8 +512,8 @@ class DriftingSquareGrating(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
-        self.get_run_parameter_defaults()
-        self.get_protocol_parameter_defaults()
+        self.run_parameters = self.get_run_parameter_defaults()
+        self.protocol_parameters = self.get_protocol_parameter_defaults()
 
     def get_epoch_parameters(self):
         super().get_epoch_parameters()
@@ -564,8 +564,8 @@ class MovingPatch(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
-        self.get_run_parameter_defaults()
-        self.get_protocol_parameter_defaults()
+        self.run_parameters = self.get_run_parameter_defaults()
+        self.protocol_parameters = self.get_protocol_parameter_defaults()
 
     def get_epoch_parameters(self):
         super().get_epoch_parameters()
