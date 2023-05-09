@@ -571,6 +571,7 @@ class ExperimentGUI(QWidget):
                 self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
                 self.run_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
+                self.run_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
 
             self.protocol_grid.addWidget(self.run_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 1)
 
