@@ -106,8 +106,6 @@ class BaseClient():
 
         self.manager.print_on_server('Run ended.')
 
-        protocol_object.prepare_run(recompute_epoch_parameters=True)
-
     def start_epoch(self, protocol_object, data, save_metadata_flag=True):
         #  get stimulus parameters for this epoch
         if protocol_object.use_precomputed_epoch_parameters:
