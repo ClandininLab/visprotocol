@@ -33,6 +33,7 @@ class ExperimentGUI(QWidget):
         self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
+        self.mid_parameter_edit = False
 
         # user input to select configuration file and rig name
         # sets self.cfg
@@ -485,19 +486,21 @@ class ExperimentGUI(QWidget):
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
                 self.protocol_parameter_input[key].setChecked(value)
-                self.protocol_parameter_input[key].stateChanged.connect(self.on_updated_parameter)
+                self.protocol_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
             else:
                 self.protocol_parameter_input[key] = QLineEdit()
                 self.protocol_parameter_input[key].setText(str(value))  # set to default value
-                self.protocol_parameter_input[key].editingFinished.connect(self.on_updated_parameter)
+                self.protocol_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
+                self.protocol_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
 
             self.protocol_grid.addWidget(self.protocol_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 2)
 
             self.protocol_grid_row_ct += 1
 
+    def on_parameter_mid_edit(self):
+        self.mid_parameter_edit = True
 
-
-    def on_updated_parameter(self):
+    def on_parameter_finished_edit(self):
         if self.status == Status.STANDBY:
             self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
@@ -556,7 +559,7 @@ class ExperimentGUI(QWidget):
             if isinstance(value, bool):
                 self.run_parameter_input[key] = QCheckBox()
                 self.run_parameter_input[key].setChecked(value)
-                self.run_parameter_input[key].stateChanged.connect(self.on_updated_parameter)
+                self.run_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
             else:
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
@@ -567,7 +570,7 @@ class ExperimentGUI(QWidget):
                     validator.setBottom(0)
                 self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
-                self.run_parameter_input[key].editingFinished.connect(self.on_updated_parameter)
+                self.run_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
 
             self.protocol_grid.addWidget(self.run_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 1)
 
@@ -598,8 +601,8 @@ class ExperimentGUI(QWidget):
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
         # Populate parameters from filled fields
-        # self.update_parameters_from_fillable_fields()
-        # Assume that parameters have already been updated
+        if self.mid_parameter_edit:
+            self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
         # start the epoch run thread:
         self.run_series_thread = runSeriesThread(self.protocol_object,
@@ -727,6 +730,8 @@ class ExperimentGUI(QWidget):
 
         self.protocol_object.prepare_run(recompute_epoch_parameters=compute_epoch_parameters)
         self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
+
+        self.mid_parameter_edit = False
 
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
