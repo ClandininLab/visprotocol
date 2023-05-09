@@ -10,6 +10,7 @@ import os
 import sys
 import importlib
 import warnings
+from enum import Enum
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
                              QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
@@ -23,6 +24,7 @@ from visprotocol.util import config_tools, h5io
 # from visprotocol.control import EpochRun
 from visprotocol import protocol, data, client
 
+Status = Enum('Status', ['STANDBY', 'RECORDING', 'VIEWING'])
 
 class ExperimentGUI(QWidget):
 
@@ -31,6 +33,7 @@ class ExperimentGUI(QWidget):
         self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
+        self.mid_parameter_edit = False
 
         # user input to select configuration file and rig name
         # sets self.cfg
@@ -134,6 +137,7 @@ class ExperimentGUI(QWidget):
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
         self.protocol_selector_grid.addWidget(parameter_preset_label, 2, 0)
+        self.parameter_preset_comboBox = None
         self.update_parameter_preset_selector()
 
         # Save parameter preset button:
@@ -348,7 +352,8 @@ class ExperimentGUI(QWidget):
         self.update_window_width()
         self.show()
 
-        self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
+        self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
+        self.status = Status.STANDBY
         self.status_label.setText('Ready')
 
     def on_pressed_button(self):
@@ -395,14 +400,16 @@ class ExperimentGUI(QWidget):
                 self.notes_edit.setTextColor(QtGui.QColor("Red"))
 
         elif sender.text() == 'Save preset':
-            self.update_parameters_from_fillable_fields()  # get the state of the param input from GUI
+            self.update_parameters_from_fillable_fields(compute_epoch_parameters=False)  # get the state of the param input from GUI
             start_name = self.parameter_preset_comboBox.currentText()
             if start_name == 'Default':
                 start_name = ''
 
             text, _ = QInputDialog.getText(self, "Save preset", "Preset Name:", QLineEdit.Normal, start_name)
 
-            self.protocol_object.update_parameter_presets(text)
+            self.protocol_object.update_parameter_presets(text) # TODO update GUI
+            self.update_parameter_preset_selector()
+            self.parameter_preset_comboBox.setCurrentIndex(self.parameter_preset_comboBox.findText(text))
 
         elif sender.text() == 'Initialize experiment':
             dialog = QDialog()
@@ -479,23 +486,27 @@ class ExperimentGUI(QWidget):
             if isinstance(value, bool):
                 self.protocol_parameter_input[key] = QCheckBox()
                 self.protocol_parameter_input[key].setChecked(value)
-                self.protocol_parameter_input[key].stateChanged.connect(self.on_parameter_updated)
+                self.protocol_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
             else:
                 self.protocol_parameter_input[key] = QLineEdit()
                 self.protocol_parameter_input[key].setText(str(value))  # set to default value
-                self.protocol_parameter_input[key].editingFinished.connect(self.on_parameter_updated)
+                self.protocol_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
+                self.protocol_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
 
             self.protocol_grid.addWidget(self.protocol_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 2)
 
             self.protocol_grid_row_ct += 1
 
-    def on_parameter_updated(self):
-        self.update_parameters_from_fillable_fields()
-        self.protocol_object.prepare_run(recompute_epoch_parameters=True)
+    def on_parameter_mid_edit(self):
+        self.mid_parameter_edit = True
 
-        self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
+    def on_parameter_finished_edit(self):
+        if self.status == Status.STANDBY:
+            self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
     def update_parameter_preset_selector(self):
+        if self.parameter_preset_comboBox is not None:
+            self.parameter_preset_comboBox.deleteLater()
         self.parameter_preset_comboBox = QComboBox(self)
         self.parameter_preset_comboBox.addItem("Default")
         for name in self.protocol_object.parameter_presets.keys():
@@ -508,6 +519,7 @@ class ExperimentGUI(QWidget):
         self.reset_layout()
         self.update_protocol_parameters_input()
         self.update_run_parameters_input()
+        self.update_parameters_from_fillable_fields()
         self.show()
 
     def on_selected_existing_animal(self, index):
@@ -547,7 +559,7 @@ class ExperimentGUI(QWidget):
             if isinstance(value, bool):
                 self.run_parameter_input[key] = QCheckBox()
                 self.run_parameter_input[key].setChecked(value)
-                self.run_parameter_input[key].stateChanged.connect(self.on_parameter_updated)
+                self.run_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
             else:
                 self.run_parameter_input[key] = QLineEdit()
                 if isinstance(value, int):
@@ -558,7 +570,7 @@ class ExperimentGUI(QWidget):
                     validator.setBottom(0)
                 self.run_parameter_input[key].setValidator(validator)
                 self.run_parameter_input[key].setText(str(value))
-                self.run_parameter_input[key].editingFinished.connect(self.on_parameter_updated)
+                self.run_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
 
             self.protocol_grid.addWidget(self.run_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 1)
 
@@ -589,7 +601,8 @@ class ExperimentGUI(QWidget):
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
         # Populate parameters from filled fields
-        self.update_parameters_from_fillable_fields()
+        if self.mid_parameter_edit:
+            self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
         # start the epoch run thread:
         self.run_series_thread = runSeriesThread(self.protocol_object,
@@ -608,8 +621,10 @@ class ExperimentGUI(QWidget):
         self.record_button.setEnabled(False)
         if save_metadata_flag:
             self.status_label.setText('Recording series ' + str(self.data.get_series_count()))
+            self.status = Status.RECORDING
         else:
             self.status_label.setText('Viewing...')
+            self.status = Status.VIEWING
 
     def run_finished(self, save_metadata_flag):
         # re-enable view/record buttons
@@ -617,6 +632,7 @@ class ExperimentGUI(QWidget):
         self.record_button.setEnabled(True)
 
         self.status_label.setText('Ready')
+        self.status = Status.STANDBY
         self.pause_button.setText('Pause')
         if save_metadata_flag:
             self.update_existing_animal_input()
@@ -624,8 +640,11 @@ class ExperimentGUI(QWidget):
             self.data.advance_series_count()
             self.series_counter_input.setValue(self.data.get_series_count())
             self.populate_groups()
+            
+        # Prepare for next run
+        self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
-    def update_parameters_from_fillable_fields(self):
+    def update_parameters_from_fillable_fields(self, compute_epoch_parameters=True):
         def is_number(s):
             try:
                 float(s)
@@ -708,6 +727,11 @@ class ExperimentGUI(QWidget):
                     warnings.warn(f'Could not parse paramter input: {raw_input}. Using default value.')
                     self.protocol_object.protocol_parameters[key] = self.protocol_object.get_protocol_parameter_defaults()[key]
                     self.protocol_parameter_input[key].setText(str(self.protocol_object.protocol_parameters[key]))
+
+        self.protocol_object.prepare_run(recompute_epoch_parameters=compute_epoch_parameters)
+        self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
+
+        self.mid_parameter_edit = False
 
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')

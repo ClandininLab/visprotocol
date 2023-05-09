@@ -106,8 +106,6 @@ class BaseClient():
 
         self.manager.print_on_server('Run ended.')
 
-        protocol_object.prepare_run(recompute_epoch_parameters=True)
-
     def start_epoch(self, protocol_object, data, save_metadata_flag=True):
         #  get stimulus parameters for this epoch
         if protocol_object.use_precomputed_epoch_parameters:
@@ -155,7 +153,7 @@ class BaseClient():
                 self.manager.set_save_pos_history_dir(server_pos_history_dir)
 
                 # set server-side directory in which to save locomotion data
-                server_loco_dir = posixpath.join(self.server_series_dir, 'loco')
+                server_loco_dir = posixpath.join(server_series_dir, 'loco')
                 self.manager.loco_set_save_directory(server_loco_dir)
             else:
                 print("Warning: Locomotion data won't be saved without server's data_directory specified in config file.")

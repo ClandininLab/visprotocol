@@ -244,11 +244,11 @@ class BaseProtocol():
         # Check that all required run parameters are set
         self.check_required_run_parameters()
         
-        # Get persistent parameters prior to epoch run loop
-        self.get_persistent_parameters()
-
         # Classify protocol parameters
         self.__classify_protocol_parameters()
+
+        # Get persistent parameters prior to epoch run loop
+        self.get_persistent_parameters()
 
         # Precompute epoch parameters
         self.__precompute_epoch_parameters(refresh=recompute_epoch_parameters)
