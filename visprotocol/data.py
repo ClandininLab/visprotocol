@@ -161,7 +161,7 @@ class BaseData():
         ""
         if self.experiment_file_exists():
             with h5py.File(os.path.join(self.data_directory, self.experiment_file_name + '.hdf5'), 'r+') as experiment_file:
-                note_unix_time = datetime.now().timestamp()
+                note_unix_time = str(datetime.now().timestamp())
                 notes = experiment_file['/Notes']
                 notes.attrs[note_unix_time] = note_text
         else:
