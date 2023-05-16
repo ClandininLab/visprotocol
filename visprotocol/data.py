@@ -53,7 +53,7 @@ class BaseData():
             init_now = datetime.now()
             date = init_now.isoformat()[:-16]
             init_unix_time = init_now.timestamp()
-            
+
             # Write experiment metadata as top-level attributes
             experiment_file.attrs['date'] = date
             experiment_file.attrs['init_unix_time'] = init_unix_time
@@ -106,7 +106,7 @@ class BaseData():
                 new_epoch_run.attrs['protocol_ID'] = protocol_object.__class__.__name__
 
                 for key in protocol_object.protocol_parameters:  # add user-entered protocol params
-                    new_epoch_run.attrs[key] = protocol_object.protocol_parameters[key]
+                    new_epoch_run.attrs[key] = hdf5ify_parameter(protocol_object.protocol_parameters[key])
 
                 # add subgroups:
                 new_epoch_run.create_group('acquisition')
@@ -253,5 +253,7 @@ def hdf5ify_parameter(value):
     if type(value) is np.ndarray:
         if value.dtype == 'object':
             value = value.astype('float')
+    if type(value) is list:
+        value = ['None' for x in value if x is None]
 
     return value
