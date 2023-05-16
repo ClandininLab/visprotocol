@@ -106,3 +106,24 @@ RIGHT-dark_20230502_shortpretail:
     - 10.0
     - 20.0
     randomize_order: true
+20230502_righteye-shortpretailDARK:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 98.0
+    pre_time: 1.0
+    stim_time: 2.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
