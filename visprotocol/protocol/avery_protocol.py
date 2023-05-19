@@ -451,9 +451,9 @@ class OptoStepSeries(BaseProtocol):
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'OptoStepSeries',
                                'num_epochs': 150,
-                               'pre_time': 2,
-                               'stim_time': 5,
-                               'tail_time': 10,
+                               'pre_time': 2.0,
+                               'stim_time': 5.0,
+                               'tail_time': 10.0,
                                'idle_color': 0.5}
 
 
@@ -558,7 +558,7 @@ class FlashSeriesWithOptoStep(BaseProtocol):
         #                             'led_duration': 6,  # sec, duration. Must be shorter than stim_time
 
         #                             'led_intensity': [0.25, 0.5, 1, 2, 4],  # V
-        #                             'randomize_order': True}       
+        #                             'randomize_order': True}
         self.protocol_parameters = {'height': 240.0,
                                     'width': 240.0,
                                     'center': [0, 0],

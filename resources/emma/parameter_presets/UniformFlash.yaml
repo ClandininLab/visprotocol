@@ -288,3 +288,19 @@ onlyDARK_300ms_0323:
     - 0.0
     intensity: 0.5
     randomize_order: false
+8second_grayFlashOnly300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 5.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.5
+    randomize_order: false

@@ -44,3 +44,26 @@
     - 1.0
     render_on_cylinder: true
     randomize_order: true
+1_30min_dark:
+  run_parameters:
+    protocol_ID: StripeFixation
+    num_epochs: 1.0
+    pre_time: 0.0
+    stim_time: 15.0
+    tail_time: 0.0
+    idle_color: 0.25
+  protocol_parameters:
+    width:
+    - 15.0
+    height:
+    - 150.0
+    intensity:
+    - 0.0
+    angle:
+    - 0.0
+    theta:
+    - 0.0
+    closed_loop:
+    - 1.0
+    render_on_cylinder: true
+    randomize_order: true

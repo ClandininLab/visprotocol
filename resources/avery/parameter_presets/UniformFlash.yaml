@@ -50,6 +50,40 @@ AstA Perfusion:
     intensity:
     - 1.0
     randomize_order: false
+Perfusion Pre:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20
+    pre_time: 2.0
+    stim_time: 0.5
+    tail_time: 3.5
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: false
+Perfusion Perf and Wash:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 230
+    pre_time: 2.0
+    stim_time: 0.5
+    tail_time: 3.5
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: false
 Half AstA Perfusion:
   run_parameters:
     protocol_ID: UniformFlash
@@ -66,4 +100,22 @@ Half AstA Perfusion:
     - 0.0
     intensity:
     - 1.0
+    randomize_order: false
+q_vis_responsive:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 2.0
+    stim_time: 0.5
+    tail_time: 3.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
     randomize_order: false
