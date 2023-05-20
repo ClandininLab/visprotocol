@@ -15,7 +15,7 @@ def get_lab_package_directory():
             text_file.write('/path/to/lab/package')
 
     with open(path_to_lab_package) as path_file:
-            cfg_dir_path = path_file.read()
+            cfg_dir_path = path_file.read().strip()
 
     return cfg_dir_path
 
@@ -69,7 +69,7 @@ def get_parameter_preset_directory(cfg):
     else:
         print('!!! No parameter preset directory is defined by configuration file !!!')
         return os.getcwd()
-        
+
 
 # %% Functions for finding and loading user-defined modules
 
@@ -88,7 +88,7 @@ def get_path_to_module(cfg, module_name):
         full_module_path = os.path.join(get_lab_package_directory(), module_path)
 
     return full_module_path
-    
+
 def user_module_exists(cfg, module_name):
     """Checks whether specified user module is defined and exists on this machine. Returns True/False."""
 
@@ -112,7 +112,7 @@ def load_user_module(cfg, module_name):
         return loaded_mod
     else:
         return None
-    
+
 
 def load_trigger_device(cfg):
     """Loads trigger device specified in rig config from the user daq module """
@@ -136,9 +136,9 @@ def get_screen_center(cfg):
     else:
         print('No rig selected, using default screen center')
         screen_center = [0, 0]
-    
+
     return screen_center
-    
+
 def get_server_options(cfg):
     if 'current_rig_name' in cfg:
         server_options = cfg.get('rig_config').get(cfg.get('current_rig_name')).get('server_options', {'host': '0.0.0.0', 'port': 60629, 'use_server': False})
