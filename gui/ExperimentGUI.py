@@ -8,7 +8,7 @@ Created on Thu Jun 21 10:51:42 2018
 from datetime import datetime
 import os
 import sys
-import importlib
+import time
 import warnings
 from enum import Enum
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayou
                              QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem,
                              QScrollArea, QSizePolicy)
 import PyQt5.QtCore as QtCore
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, QTimer
 import PyQt5.QtGui as QtGui
 
 from visprotocol.util import config_tools, h5io
@@ -34,6 +34,7 @@ class ExperimentGUI(QWidget):
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
         self.mid_parameter_edit = False
+        self.status = Status.STANDBY
 
         # user input to select configuration file and rig name
         # sets self.cfg
@@ -163,23 +164,28 @@ class ExperimentGUI(QWidget):
         self.series_counter_input.valueChanged.connect(self.on_entered_series_count)
         self.protocol_control_grid.addWidget(self.series_counter_input, 0, 3)
 
-        # Run duration estimate window:
-        new_label = QLabel('Est. run [s]:')
+        # Elapsed time window:
+        new_label = QLabel('Elapsed time [s]:')
         self.protocol_control_grid.addWidget(new_label, 1, 0)
-        self.est_run_time_label = QLabel()
-        self.est_run_time_label.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_control_grid.addWidget(self.est_run_time_label, 1, 1)
-        self.est_run_time_label.setText('')
+        self.elapsed_time_label = QLabel()
+        self.elapsed_time_label.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_control_grid.addWidget(self.elapsed_time_label, 1, 1)
+        self.elapsed_time_label.setText('')
+
+        # Elapsed timer for protocol
+        self.progress_timer = QTimer()
+        self.progress_timer.setSingleShot(False)
+        self.progress_timer.setInterval(1000)
+        self.progress_timer.timeout.connect(self.update_run_progress)
 
         # Epoch count refresh button:
-        check_epoch_count_button = QPushButton("Check epochs:", self)
-        check_epoch_count_button.clicked.connect(self.on_pressed_button)
-        self.protocol_control_grid.addWidget(check_epoch_count_button, 1, 2)
+        new_label = QLabel('Epoch count:')
+        self.protocol_control_grid.addWidget(new_label, 1, 2)
         # Epoch count window:
-        self.epoch_count = QLabel()
-        self.epoch_count.setFrameShadow(QFrame.Shadow(1))
-        self.protocol_control_grid.addWidget(self.epoch_count, 1, 3)
-        self.epoch_count.setText('')
+        self.epoch_count_label = QLabel()
+        self.epoch_count_label.setFrameShadow(QFrame.Shadow(1))
+        self.protocol_control_grid.addWidget(self.epoch_count_label, 1, 3)
+        self.epoch_count_label.setText('')
 
         # View button:
         self.view_button = QPushButton("View", self)
@@ -442,9 +448,6 @@ class ExperimentGUI(QWidget):
                 self.update_existing_animal_input()
                 self.populate_groups()
 
-        elif sender.text() == 'Check epochs:':
-            self.epoch_count.setText(str(self.protocol_object.num_epochs_completed))
-
     def on_created_animal(self):
         # Populate animal metadata from animal data fields
         animal_metadata = {}
@@ -626,6 +629,9 @@ class ExperimentGUI(QWidget):
         else:
             self.status_label.setText('Viewing...')
             self.status = Status.VIEWING
+        
+        self.run_start_time = time.time()
+        self.progress_timer.start()
 
     def run_finished(self, save_metadata_flag):
         # re-enable view/record buttons
@@ -635,6 +641,9 @@ class ExperimentGUI(QWidget):
         self.status_label.setText('Ready')
         self.status = Status.STANDBY
         self.pause_button.setText('Pause')
+
+        self.progress_timer.stop()
+
         if save_metadata_flag:
             self.update_existing_animal_input()
             # Advance the series_count:
@@ -730,9 +739,20 @@ class ExperimentGUI(QWidget):
                     self.protocol_parameter_input[key].setText(str(self.protocol_object.protocol_parameters[key]))
 
         self.protocol_object.prepare_run(recompute_epoch_parameters=compute_epoch_parameters)
-        self.est_run_time_label.setText(str(int(self.protocol_object.est_run_time)))
+        self.update_run_progress()
 
         self.mid_parameter_edit = False
+
+    def update_run_progress(self):
+        if self.status == Status.STANDBY:
+            elapsed_time = 0
+            epoch_count = 0
+        else:
+            elapsed_time = int(time.time() - self.run_start_time)
+            epoch_count = self.protocol_object.num_epochs_completed
+
+        self.elapsed_time_label.setText(f'{elapsed_time} / {self.protocol_object.est_run_time}')
+        self.epoch_count_label.setText(f'{epoch_count} / {self.protocol_object.run_parameters.get("num_epochs", "?")}')
 
     def populate_groups(self):
         file_path = os.path.join(self.data.data_directory, self.data.experiment_file_name + '.hdf5')
