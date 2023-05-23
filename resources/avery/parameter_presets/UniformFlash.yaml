@@ -19,7 +19,7 @@ FullFieldFlash:
 Mi1_Mapping:
   run_parameters:
     protocol_ID: UniformFlash
-    num_epochs: 20.0
+    num_epochs: 40.0
     pre_time: 1.0
     stim_time: 0.5
     tail_time: 1.0
