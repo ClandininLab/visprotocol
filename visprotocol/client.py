@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from time import sleep
+import os
 import posixpath
 from PyQt5.QtWidgets import QApplication
 
@@ -29,7 +30,10 @@ class BaseClient():
             if isinstance(self.trigger_device, daq.DAQonServer):
                 self.trigger_device.set_manager(self.manager)
         else:
-            aux_screen = Screen(server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
+            disp_env = os.environ['DISPLAY']
+            disp_server, disp_id = (int(x) if x.isnumeric() else 0 for x in disp_env.split(':'))
+            
+            aux_screen = Screen(server_number=disp_server, id=disp_id, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
             self.manager = launch_stim_server(aux_screen)
 
         self.manager.black_corner_square()
