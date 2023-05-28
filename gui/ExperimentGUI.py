@@ -709,8 +709,8 @@ class ExperimentGUI(QWidget):
                 return l
 
             else:
-                warnings.warn('Could not parse paramter token: ' + s)
-                return None
+                print('Assuming string parameter: ' + s)
+                return s
 
         # Empty the parameters before filling them from the GUI
         self.protocol_object.run_parameters = {}
