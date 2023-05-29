@@ -708,6 +708,8 @@ class ExperimentGUI(QWidget):
                     
                 return l
 
+            elif s == 'None':
+                return None
             else:
                 print('Assuming string parameter: ' + s)
                 return s
