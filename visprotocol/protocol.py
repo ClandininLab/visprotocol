@@ -482,10 +482,10 @@ class BaseProtocol():
             x = [x_1, x_2, x_3, x_4]
             y = [y_1, y_2, y_3, y_4]
 
-        x_trajectory = {'name': 'tv_pairs',
+        x_trajectory = {'name': 'TVPairs',
                         'tv_pairs': x,
                         'kind': 'linear'}
-        y_trajectory = {'name': 'tv_pairs',
+        y_trajectory = {'name': 'TVPairs',
                         'tv_pairs': y,
                         'kind': 'linear'}
 
