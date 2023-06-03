@@ -37,15 +37,15 @@ class BaseClient():
                 disp_server, disp_id = 0, 0
             
             aux_screen = Screen(server_number=disp_server, id=disp_id, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
-            # other_stimuli_paths=[] stops StimServer from importing user stimuli modules from a txt file
-            self.manager = launch_stim_server(aux_screen, other_stimuli_paths=[])
+            # other_stim_module_paths=[] stops StimServer from importing user stimuli modules from a txt file
+            self.manager = launch_stim_server(aux_screen, other_stim_module_paths=[])
 
         self.manager.black_corner_square()
         self.manager.set_idle_background(0)
 
         # # # Import user-defined flystim stimuli modules on server screens # # #
-        stimuli_paths = self.server_options.get('stimuli_paths', [])
-        [self.manager.import_stimuli_from_path(path) for path in stimuli_paths]
+        stim_module_paths = self.server_options.get('stim_module_paths', [])
+        [self.manager.import_stim_module(dir) for dir in stim_module_paths]
 
     def stop_run(self):
         self.stop = True

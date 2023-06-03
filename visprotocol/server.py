@@ -9,10 +9,10 @@ from visprotocol.device.daq import DAQ
 class BaseServer():
     def __init__(self, screens=[], loco_class=None, loco_kwargs={}, daq_class=None, daq_kwargs={}):
         if screens:
-            # other_stimuli_paths=[] stops StimServer from importing user stimuli modules from a txt file
-            self.manager = StimServer(screens=screens, host='', port=60629, auto_stop=False, other_stimuli_paths=[])
+            # other_stim_module_paths=[] stops StimServer from importing user stimuli modules from a txt file
+            self.manager = StimServer(screens=screens, host='', port=60629, auto_stop=False, other_stim_module_paths=[])
         else:
-            self.manager = launch_stim_server(Screen(fullscreen=False, server_number=0, id=0, vsync=False), other_stimuli_paths=[])
+            self.manager = launch_stim_server(Screen(fullscreen=False, server_number=0, id=0, vsync=False), other_stim_module_paths=[])
 
         self.loco_manager = None
         self.daq_device = None
