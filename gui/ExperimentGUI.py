@@ -958,6 +958,9 @@ class InitializeRigGUI(QWidget):
 
         self.setLayout(self.layout)
 
+        # Load the first config
+        self.on_selected_config()
+
         self.show()
 
     def update_available_rigs(self):
