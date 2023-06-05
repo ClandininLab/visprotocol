@@ -24,6 +24,8 @@ from visprotocol.util import config_tools, h5io
 # from visprotocol.control import EpochRun
 from visprotocol import protocol, data, client
 
+from flystim.util import get_all_subclasses
+
 Status = Enum('Status', ['STANDBY', 'RECORDING', 'VIEWING'])
 
 class ExperimentGUI(QWidget):
@@ -52,7 +54,7 @@ class ExperimentGUI(QWidget):
         if config_tools.user_module_exists(self.cfg, 'protocol'):
             user_protocol_module = config_tools.load_user_module(self.cfg, 'protocol')
             self.protocol_object = user_protocol_module.BaseProtocol(self.cfg)
-            self.available_protocols =  user_protocol_module.BaseProtocol.__subclasses__()
+            self.available_protocols =  get_all_subclasses(user_protocol_module.BaseProtocol)
         else:   # use the built-in
             print('!!! Using builtin {} module. To use user defined module, you must point to that module in your config file !!!'.format('protocol'))
             self.protocol_object =  protocol.BaseProtocol(self.cfg)
