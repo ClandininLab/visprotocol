@@ -32,6 +32,10 @@ class ExperimentGUI(QWidget):
 
     def __init__(self):
         super().__init__()
+        # set GUI icon
+        self.icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'icon.png')
+        self.setWindowIcon(QtGui.QIcon(self.icon_path))
+
         self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
@@ -42,6 +46,7 @@ class ExperimentGUI(QWidget):
         # sets self.cfg
         if len(config_tools.get_available_config_files()) > 0:
             dialog = QDialog()
+            dialog.setWindowIcon(QtGui.QIcon(self.icon_path))
             dialog.ui = InitializeRigGUI(parent=dialog)
             dialog.ui.setupUI(self, dialog)
             dialog.setFixedSize(200, 200)
@@ -333,7 +338,7 @@ class ExperimentGUI(QWidget):
         self.protocol_box.setLayout(self.protocol_grid)
         self.data_tab.setLayout(self.data_form)
         self.file_tab.setLayout(self.file_form)
-        self.setWindowTitle('Visprotocol')
+        self.setWindowTitle(f"Visprotocol ({self.cfg['current_cfg_name'].split('.')[0]}: {self.cfg['current_rig_name']})")
 
         # Resize window based on protocol tab
         self.update_window_width()
