@@ -167,7 +167,7 @@ class BaseProtocol():
         self.persistent_parameters['variable_protocol_parameter_names'] = variable_protocol_parameter_names
         self.persistent_parameters['static_protocol_parameter_names']   = static_protocol_parameter_names
 
-    def __precompute_epoch_parameters(self, refresh=False):
+    def precompute_epoch_parameters(self, refresh=False):
         if refresh:
             self.precomputed_epoch_parameters = {}
 
@@ -251,7 +251,7 @@ class BaseProtocol():
         self.get_persistent_parameters()
 
         # Precompute epoch parameters
-        self.__precompute_epoch_parameters(refresh=recompute_epoch_parameters)
+        self.precompute_epoch_parameters(refresh=recompute_epoch_parameters)
 
         # Estimate run time
         self.__estimate_run_time()
@@ -508,8 +508,35 @@ class SharedPixMapProtocol(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
 
+        self.use_precomputed_epoch_parameters = True  # Bool, whether or not to precompute epoch parameters
+
         # Shared pixmap stim parameters
         self.epoch_shared_pixmap_stim_parameters = None
+
+    def precompute_epoch_parameters(self, refresh=False):
+        if refresh:
+            self.precomputed_epoch_parameters = {}
+
+        if len(self.precomputed_epoch_parameters) == 0:
+            precomputed_epoch_stim_parameters = []
+            precomputed_epoch_shared_pixmap_stim_parameters = []
+            precomputed_epoch_protocol_parameters = []
+            for e in range(int(self.run_parameters['num_epochs'])):
+                self.num_epochs_completed = e
+                self.get_epoch_parameters()
+                self.check_required_epoch_protocol_parameters()
+                precomputed_epoch_stim_parameters.append(self.epoch_stim_parameters)
+                precomputed_epoch_protocol_parameters.append(self.epoch_protocol_parameters)
+                precomputed_epoch_shared_pixmap_stim_parameters.append(self.epoch_shared_pixmap_stim_parameters)
+            self.precomputed_epoch_parameters = {'stim': precomputed_epoch_stim_parameters,
+                                                'protocol': precomputed_epoch_protocol_parameters,
+                                                'pixmap': precomputed_epoch_shared_pixmap_stim_parameters}
+            self.num_epochs_completed = 0
+
+    def load_precomputed_epoch_parameters(self):
+        self.epoch_stim_parameters = self.precomputed_epoch_parameters['stim'][self.num_epochs_completed]
+        self.epoch_shared_pixmap_stim_parameters = self.precomputed_epoch_parameters['pixmap'][self.num_epochs_completed]
+        self.epoch_protocol_parameters = self.precomputed_epoch_parameters['protocol'][self.num_epochs_completed]
 
     def load_stimuli(self, manager, multicall=None):
         if multicall is None:
