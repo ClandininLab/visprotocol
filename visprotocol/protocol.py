@@ -503,6 +503,86 @@ class BaseProtocol():
                             'angle': angle}
         return patch_parameters
 
+
+class SharedPixMapProtocol(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        # Shared pixmap stim parameters
+        self.epoch_shared_pixmap_stim_parameters = None
+
+    def load_stimuli(self, manager, multicall=None):
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(manager)
+
+        # Load shared pixmap stimuli if defined # TODO This shouldn't really be a list
+        if self.epoch_shared_pixmap_stim_parameters is not None:
+            if not isinstance(self.epoch_shared_pixmap_stim_parameters, list):
+                self.epoch_shared_pixmap_stim_parameters = [self.epoch_shared_pixmap_stim_parameters]
+            for ep in self.epoch_shared_pixmap_stim_parameters:
+                multicall.load_shared_pixmap_stim(**ep.copy())
+
+        bg = self.run_parameters.get('idle_color')
+        multicall.load_stim('ConstantBackground', color=[bg, bg, bg, 1.0])
+
+        if isinstance(self.epoch_stim_parameters, list):
+            for ep in self.epoch_stim_parameters:
+                multicall.load_stim(**ep.copy(), hold=True)
+        else:
+            multicall.load_stim(**self.epoch_stim_parameters.copy(), hold=True)
+
+        multicall()
+
+    def start_stimuli(self, manager, append_stim_frames=False, print_profile=True, multicall=None):
+        
+        # locomotion setting variables
+        do_loco = self.run_parameters.get('do_loco', False)
+        do_loco_closed_loop = do_loco and self.epoch_protocol_parameters.get('loco_pos_closed_loop', False)
+        loco_pos_closed_loop_in_param = 'loco_pos_closed_loop' in self.protocol_parameters
+        save_pos_history = do_loco_closed_loop and self.save_metadata_flag
+        
+        ### pre time
+        sleep(self.epoch_protocol_parameters['pre_time'])
+        
+        if multicall is None:
+            multicall = flyrpc.multicall.MyMultiCall(manager)
+
+        ### stim time
+        # locomotion / closed loop
+        if do_loco:
+            multicall.loco_set_pos_0(theta_0=None, x_0=0, y_0=0, use_data_prev=True, write_log=self.save_metadata_flag)
+        if do_loco_closed_loop:
+            multicall.loco_loop_update_closed_loop_vars(update_theta=True, update_x=False, update_y=False)
+            multicall.loco_loop_start_closed_loop()
+        
+        # Shared pixmap stimuli
+        if self.epoch_shared_pixmap_stim_parameters is not None:
+            multicall.start_shared_pixmap_stim()
+        
+        multicall.start_stim()
+        multicall.start_corner_square()
+        multicall()
+        sleep(self.epoch_protocol_parameters['stim_time'])
+
+        ### tail time
+        multicall = flyrpc.multicall.MyMultiCall(manager)
+        multicall.stop_stim(print_profile=print_profile)
+        multicall.black_corner_square()
+
+        # locomotion / closed loop
+        if do_loco_closed_loop:
+            multicall.loco_loop_stop_closed_loop()
+        if save_pos_history:
+            multicall.save_pos_history_to_file(epoch_id=f'{self.num_epochs_completed:03d}')
+
+        # shared pixmap clear
+        if self.epoch_shared_pixmap_stim_parameters is not None:
+            multicall.clear_shared_pixmap_stim()
+
+        multicall()
+
+        sleep(self.epoch_protocol_parameters['tail_time'])
+
 # %% Some simple visual stimulus protocol classes
 
 class DriftingSquareGrating(BaseProtocol):
