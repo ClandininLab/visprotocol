@@ -55,6 +55,7 @@ class ExperimentGUI(QWidget):
 
         # user input to select configuration file and rig name
         # sets self.cfg
+        self.cfg = None
         if len(config_tools.get_available_config_files()) > 0:
             dialog = QDialog()
             dialog.setWindowIcon(QtGui.QIcon(self.icon_path))
@@ -65,6 +66,11 @@ class ExperimentGUI(QWidget):
         else:
             self.cfg = config_tools.get_default_config()
             print('!!! No user configuration files found. Check your path_to_lab_package.txt and that there exists a configs directory !!!')
+
+        # No config file selected, exit
+        if self.cfg is None:
+            print('!!! No configuration file selected. Exiting !!!')
+            sys.exit()
 
         print('# # # Loading protocol, data and client modules # # #')
         if config_tools.user_module_exists(self.cfg, 'protocol'):
@@ -101,8 +107,8 @@ class ExperimentGUI(QWidget):
         self.tabs = QTabWidget()
 
         self.protocol_box = QWidget()
-        self.protocol_grid = QGridLayout()
-        self.protocol_grid.setSpacing(10)
+        self.parameter_grid = QGridLayout()
+        self.parameter_grid.setSpacing(10)
         self.protocol_box.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,
                                             QSizePolicy.MinimumExpanding))
         
@@ -346,7 +352,7 @@ class ExperimentGUI(QWidget):
         self.protocol_tab.setLayout(self.protocol_tab_layout)
         self.protocol_selector_box.setLayout(self.protocol_selector_grid)
         self.protocol_control_box.setLayout(self.protocol_control_grid)
-        self.protocol_box.setLayout(self.protocol_grid)
+        self.protocol_box.setLayout(self.parameter_grid)
         self.data_tab.setLayout(self.data_form)
         self.file_tab.setLayout(self.file_form)
         self.setWindowTitle(f"Visprotocol ({self.cfg['current_cfg_name'].split('.')[0]}: {self.cfg['current_rig_name']})")
@@ -371,8 +377,7 @@ class ExperimentGUI(QWidget):
         self.protocol_object.select_protocol_preset(name='Default')
         self.protocol_object.prepare_run()
         self.update_parameter_preset_selector()
-        self.update_run_parameters_input()
-        self.update_protocol_parameters_input()
+        self.update_parameters_input()
         self.update_window_width()
         self.show()
 
@@ -482,79 +487,75 @@ class ExperimentGUI(QWidget):
         self.update_existing_animal_input()
 
     def reset_layout(self):
-        for ii in range(self.protocol_grid.rowCount()):
-            item = self.protocol_grid.itemAtPosition(ii, 0)
+        for ii in range(self.parameter_grid.rowCount()):
+            item = self.parameter_grid.itemAtPosition(ii, 0)
             if item is not None:
                 item.widget().deleteLater()
-            item = self.protocol_grid.itemAtPosition(ii, 1)
+            item = self.parameter_grid.itemAtPosition(ii, 1)
             if item is not None:
                 item.widget().deleteLater()
         self.show()
 
-    def update_run_parameters_input(self):
-        new_label = QLabel('Run parameters:')
-        new_label.setStyleSheet('font-weight: bold; text-decoration: underline')
-        self.protocol_grid.addWidget(new_label, 0, 0) # add label after run_params
-        self.protocol_grid_row_ct = 1
+    def make_parameter_input_text(self, value):
+        if isinstance(value, str):
+            return '"'+value+'"'
+        else:
+            return str(value)
 
-        self.run_parameter_input = {}  # clear old input params dict
-        
-        # Run parameters list
-        for key, value in self.protocol_object.run_parameters.items():
-            # write new labels:
-            new_label = QLabel(key + ':')
-            self.protocol_grid.addWidget(new_label, self.protocol_grid_row_ct, 0)
-
+    def update_parameters_input(self):
+        def make_parameter_input_field(key, value, input_field_row):
             if isinstance(value, bool):
-                self.run_parameter_input[key] = QCheckBox()
-                self.run_parameter_input[key].setChecked(value)
-                self.run_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
+                input_field = QCheckBox()
+                input_field.setChecked(value)
+                input_field.stateChanged.connect(self.on_parameter_finished_edit)
             else:
-                self.run_parameter_input[key] = QLineEdit()
-                if isinstance(value, int):
-                    validator = QtGui.QIntValidator()
-                    validator.setBottom(0)
-                elif isinstance(value, float):
-                    validator = QtGui.QDoubleValidator()
-                    validator.setBottom(0)
-                self.run_parameter_input[key].setValidator(validator)
-                self.run_parameter_input[key].setText(str(value))
-                self.run_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
-                self.run_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
+                input_field = QLineEdit()
+                input_field.setText(self.make_parameter_input_text(value))
+                input_field.editingFinished.connect(self.on_parameter_finished_edit)
+                input_field.textEdited.connect(self.on_parameter_mid_edit)
 
-            self.protocol_grid.addWidget(self.run_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 1)
+            self.parameter_grid.addWidget(QLabel(key + ':'), input_field_row, 0)
+            self.parameter_grid.addWidget(input_field, input_field_row, 1, 1, 2)
+            
+            return input_field
 
-            self.protocol_grid_row_ct += 1
+        def set_validator(input_field, type):
+            if type == int:
+                validator = QtGui.QIntValidator()
+                validator.setBottom(0)
+                input_field.setValidator(validator)
+            elif type == float:
+                validator = QtGui.QDoubleValidator()
+                validator.setBottom(0)
+                input_field.setValidator(validator)
 
-    def update_protocol_parameters_input(self):
-        # update display window to show parameters for this protocol
-        new_label = QLabel('Protocol parameters:')
-        new_label.setStyleSheet('font-weight: bold; text-decoration: underline; margin-top: 10px;')
-        self.protocol_grid.addWidget(new_label, self.protocol_grid_row_ct, 0) # add label after run_params
-        self.protocol_grid_row_ct += 1 # +1 for label 'Protocol parameters:'
+        def update_run_parameters_input():
+            new_label = QLabel('Run parameters:')
+            new_label.setStyleSheet('font-weight: bold; text-decoration: underline')
+            self.parameter_grid.addWidget(new_label, self.parameter_grid_row_ct, 0) # add label after run_params
+            self.parameter_grid_row_ct = +1 # +1 for label 'Run parameters:'
 
-        self.protocol_parameter_input = {}  # clear old input params dict
+            self.run_parameter_input = {}  # clear old input params dict        
+            for key, value in self.protocol_object.run_parameters.items():
+                self.run_parameter_input[key] = make_parameter_input_field(key, value, self.parameter_grid_row_ct)
+                self.parameter_grid_row_ct += 1
+                set_validator(self.run_parameter_input[key], type(value))
 
-        for key, value in self.protocol_object.protocol_parameters.items():
-            new_label = QLabel(key + ':')
-            self.protocol_grid.addWidget(new_label, self.protocol_grid_row_ct, 0)
+        def update_protocol_parameters_input():
+            # update display window to show parameters for this protocol
+            new_label = QLabel('Protocol parameters:')
+            new_label.setStyleSheet('font-weight: bold; text-decoration: underline; margin-top: 10px;')
+            self.parameter_grid.addWidget(new_label, self.parameter_grid_row_ct, 0) # add label after run_params
+            self.parameter_grid_row_ct += 1 # +1 for label 'Protocol parameters:'
+            
+            self.protocol_parameter_input = {}  # clear old input params dict
+            for key, value in self.protocol_object.protocol_parameters.items():
+                self.protocol_parameter_input[key] = make_parameter_input_field(key, value, self.parameter_grid_row_ct)
+                self.parameter_grid_row_ct += 1
 
-            if isinstance(value, bool):
-                self.protocol_parameter_input[key] = QCheckBox()
-                self.protocol_parameter_input[key].setChecked(value)
-                self.protocol_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
-            else:
-                self.protocol_parameter_input[key] = QLineEdit()
-                if isinstance(value, str):
-                    self.protocol_parameter_input[key].setText('"'+value+'"')  # strings need to be in quotes
-                else:
-                    self.protocol_parameter_input[key].setText(str(value))  # set to default value
-                self.protocol_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
-                self.protocol_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
-
-            self.protocol_grid.addWidget(self.protocol_parameter_input[key], self.protocol_grid_row_ct, 1, 1, 2)
-
-            self.protocol_grid_row_ct += 1
+        self.parameter_grid_row_ct = 0
+        update_run_parameters_input()
+        update_protocol_parameters_input()
 
     def on_parameter_mid_edit(self):
         self.mid_parameter_edit = True
@@ -576,8 +577,7 @@ class ExperimentGUI(QWidget):
     def on_selected_parameter_preset(self, text):
         self.protocol_object.select_protocol_preset(text)
         self.reset_layout()
-        self.update_protocol_parameters_input()
-        self.update_run_parameters_input()
+        self.update_parameters_input()
         self.update_parameters_from_fillable_fields()
         self.show()
 
@@ -755,21 +755,21 @@ class ExperimentGUI(QWidget):
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
-            elif isinstance(self.protocol_parameter_input[key], str):
-                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
                 raw_input = self.protocol_parameter_input[key].text()
                 parsed_input = parse_param_str(raw_input)
-                if not isinstance(parsed_input, ParseError):
-                    self.protocol_object.protocol_parameters[key] = parsed_input
-                else:
+
+                if isinstance(parsed_input, ParseError): # Parse error
                     default_value = self.protocol_object.get_protocol_parameter_defaults()[key]
+                    default_value_input_text = self.make_parameter_input_text(default_value)
                     error_text = parsed_input.message + '\n' + \
                                     'Raw input: ' + raw_input + '\n' + \
-                                    'Using default value: ' + str(default_value)
+                                    'Using default value: ' + default_value_input_text
                     open_message_window(title='Parameter parse error', text=error_text)
                     self.protocol_object.protocol_parameters[key] = default_value
-                    self.protocol_parameter_input[key].setText(str(default_value))
+                    self.protocol_parameter_input[key].setText(default_value_input_text)
+                else: # Successful parse
+                    self.protocol_object.protocol_parameters[key] = parsed_input
 
         self.protocol_object.prepare_run(recompute_epoch_parameters=compute_epoch_parameters)
         self.update_run_progress()
