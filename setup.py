@@ -10,8 +10,6 @@ setup(
     packages=['visprotocol'],
     install_requires=[
         'numpy',
-        'nidaqmx',
-        'labjack-ljm',
         'h5py',
         'scipy',
         'PyQT5',
