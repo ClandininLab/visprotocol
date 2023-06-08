@@ -9,7 +9,6 @@ from datetime import datetime
 import os
 import sys
 import time
-import warnings
 from enum import Enum
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
@@ -25,6 +24,17 @@ from visprotocol.util import config_tools, h5io
 from visprotocol import protocol, data, client
 
 Status = Enum('Status', ['STANDBY', 'RECORDING', 'VIEWING'])
+
+class ParseError(Exception):
+    def __init__(self, message):
+        super().__init__()
+        self.message = message
+
+def open_message_window(title="Alert", text=""):
+    msg = QMessageBox()
+    msg.setWindowTitle(title)
+    msg.setText(text)
+    msg.exec_()
 
 class ExperimentGUI(QWidget):
 
@@ -492,7 +502,7 @@ class ExperimentGUI(QWidget):
                 self.protocol_parameter_input[key].stateChanged.connect(self.on_parameter_finished_edit)
             else:
                 self.protocol_parameter_input[key] = QLineEdit()
-                self.protocol_parameter_input[key].setText(str(value))  # set to default value
+                self.protocol_parameter_input[key].setText(self.make_parameter_input_text(value))  # set to default value
                 self.protocol_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
                 self.protocol_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
 
@@ -572,7 +582,7 @@ class ExperimentGUI(QWidget):
                     validator = QtGui.QDoubleValidator()
                     validator.setBottom(0)
                 self.run_parameter_input[key].setValidator(validator)
-                self.run_parameter_input[key].setText(str(value))
+                self.run_parameter_input[key].setText(self.make_parameter_input_text(value))
                 self.run_parameter_input[key].editingFinished.connect(self.on_parameter_finished_edit)
                 self.run_parameter_input[key].textEdited.connect(self.on_parameter_mid_edit)
 
@@ -654,6 +664,12 @@ class ExperimentGUI(QWidget):
         # Prepare for next run
         self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
+    def make_parameter_input_text(self, value):
+        if isinstance(value, str):
+            return '"'+value+'"'
+        else:
+            return str(value)
+    
     def update_parameters_from_fillable_fields(self, compute_epoch_parameters=True):
         def is_number(s):
             try:
@@ -662,20 +678,27 @@ class ExperimentGUI(QWidget):
             except ValueError:
                 return False
 
-        def parse_param_str(s): # TODO: Need a better mechanism for passing parse error
+        def parse_param_str(s, param_type=float): 
             # Remove all whitespace
             s = ''.join(s.split())
 
-            # Base case: number
-            if is_number(s):
-                return eval(s)
-            
-            # If string is empty, return 0 as default
-            elif len(s) == 0:
-                warnings.warn('Could not parse paramter token: ' + s)
-                return None
+            # Base case 1: Empty string
+            if len(s) == 0:
+                return ParseError('Empty parameter token')
 
-            # List or tuple
+            # Base case 2: number
+            elif is_number(s):
+                return eval(s)
+
+            # Base case 3: None
+            elif s == 'None':
+                return None
+            
+            # Base case 4: String literal (remove quotes)
+            elif (s[0] == '"' and s[-1] == '"') or (s[0] == "'" and s[-1] == "'"):
+                return s[1:-1]
+            
+           # List or tuple
             elif (s[0] == '[' and s[-1] == ']') or (s[0] == '(' and s[-1] == ')'):                
                 l = []
                 sq_bracket_level = 0
@@ -693,14 +716,16 @@ class ExperimentGUI(QWidget):
                         parantheses_level -= 1
 
                     if sq_bracket_level == 0 and parantheses_level == 0 and c == ',': # End of token
-                        l.append(parse_param_str(token))
+                        parsed_token = parse_param_str(token)
+                        if isinstance(parsed_token, ParseError):
+                            return parsed_token
+                        l.append(parsed_token)
                         token = ''
                     else:
                         token += c
 
                 if sq_bracket_level != 0 or parantheses_level != 0:
-                    warnings.warn('Could not parse paramter token: ' + s)
-                    return None
+                    return ParseError('Mismatched () or []: ' + s)
 
                 # If input was a tuple, convert l to a tuple
                 if s[0] == '(':
@@ -708,11 +733,8 @@ class ExperimentGUI(QWidget):
                     
                 return l
 
-            elif s == 'None':
-                return None
             else:
-                print('Assuming string parameter: ' + s)
-                return s
+                return ParseError('Unrecognized token: ' + s)
 
         # Empty the parameters before filling them from the GUI
         self.protocol_object.run_parameters = {}
@@ -728,23 +750,26 @@ class ExperimentGUI(QWidget):
         for key, value in self.protocol_parameter_input.items():
             if isinstance(self.protocol_parameter_input[key], QCheckBox): #QCheckBox
                 self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].isChecked()
-            elif isinstance(self.protocol_parameter_input[key], str):
-                self.protocol_object.protocol_parameters[key] = self.protocol_parameter_input[key].text() # Pass the string
             else:  # QLineEdit
                 raw_input = self.protocol_parameter_input[key].text()
                 parsed_input = parse_param_str(raw_input)
-                if parsed_input is not None: # TODO: Need a better mechanism for passing parse error
+
+                if isinstance(parsed_input, ParseError): # Parse error
+                    default_value = self.protocol_object.get_protocol_parameter_defaults()[key]
+                    default_value_input_text = self.make_parameter_input_text(default_value)
+                    error_text = parsed_input.message + '\n' + \
+                                    'Raw input: ' + raw_input + '\n' + \
+                                    'Using default value: ' + default_value_input_text
+                    open_message_window(title='Parameter parse error', text=error_text)
+                    self.protocol_object.protocol_parameters[key] = default_value
+                    self.protocol_parameter_input[key].setText(default_value_input_text)
+                else: # Successful parse
                     self.protocol_object.protocol_parameters[key] = parsed_input
-                else:
-                    warnings.warn(f'Could not parse paramter input: {raw_input}. Using default value.')
-                    self.protocol_object.protocol_parameters[key] = self.protocol_object.get_protocol_parameter_defaults()[key]
-                    self.protocol_parameter_input[key].setText(str(self.protocol_object.protocol_parameters[key]))
 
         self.protocol_object.prepare_run(recompute_epoch_parameters=compute_epoch_parameters)
         self.update_run_progress()
 
         self.mid_parameter_edit = False
-
     def update_run_progress(self):
         if self.status == Status.STANDBY:
             elapsed_time = 0
