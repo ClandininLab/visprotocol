@@ -6,6 +6,7 @@ Created on Thu Jun 21 10:51:42 2018
 @author: mhturner
 """
 from datetime import datetime
+import glob
 import os
 import sys
 import time
@@ -46,6 +47,10 @@ class ExperimentGUI(QWidget):
         # set GUI icon
         self.icon_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'icon.png')
         self.setWindowIcon(QtGui.QIcon(self.icon_path))
+        
+        tempfiles = glob.glob(os.path.expanduser('~/.config/fly/temp/*.txt'))
+        for f in tempfiles:
+            os.remove(f)
 
         self.note_text = ''
         self.run_parameter_input = {}
@@ -706,8 +711,8 @@ class ExperimentGUI(QWidget):
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
         # Populate parameters from filled fields
-        if self.mid_parameter_edit:
-            self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
+        # if self.mid_parameter_edit:
+        #     self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
 
         # start the epoch run thread:
         self.run_series_thread = runSeriesThread(self.protocol_object,
@@ -753,7 +758,7 @@ class ExperimentGUI(QWidget):
             self.populate_groups()
             
         # Prepare for next run
-        self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
+        # self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
         if ensemble:
             self.run_ensemble_item()
 
