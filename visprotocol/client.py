@@ -31,11 +31,15 @@ class BaseClient():
                 self.trigger_device.set_manager(self.manager)
         else:
             disp_env = os.environ['DISPLAY']
-            try:
-                disp_server, disp_id = (int(x) if x.isnumeric() else 0 for x in disp_env.split(':'))
-            except:
-                disp_server, disp_id = 0, 0
-            
+            if 'disp_server_id' in self.server_options:
+                disp_server, disp_id = self.server_options['disp_server_id']
+            else:
+                try:
+                    disp_server, disp_id = (int(x) if x.isnumeric() else 0 for x in disp_env.split(':'))
+                except:
+                    disp_server, disp_id = 0, 0
+            print (f"Using display server {disp_server} and id {disp_id}")
+                        
             aux_screen = Screen(server_number=disp_server, id=disp_id, fullscreen=False, vsync=True, square_size=(0.25, 0.25))
             self.manager = launch_stim_server(aux_screen)
 
