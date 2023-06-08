@@ -13,8 +13,8 @@ import warnings
 from enum import Enum
 from PyQt5.QtWidgets import (QPushButton, QWidget, QLabel, QTextEdit, QGridLayout, QApplication,
                              QComboBox, QLineEdit, QFormLayout, QDialog, QFileDialog, QInputDialog,
-                             QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame,
-                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem,
+                             QMessageBox, QCheckBox, QSpinBox, QTabWidget, QVBoxLayout, QFrame, QListView,
+                             QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QListWidget,
                              QScrollArea, QSizePolicy)
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QThread, QTimer
@@ -50,6 +50,10 @@ class ExperimentGUI(QWidget):
         self.note_text = ''
         self.run_parameter_input = {}
         self.protocol_parameter_input = {}
+        self.ensemble_list = []
+        self.ensemble_names = []
+        self.ensemble_protos = []
+        self.ensemble_started = False
         self.mid_parameter_edit = False
         self.status = Status.STANDBY
 
@@ -142,9 +146,15 @@ class ExperimentGUI(QWidget):
         self.file_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
         self.file_form.setLabelAlignment(QtCore.Qt.AlignCenter)
 
+        self.ensemble_tab = QWidget()
+        self.ensemble_form= QFormLayout()
+        self.ensemble_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        self.ensemble_form.setLabelAlignment(QtCore.Qt.AlignCenter)
+
         self.tabs.addTab(self.protocol_tab, "Main")
         self.tabs.addTab(self.data_tab, "Animal")
         self.tabs.addTab(self.file_tab, "File")
+        self.tabs.addTab(self.ensemble_tab, "Ensemble")
 
         self.tabs.resize(450, 500)
 
@@ -158,6 +168,11 @@ class ExperimentGUI(QWidget):
         protocol_selection_combo_box.activated[str].connect(self.on_selected_protocol_ID)
         self.protocol_selector_grid.addWidget(protocol_label, 1, 0)
         self.protocol_selector_grid.addWidget(protocol_selection_combo_box, 1, 1, 1, 1)
+
+        # Ensemble button:
+        ensemble_append_button = QPushButton("Append", self)
+        ensemble_append_button.clicked.connect(self.on_pressed_button)
+        self.protocol_selector_grid.addWidget(ensemble_append_button, 1, 2)
 
         # Parameter preset drop-down:
         parameter_preset_label = QLabel('Parameter_preset:')
@@ -346,6 +361,19 @@ class ExperimentGUI(QWidget):
         self.table_attributes.itemChanged.connect(self.update_attrs_to_file)
 
         self.file_form.addRow(self.table_attributes)
+        
+        # # #  Ensemble view # # #
+        run_ensemble_button = QPushButton("Run ensemble", self)
+        run_ensemble_button.clicked.connect(self.on_pressed_button)
+
+        self.ensemble_viewer = QListWidget()
+        self.ensemble_viewer.addItem('No ensembles yet')
+
+
+
+        self.ensemble_form.addRow(run_ensemble_button)
+        self.ensemble_form.addRow(self.ensemble_viewer)
+
 
         # Add all layouts to window
         self.layout.addWidget(self.tabs)
@@ -355,6 +383,7 @@ class ExperimentGUI(QWidget):
         self.protocol_box.setLayout(self.parameter_grid)
         self.data_tab.setLayout(self.data_form)
         self.file_tab.setLayout(self.file_form)
+        self.ensemble_tab.setLayout(self.ensemble_form)
         self.setWindowTitle(f"Visprotocol ({self.cfg['current_cfg_name'].split('.')[0]}: {self.cfg['current_rig_name']})")
 
         # Resize window based on protocol tab
@@ -420,6 +449,17 @@ class ExperimentGUI(QWidget):
             self.client.stop_run()
             self.pause_button.setText('Pause')
 
+        elif sender.text() == 'Append':
+            start_name = self.parameter_preset_comboBox.currentText()
+            self.ensemble_names.append(start_name)
+            proto = self.protocol_object.__class__.__name__
+            self.ensemble_protos.append(proto)
+            self.ensemble_list.append(self.protocol_object)
+            self.ensemble_viewer_update()
+
+        elif sender.text() == 'Run ensemble':
+            self.run_ensemble()
+
         elif sender.text() == 'Enter note':
             self.note_text = self.notes_edit.toPlainText()
             if self.data.experiment_file_exists() is True:
@@ -470,6 +510,23 @@ class ExperimentGUI(QWidget):
                 self.series_counter_input.setValue(self.data.get_highest_series_count() + 1)
                 self.update_existing_animal_input()
                 self.populate_groups()
+    
+    def ensemble_viewer_update(self):
+        self.ensemble_viewer.clear()
+        if self.ensemble_started:
+            for i, (proto,name) in enumerate(zip(self.ensemble_protos,self.ensemble_names)):
+                self.ensemble_viewer.addItem(proto + ' (' + name + ')')
+                if i == self.current_ensemble_idx:
+                    self.ensemble_viewer.item(i).setForeground(QtGui.QColor("Green"))
+                else:
+                    self.ensemble_viewer.item(i).setForeground(QtGui.QColor("Black"))
+        else:
+            for i, (proto,name) in enumerate(zip(self.ensemble_protos,self.ensemble_names)):
+                self.ensemble_viewer.addItem(proto + ' (' + name + ')')
+                self.ensemble_viewer.item(i).setForeground(QtGui.QColor("Black"))
+
+
+
 
     def on_created_animal(self):
         # Populate animal metadata from animal data fields
@@ -485,6 +542,29 @@ class ExperimentGUI(QWidget):
 
         self.data.create_animal(animal_metadata)  # creates new animal and selects it as the current animal
         self.update_existing_animal_input()
+    
+    def run_ensemble_item(self):
+        print('Running ensemble idx {} out of {}'.format(self.current_ensemble_idx, len(self.ensemble_list)))
+        if self.current_ensemble_idx >= self.num_ensemble_items:
+            self.ensemble_started=False
+            return
+
+        self.protocol_object = self.ensemble_list[self.current_ensemble_idx]
+        self.protocol_object.select_protocol_preset(self.ensemble_names[self.current_ensemble_idx])
+        self.protocol_object.prepare_run()
+        
+        self.ensemble_viewer_update()
+        self.send_run(save_metadata_flag=True, ensemble=True)
+        self.current_ensemble_idx+=1
+
+        
+    def run_ensemble(self):
+        self.ensemble_started =True
+        self.current_ensemble_idx=0
+        self.num_ensemble_items = len(self.ensemble_list)
+        self.run_ensemble_item()
+
+
 
     def reset_layout(self):
         for ii in range(self.parameter_grid.rowCount()):
@@ -609,7 +689,7 @@ class ExperimentGUI(QWidget):
             else:
                 self.series_counter_input.setStyleSheet("background-color: rgb(255, 255, 255);")
 
-    def send_run(self, save_metadata_flag=True):
+    def send_run(self, save_metadata_flag=True, ensemble=False):
         # check to make sure a protocol has been selected
         if self.protocol_object.__class__.__name__ == 'BaseProtocol':
             self.status_label.setText('Select a protocol')
@@ -635,7 +715,7 @@ class ExperimentGUI(QWidget):
                                                  self.client,
                                                  save_metadata_flag)
 
-        self.run_series_thread.finished.connect(lambda: self.run_finished(save_metadata_flag))
+        self.run_series_thread.finished.connect(lambda: self.run_finished(save_metadata_flag, ensemble))
         self.run_series_thread.started.connect(lambda: self.run_started(save_metadata_flag))
 
         self.run_series_thread.start()
@@ -654,7 +734,7 @@ class ExperimentGUI(QWidget):
         self.run_start_time = time.time()
         self.progress_timer.start()
 
-    def run_finished(self, save_metadata_flag):
+    def run_finished(self, save_metadata_flag, ensemble):
         # re-enable view/record buttons
         self.view_button.setEnabled(True)
         self.record_button.setEnabled(True)
@@ -674,6 +754,8 @@ class ExperimentGUI(QWidget):
             
         # Prepare for next run
         self.update_parameters_from_fillable_fields(compute_epoch_parameters=True)
+        if ensemble:
+            self.run_ensemble_item()
 
     def update_parameters_from_fillable_fields(self, compute_epoch_parameters=True):
         def is_number(s):
