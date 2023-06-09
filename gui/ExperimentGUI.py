@@ -784,7 +784,7 @@ class ExperimentGUI(QWidget):
             elapsed_time = int(time.time() - self.run_start_time)
             epoch_count = self.protocol_object.num_epochs_completed
 
-        self.elapsed_time_label.setText(f'{elapsed_time} / {self.protocol_object.est_run_time}')
+        self.elapsed_time_label.setText(f'{elapsed_time} / {self.protocol_object.est_run_time:.0f}')
         self.epoch_count_label.setText(f'{epoch_count} / {self.protocol_object.run_parameters.get("num_epochs", "?")}')
 
     def populate_groups(self):
