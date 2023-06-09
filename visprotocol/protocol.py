@@ -195,6 +195,12 @@ class BaseProtocol():
         epoch_protocol_params = self.precomputed_epoch_parameters['protocol']
         self.est_run_time = np.sum([p.get('pre_time', 0) + p.get('stim_time', 0) + p.get('tail_time', 0) for p in epoch_protocol_params])
 
+    def process_input_parameters(self):
+        """
+        Process input parameters and set persistent parameters prior to epoch run loop
+        """
+        pass
+
     def check_required_run_parameters(self):
         """
         required_run_parameters: list of tuples (parameter_name, parameter_dtype)
@@ -241,14 +247,14 @@ class BaseProtocol():
         self.persistent_parameters = {}
         self.epoch_protocol_parameters = {}
 
+        # Process input parameters and set persistent parameters prior to epoch run loop
+        self.process_input_parameters()
+
         # Check that all required run parameters are set
         self.check_required_run_parameters()
         
         # Classify protocol parameters
         self.__classify_protocol_parameters()
-
-        # Get persistent parameters prior to epoch run loop
-        self.get_persistent_parameters()
 
         # Precompute epoch parameters
         self.precompute_epoch_parameters(refresh=recompute_epoch_parameters)
