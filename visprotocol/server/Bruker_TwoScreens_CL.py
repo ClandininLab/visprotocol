@@ -55,8 +55,8 @@ def main():
     loco_kwargs = {
         'host':          '127.0.0.1', 
         'port':          33334, 
-        'ft_bin':           "/home/clandininlab/lib/fictrac/bin/fictrac",
-        'ft_config':        "/home/clandininlab/lib/fictrac/configs/config_CL.txt", 
+        'ft_bin':           "/home/clandinin/src/fictrac211/bin/fictrac",
+        'ft_config':        "/home/clandinin/src/fictrac211/configs/config_CL.txt", 
         'ft_theta_idx':     16, 
         'ft_x_idx':         14, 
         'ft_y_idx':         15, 
