@@ -121,3 +121,51 @@ class LoomingSpot(BaseProtocol):
 
 
 # %%
+
+class FlickeringPatch(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
+
+        # make color trajectory
+        color_traj = {'name': 'Sinusoid',
+                      'temporal_frequency': current_temporal_frequency,
+                      'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
+                      'offset': self.protocol_parameters['mean']}
+
+        self.epoch_parameters = {'name': 'MovingPatch',
+                                 'width': self.protocol_parameters['width'],
+                                 'height': self.protocol_parameters['height'],
+                                 'sphere_radius': 1,
+                                 'color': color_traj,
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1],
+                                 'angle': 0}
+
+        self.convenience_parameters = {'current_temporal_frequency': current_temporal_frequency}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'height': 10.0,
+                                    'width': 10.0,
+                                    'center': [0, 0],
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'FlickeringPatch',
+                               'num_epochs': 30,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+
+# %%
