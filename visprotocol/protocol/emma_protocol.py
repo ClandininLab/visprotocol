@@ -135,7 +135,7 @@ class FlickeringPatch(BaseProtocol):
         current_temporal_frequency = self.selectParametersFromLists(self.protocol_parameters['temporal_frequency'], randomize_order=self.protocol_parameters['randomize_order'])
 
         # make color trajectory
-        color_traj = {'name': 'Sinusoid',
+        color_traj = {'name': 'Sinusoid' if self.protocol_parameters['sinusoidal'] else 'SquareWave',
                       'temporal_frequency': current_temporal_frequency,
                       'amplitude': self.protocol_parameters['mean'] * self.protocol_parameters['contrast'],
                       'offset': self.protocol_parameters['mean']}
@@ -158,6 +158,7 @@ class FlickeringPatch(BaseProtocol):
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'temporal_frequency': [0.5, 1.0, 2.0, 4.0, 8.0, 16.0],
+                                    'sinusoidal': False,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
@@ -169,3 +170,4 @@ class FlickeringPatch(BaseProtocol):
                                'idle_color': 0.5}
 
 # %%
+[0, 0]
