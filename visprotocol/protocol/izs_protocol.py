@@ -118,7 +118,7 @@ class LoomRandomlySpacedRV(BaseProtocol):
     def getEpochParameters(self):
         current_color = self.selectParametersFromLists(self.protocol_parameters['color'], randomize_order = self.protocol_parameters['randomize_order'])
 
-        loom_trajectory = {'name': 'Loom', 'rv_ratio': self.protocol_parameters['rv_ratio'], 'start_size': self.protocol_parameters['start_size'], 'end_size': self.protocol_parameters['end_size']}
+        loom_trajectory = {'name': 'Loom', 'rv_ratio': self.protocol_parameters['rv_ratio'], 'stim_time': self.run_parameters['stim_time'], 'start_size': self.protocol_parameters['start_size'], 'end_size': self.protocol_parameters['end_size']}
 
         adj_center = self.adjustCenter(self.protocol_parameters['center'])
         
