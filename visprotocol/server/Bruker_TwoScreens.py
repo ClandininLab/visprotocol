@@ -10,8 +10,14 @@ import matplotlib.pyplot as plt
 def main():
     # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
+    print(dlpc350_objects)
+    print(len(dlpc350_objects))
+    assert len(dlpc350_objects) == 2
+    dlpc350_objects[0].set_current(red=0, green = 0, blue = 1.5)
+    dlpc350_objects[1].set_current(red=0, green = 0, blue = 0.53)
+
     for dlpc350_object in dlpc350_objects:
-         dlpc350_object.set_current(red=0, green = 0, blue = 1.0)
+        #  dlpc350_object.set_current(red=0, green = 0, blue = 1.0)
          dlpc350_object.pattern_mode(fps=120)
          dlpc350_object.pattern_mode(fps=120)
 
@@ -39,8 +45,8 @@ def main():
     aux_screen = Screen(subscreens=[getBrukerLeft()], server_number=1, id=0, fullscreen=False, vsync=True, square_size=(0, 0), square_loc=(-1, -1), name='Aux', horizontal_flip=False)
 
 
-    draw_screens([bruker_left_screen, bruker_right_screen])
-    plt.show()
+    #draw_screens([bruker_left_screen, bruker_right_screen])
+    #plt.show()
 
     screens = [bruker_left_screen, bruker_right_screen, aux_screen]
     port = 60629

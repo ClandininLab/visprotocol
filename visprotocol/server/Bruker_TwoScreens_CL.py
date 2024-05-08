@@ -16,8 +16,14 @@ from visprotocol.loco_managers.fictrac_managers import FtClosedLoopManager
 def main():
     # Put lightcrafter(s) in pattern mode
     dlpc350_objects = make_dlpc350_objects()
+    print(dlpc350_objects)
+    print(len(dlpc350_objects))
+    assert len(dlpc350_objects) == 2
+    dlpc350_objects[0].set_current(red=0, green = 0, blue = 1.5)
+    dlpc350_objects[1].set_current(red=0, green = 0, blue = 0.53)
+
     for dlpc350_object in dlpc350_objects:
-         dlpc350_object.set_current(red=0, green = 0, blue = 1.0)
+        #  dlpc350_object.set_current(red=0, green = 0, blue = 1.0)
          dlpc350_object.pattern_mode(fps=120)
          dlpc350_object.pattern_mode(fps=120)
 
