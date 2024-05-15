@@ -1,0 +1,21 @@
+experimenter: Jacob
+prep_choices: [WB, OL]
+driver_choices: [NSYB-gal4(iii), MI1 gal4-split(JS140), L2 gal4-split(JS143), MI9 gal4-split(), T4/T5 gal4]
+indicator_choices: [UAS-GCaMP8s(vk5), UAS-GCaMP8s(su5), UAS-GCaMP8m(vk5), UAS-GCaMP8m(su5), UAS-GCaMP6f(vk5), UAS-GFlamp2(vk5), UAS-GFlamp2(su5), UAS-jrGECO1a(vk5)]
+
+rig_config:
+
+  Bruker_TwoScreens:
+    data_directory: F:/Jacob
+    screen_center: [0, -30]
+    rig: Bruker
+
+  24HrFitness:
+    data_directory: /home/clandinin/jacob/stim
+    screen_center: [0, 0]
+    rig: 24HrFitness
+
+  Laptop:
+    data_directory: /path/to/data
+    screen_center: [0, 0]
+    rig: (testing)
