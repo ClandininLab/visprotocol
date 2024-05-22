@@ -14,7 +14,7 @@ rig_config:
     data_directory: E:/Yandan/VisprotocolData
     screen_center: [0, -30]
     rig: Bruker
-    server_data_directory: /home/clandininlab/yandan/visprotocol/fictrac
+    server_data_directory: /home/clandinin/data/yandan/visprotocol
     locomotion: True
 
   24HrFitness:
