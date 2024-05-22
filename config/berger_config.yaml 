@@ -1,0 +1,11 @@
+experimenter: berger
+prep_choices: [L1]
+driver_choices: [L1split-Gal4]
+indicator_choices: [jRGECO1a, iGluSNFR.S72A, iGluSNFR.V]
+
+rig_config:
+
+  Bruker_TwoScreens:
+    data_directory: F:/berger
+    screen_center: [0, -30]
+    rig: Bruker
