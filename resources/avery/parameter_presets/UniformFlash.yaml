@@ -119,3 +119,20 @@ Perfusion_Wash.820:
     intensity:
     - 1.0
     randomize_order: false
+Mi1_Mapping_q:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 1.0
+    stim_time: 0.5
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 20.0
+    width: 20.0
+    center:
+    - -20.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: true

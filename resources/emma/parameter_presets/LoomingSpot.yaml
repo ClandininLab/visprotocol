@@ -127,3 +127,190 @@ RIGHT-dark_20230502_shortpretail:
     - 10.0
     - 20.0
     randomize_order: false
+20230502_DARK_3second:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 98.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100rv10:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 10.0
+    randomize_order: false
+20230502_DARK_5second:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 98.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 3.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100_right:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100_4s_tail:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 4.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100_right_4s_tail:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 4.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100_2s_tail:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false
+20230502_DARK_3second100_right_2s_tail:
+  run_parameters:
+    protocol_ID: LoomingSpot
+    num_epochs: 100.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    start_size: 2.5
+    end_size: 80.0
+    rv_ratio:
+    - 5.0
+    - 10.0
+    - 20.0
+    randomize_order: false

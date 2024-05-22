@@ -170,4 +170,35 @@ class FlickeringPatch(BaseProtocol):
                                'idle_color': 0.5}
 
 # %%
-[0, 0]
+class MovingRectangle(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        current_intensity, current_angle = self.selectParametersFromLists((self.protocol_parameters['intensity'], self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.epoch_parameters = self.getMovingPatchParameters(angle=current_angle, color=current_intensity)
+
+        self.convenience_parameters = {'current_angle': current_angle,
+                                       'current_intensity': current_intensity}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'width': 5.0,
+                                    'height': 50.0,
+                                    'intensity': [0.0, 1.0],
+                                    'center': [0, 0],
+                                    'speed': 80.0,
+                                    'angle': [0.0, 180.0],
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'MovingRectangle',
+                               'num_epochs': 40,
+                               'pre_time': 0.5,
+                               'stim_time': 3.0,
+                               'tail_time': 1.0,
+                               'idle_color': 0.5}
+# %%

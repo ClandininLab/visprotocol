@@ -68,3 +68,51 @@ theta_pos_sweep:
     - 1.0
     render_on_cylinder: true
     randomize_order: true
+opto_darkbar:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 90.0
+    pre_time: 0.0
+    stim_time: 2.0
+    tail_time: 0.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 15.0
+    height: 150.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 120.0
+    angle:
+    - 0.0
+    - 180.0
+    closed_loop:
+    - 0.0
+    render_on_cylinder: true
+    randomize_order: true
+opto_brightbar:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 90.0
+    pre_time: 0.0
+    stim_time: 2.0
+    tail_time: 0.0
+    idle_color: 0.0
+  protocol_parameters:
+    width: 15.0
+    height: 150.0
+    intensity:
+    - 1.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 120.0
+    angle:
+    - 0.0
+    - 180.0
+    closed_loop:
+    - 0.0
+    render_on_cylinder: true
+    randomize_order: true

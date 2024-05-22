@@ -1,0 +1,38 @@
+loom2_males:
+  run_parameters:
+    protocol_ID: LoomRandomlySpacedRV
+    num_epochs: 20.0
+    pre_time: 0.0
+    stim_time: 1.0
+    run_time: 300.0
+    pre_run_time: 300.0
+    idle_color: 0.5
+  protocol_parameters:
+    rv_ratio: 0.04
+    start_size: 10.0
+    end_size: 100.0
+    color:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    randomize_order: true
+loom2__30min:
+  run_parameters:
+    protocol_ID: LoomRandomlySpacedRV
+    num_epochs: 200.0
+    pre_time: 0.0
+    stim_time: 1.0
+    run_time: 1500.0
+    pre_run_time: 300.0
+    idle_color: 0.5
+  protocol_parameters:
+    rv_ratio: 0.04
+    start_size: 10.0
+    end_size: 120.0
+    color:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    randomize_order: true

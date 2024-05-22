@@ -24,9 +24,11 @@ rig_config:
     rig: Bruker
 
   Bruker_TwoScreens:
-    data_directory: E:/path/to/FlystimData
+    data_directory: E:/Ilana/StimpackData
     screen_center: [0, -30] #center of two screens and a little down
     rig: Bruker
+    server_data_directory: /home/clandinin/data/ilana/StimpackData/fictrac
+    locomotion: True
 
   Laptop:
     data_directory: E:/path/to/FlystimData

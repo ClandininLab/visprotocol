@@ -1,0 +1,462 @@
+LC11_test:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 10.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+? ''
+: run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.5
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 90.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+movingbar:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 40.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 90.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+searchstim_left:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 30.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_right:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 30.0
+    pre_time: 1.0
+    stim_time: 1.0
+    tail_time: 1.0
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_left-100s:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 50.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_left-302s:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 30.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_right-302s:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 30.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+gray-searchstim_left-302s:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 30.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+gray-searchstim_right-302s:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 30.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_right-200sec:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_left-200sec:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+movingbar-5second:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 50.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.5
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 90.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+searchstim_CTRright-200sec:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -20.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+movingbar_LJ:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 60.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 1.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 90.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+searchstim_left-200sec_2s_tail_LJ:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 2.0
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_right-200sec_2s_tail_LJ:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 2.0
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_left-200sec_4s_tail_LJ:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 4.0
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+searchstim_right-200sec_4s_tail_LJ:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 4.0
+    idle_color: 1.0
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+movingbar_LJ_4s_tail:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 60.0
+    pre_time: 0.5
+    stim_time: 3.0
+    tail_time: 4.0
+    idle_color: 0.5
+  protocol_parameters:
+    width: 10.0
+    height: 90.0
+    intensity:
+    - 0.0
+    center:
+    - 0.0
+    - 0.0
+    speed: 80.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: true
+gray-searchstim_left-40sec:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - 50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false
+gray-searchstim_right-40s:
+  run_parameters:
+    protocol_ID: MovingRectangle
+    num_epochs: 20.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.5
+  protocol_parameters:
+    width: 50.0
+    height: 50.0
+    intensity:
+    - 0.0
+    center:
+    - -50.0
+    - 0.0
+    speed: 0.0
+    angle:
+    - 0.0
+    - 180.0
+    randomize_order: false

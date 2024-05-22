@@ -304,3 +304,347 @@ onlyDARK_300ms_0323:
     - 0.0
     intensity: 0.5
     randomize_order: false
+5second_grayFlashOnly300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.5
+    randomize_order: false
+dark1sec_light1sec:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 0.0
+    stim_time: 1.0
+    tail_time: 0.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+dark1sec_light1secBETTER:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.0
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    randomize_order: true
+5second_LightFlash_DarkLight300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+100-5second_LightFlash_DarkLight300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+100-5second_grayFlashOnly300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.5
+    randomize_order: false
+100-5sec-lightdarkflash-1123:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 1.5
+    stim_time: 0.3
+    tail_time: 3.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+50-5second_grayFlashOnly300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.5
+    randomize_order: false
+3second_LightFlash_DarkLight300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+longstim-5seconds-darklight:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 2.5
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+longstim-5seconds-darklight-50:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 0.5
+    stim_time: 2.0
+    tail_time: 2.5
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+10-5second_grayFlashOnly300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 10.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.5
+    randomize_order: false
+50-5second_LightFlash_DarkLight300ms_0323:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+NOSTIM_5second_darkonly:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 30.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.0
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.0
+    randomize_order: false
+NOSTIM_5second_darkonly_LJ:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.0
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.0
+    randomize_order: false
+0.4dark1sec_light1secBETTER:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 0.5
+    stim_time: 1.0
+    tail_time: 0.5
+    idle_color: 0.0
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 0.4
+    randomize_order: true
+20240308-LIGHT-DARK-6sec-300ms:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 1.0
+    stim_time: 0.3
+    tail_time: 4.7
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+NOSTIM_5second_darkonly-100:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 100.0
+    pre_time: 2.5
+    stim_time: 0.3
+    tail_time: 2.2
+    idle_color: 0.0
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity: 0.0
+    randomize_order: false
+4sec-lightdark-300ms:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 1.0
+    stim_time: 0.3
+    tail_time: 2.7
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true
+4sec-lightdark-20ms:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 50.0
+    pre_time: 1.0
+    stim_time: 0.02
+    tail_time: 2.98
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true

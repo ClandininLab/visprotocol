@@ -1,0 +1,160 @@
+50_fullscreen_2F:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 50.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+50_fullscreen_2F-rightbox:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 50.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 50.0
+    width: 50.0
+    center:
+    - -50.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+20_fullscreen_2F:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 20.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 2.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+50_fullscreen_2F_4s_tail_LJ:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 50.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 4.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+20_fullscreen_2F_20seconds:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 20.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 15.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+10_fullscreen_2F_25seconds:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 10.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 20.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+10_fullscreen_2F_23seconds:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 10.0
+    pre_time: 1.0
+    stim_time: 2.0
+    tail_time: 20.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
+10_fullscreen_4x2F_25seconds:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 10.0
+    pre_time: 1.0
+    stim_time: 2.0
+    tail_time: 22.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
