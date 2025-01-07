@@ -168,6 +168,61 @@ class FlickeringPatch(BaseProtocol):
         # %%
 
 
+class DriftingSineGrating(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getEpochParameters(self):
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        current_period, current_rate, current_angle = self.selectParametersFromLists((self.protocol_parameters['period'],
+                                                                                         self.protocol_parameters['rate'],
+                                                                                         self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
+
+        self.epoch_parameters = {'name': 'RotatingGrating',
+                                 'period': current_period,
+                                 'rate': current_rate,
+                                 'color': [0, 0, 1, 1],
+                                 'mean': self.protocol_parameters['mean'],
+                                 'contrast': self.protocol_parameters['contrast'],
+                                 'angle': current_angle,
+                                 'offset': 0.0,
+                                 'cylinder_radius': 1,
+                                 'cylinder_height': 10,
+                                 'profile': 'sine',
+                                 'theta': adj_center[0]}
+
+        self.convenience_parameters = {'current_period': current_period,
+                                       'current_rate': current_rate,
+                                       'current_angle': current_angle}
+
+        self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
+                                'center': self.adjustCenter(self.protocol_parameters['center'])}
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'period': [20.0, 40.0, 80.0],  # spatial period, degrees
+                                    'rate': [0.0, 20.0, 40.0, 80.0],  # drift speed, degrees/second
+                                    'contrast': 1.0,
+                                    'mean': 0.5,
+                                    'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
+                                    'center': [5.0, 0.0],
+                                    'center_size': 180.0,
+                                    'randomize_order': True}
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'DriftingSineGrating',
+                               'num_epochs': 96,
+                               'pre_time': 1.0,
+                               'stim_time': 4.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}
+
+
+        # %%
+
+
 class DriftingSquareGrating(BaseProtocol):
     def __init__(self, cfg):
         super().__init__(cfg)
@@ -176,13 +231,15 @@ class DriftingSquareGrating(BaseProtocol):
         self.getParameterDefaults()
 
     def getEpochParameters(self):
-        # TODO: center size with aperture (center and center_size)
-        current_angle = self.selectParametersFromLists(self.protocol_parameters['angle'], randomize_order = self.protocol_parameters['randomize_order'])
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+        current_period, current_rate, current_angle = self.selectParametersFromLists((self.protocol_parameters['period'],
+                                                                                 self.protocol_parameters['rate'],
+                                                                                 self.protocol_parameters['angle']), randomize_order=self.protocol_parameters['randomize_order'])
 
-        self.epoch_parameters = {'name': 'RotatingGrating',
-                                 'period': self.protocol_parameters['period'],
-                                 'rate': self.protocol_parameters['rate'],
-                                 'color': [1, 1, 1, 1],
+        self.epoch_parameters = {'name': 'MovingPatch',
+                                 'period': current_period,
+                                 'rate': current_rate,
+                                 'color': [0, 0, 1, 1],
                                  'mean': self.protocol_parameters['mean'],
                                  'contrast': self.protocol_parameters['contrast'],
                                  'angle': current_angle,
@@ -190,30 +247,74 @@ class DriftingSquareGrating(BaseProtocol):
                                  'cylinder_radius': 1,
                                  'cylinder_height': 10,
                                  'profile': 'square',
-                                 'theta': self.screen_center[0]}
+                                 'theta': adj_center[0]}
 
-        self.convenience_parameters = {'current_angle': current_angle}
+        self.convenience_parameters = {'current_period': current_period,
+                                       'current_rate': current_rate,
+                                       'current_angle': current_angle}
 
         self.meta_parameters = {'center_size': self.protocol_parameters['center_size'],
                                 'center': self.adjustCenter(self.protocol_parameters['center'])}
 
     def getParameterDefaults(self):
-        self.protocol_parameters = {'period': 20.0,
-                                    'rate': 20.0,
+        self.protocol_parameters = {'period': [20.0, 40.0, 80.0],
+                                    'rate': [0.0, 20.0, 40.0, 80.0],
                                     'contrast': 1.0,
                                     'mean': 0.5,
                                     'angle': [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0],
-                                    'center': [0, 0],
+                                    'center': [5.0, 0.0],
                                     'center_size': 180.0,
                                     'randomize_order': True}
 
     def getRunParameterDefaults(self):
         self.run_parameters = {'protocol_ID': 'DriftingSquareGrating',
-                               'num_epochs': 40,
+                               'num_epochs': 96,
                                'pre_time': 1.0,
                                'stim_time': 4.0,
-                               'tail_time': 1.0,
+                               'tail_time': 2.0,
                                'idle_color': 0.5}
 
+#%%
 
-       
+
+class SphericalGrating(BaseProtocol):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+
+        self.getRunParameterDefaults()
+        self.getParameterDefaults()
+
+    def getParameterDefaults(self):
+        self.protocol_parameters = {'patch_width': 20.0,
+                                    'patch_height': 80.0,
+                                    'update_rate': 60.0,
+                                    'grid_width': 80,
+                                    'grid_height': 80,
+                                    'center': [0.0, 0.0],
+                                    'speed': 20.0}
+
+    def getEpochParameters(self):
+        stimulus_ID = 'SphericalMovingGrating'
+        adj_center = self.adjustCenter(self.protocol_parameters['center'])
+
+        color = [1, 0, 1, 1] # UV and blue
+
+        self.epoch_parameters = {'name': stimulus_ID,
+                                 'patch_width': self.protocol_parameters['patch_width'],
+                                 'patch_height': self.protocol_parameters['patch_height'],
+                                 'width': self.protocol_parameters['grid_width'],
+                                 'height': self.protocol_parameters['grid_height'],
+                                 'rate': self.protocol_parameters['speed'],
+                                 'update_rate': self.protocol_parameters['update_rate'],
+                                 'theta': adj_center[0],
+                                 'phi': adj_center[1],
+                                 'color': color,
+                                 }
+
+    def getRunParameterDefaults(self):
+        self.run_parameters = {'protocol_ID': 'SphericalMovingGrating',
+                               'num_epochs': 10,
+                               'pre_time': 2.0,
+                               'stim_time': 30.0,
+                               'tail_time': 2.0,
+                               'idle_color': 0.5}

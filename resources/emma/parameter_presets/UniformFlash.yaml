@@ -648,3 +648,21 @@ NOSTIM_5second_darkonly-100:
     - 1.0
     - 0.0
     randomize_order: true
+20240308-LIGHT-DARK-16sec-300ms:
+  run_parameters:
+    protocol_ID: UniformFlash
+    num_epochs: 20.0
+    pre_time: 1.0
+    stim_time: 0.3
+    tail_time: 14.7
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    intensity:
+    - 1.0
+    - 0.0
+    randomize_order: true

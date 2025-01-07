@@ -15,3 +15,8 @@ rig_config:
     data_directory: E:/Tim/FlystimData
     screen_center: [-50, -30]
     rig: Bruker
+
+  Laptop:
+    data_directory: E:/Tim/FlystimData
+    screen_center: [0, 0]
+    rig: (testing)

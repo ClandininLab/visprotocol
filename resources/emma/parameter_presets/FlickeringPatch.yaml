@@ -158,3 +158,23 @@
     - 2.0
     sinusoidal: false
     randomize_order: true
+10_fullscreen_2F_20seconds:
+  run_parameters:
+    protocol_ID: FlickeringPatch
+    num_epochs: 10.0
+    pre_time: 1.0
+    stim_time: 4.0
+    tail_time: 15.0
+    idle_color: 0.5
+  protocol_parameters:
+    height: 240.0
+    width: 240.0
+    center:
+    - 0.0
+    - 0.0
+    contrast: 1.0
+    mean: 0.5
+    temporal_frequency:
+    - 2.0
+    sinusoidal: false
+    randomize_order: true
